@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ForaPix - Jogos e Apostas Online</title>
+    <link rel="icon" type="image/png" href="assets/images/sinuca-game.jpg">
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a1a2e',
+                        secondary: '#16213e',
+                        accent: '#7c3aed',
+                        'accent-light': '#8b5cf6',
+                        dark: '#0f0f1a',
+                        'card-bg': '#1e1e3f',
+                        'card-hover': '#2a2a4a',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-white min-h-screen">
+    <!-- App Container -->
+    <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col relative">
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-card-bg p-6 rounded-2xl flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4"></div>
+                <p class="text-sm text-gray-400">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header id="header" class="bg-primary px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-bolt text-accent text-xl"></i>
+                <span class="text-xl font-bold text-white">FORAPIX</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="w-10 h-5 bg-success rounded-full relative">
+                    <span class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all"></span>
+                </button>
+                
+                <!-- Eye Toggle -->
+                <button class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-eye"></i>
+                </button>
+                
+                <!-- Balance Display -->
+                <div id="balanceDisplay" class="bg-secondary px-3 py-1 rounded-lg text-sm font-semibold cursor-pointer hover:bg-card-hover transition">
+                    R$ <span id="userBalance">0,00</span>
+                </div>
+                
+                <!-- Profile Button -->
+                <button id="profileBtn" class="w-8 h-8 bg-accent rounded-full flex items-center justify-center hover:bg-accent-light transition">
+                    <i class="fas fa-user text-sm"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="mainContent" class="flex-1 overflow-y-auto">
+            <!-- Content will be loaded here -->
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav id="bottomNav" class="bg-primary px-4 py-2 flex justify-around items-center border-t border-gray-700">
+            <button class="nav-item active" data-page="home">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-xs">Início</span>
+            </button>
+            <button class="nav-item" data-page="games">
+                <i class="fas fa-gamepad text-lg mb-1"></i>
+                <span class="text-xs">Jogos</span>
+            </button>
+            <button class="nav-item deposit-btn" data-page="deposit">
+                <div class="bg-accent rounded-full p-3 -mt-6 shadow-lg">
+                    <i class="fas fa-plus text-white text-lg"></i>
+                </div>
+                <span class="text-xs mt-1">Depositar</span>
+            </button>
+            <button class="nav-item" data-page="wallet">
+                <i class="fas fa-wallet text-lg mb-1"></i>
+                <span class="text-xs">Carteira</span>
+            </button>
+            <button class="nav-item" data-page="menu">
+                <i class="fas fa-bars text-lg mb-1"></i>
+                <span class="text-xs">Menu</span>
+            </button>
+        </nav>
+
+        <!-- Modals Container -->
+        <div id="modalsContainer"></div>
+
+        <!-- Toast Container -->
+        <div id="toastContainer" class="fixed top-20 left-4 right-4 z-50 space-y-2"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/storage.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/components.js"></script>
+    <script src="assets/js/pages/home.js"></script>
+    <script src="assets/js/pages/matches.js"></script>
+    <script src="assets/js/pages/sinuca.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

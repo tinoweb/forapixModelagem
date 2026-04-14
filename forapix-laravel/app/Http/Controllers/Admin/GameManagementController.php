@@ -1,0 +1,504 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Game;
+use App\Models\GameMatch;
+use App\Models\Player;
+use App\Models\Sport;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+
+class GameManagementController extends Controller
+{
+    /**
+     * List all games
+     */
+    public function games(Request $request)
+    {
+        $query = Game::with(['sport', 'matches']);
+
+        // Filters
+        if ($request->has('sport_id')) {
+            $query->where('sport_id', $request->sport_id);
+        }
+
+        if ($request->has('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $games = $query->paginate(15);
+        $sports = Sport::orderBy('name')->get();
+
+        return view('admin.games.index', compact('games', 'sports'));
+    }
+
+    public function showCreateGameForm()
+    {
+        $sports = Sport::orderBy('name')->get();
+
+        return view('admin.games.create', compact('sports'));
+    }
+
+    public function showEditGameForm(Game $game)
+    {
+        $sports = Sport::orderBy('name')->get();
+
+        return view('admin.games.edit', compact('game', 'sports'));
+    }
+
+    public function confirmDeleteGame(Game $game)
+    {
+        return view('admin.games.delete', compact('game'));
+    }
+
+    /**
+     * Create new game
+     */
+    public function createGame(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'sport_id' => 'nullable|exists:sports,id',
+            'type' => 'required|in:head_to_head,casino,bingo,sinuca,par_impar',
+            'description' => 'nullable|string',
+            'min_bet' => 'required|numeric|min:0.01',
+            'max_bet' => 'required|numeric|min:0.01',
+            'house_edge' => 'required|numeric|min:0|max:1',
+            'status' => 'nullable|in:active,inactive,maintenance',
+            'image' => 'nullable|image|max:2048',
+            'settings' => 'nullable|json'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $gameData = $request->except('image');
+        $gameData['slug'] = Str::slug($request->name);
+        $gameData['created_by'] = auth()->id();
+        $gameData['status'] = $request->input('status', 'active');
+        $gameData['house_edge'] = $request->input('house_edge') / 100;
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $gameData['image'] = $request->file('image')->store('games', 'public');
+        }
+
+        // Parse settings JSON
+        if ($request->has('settings')) {
+            $gameData['settings'] = json_decode($request->settings, true);
+        }
+
+        $game = Game::create($gameData);
+
+        return response()->json([
+            'success' => true,
+            'data' => $game->load('sport'),
+            'message' => 'Jogo criado com sucesso'
+        ]);
+    }
+
+    /**
+     * Update game
+     */
+    public function updateGame(Request $request, Game $game)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'sport_id' => 'sometimes|nullable|exists:sports,id',
+            'type' => 'sometimes|in:head_to_head,casino,bingo,sinuca,par_impar',
+            'description' => 'sometimes|nullable|string',
+            'min_bet' => 'sometimes|numeric|min:0.01',
+            'max_bet' => 'sometimes|numeric|min:0.01',
+            'house_edge' => 'sometimes|numeric|min:0|max:1',
+            'status' => 'sometimes|in:active,inactive,maintenance',
+            'image' => 'sometimes|nullable|image|max:2048',
+            'settings' => 'sometimes|nullable|json'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $gameData = $request->except('image');
+        $gameData['updated_by'] = auth()->id();
+
+        // Update slug if name changed
+        if ($request->has('name')) {
+            $gameData['slug'] = Str::slug($request->name);
+        }
+
+        if ($request->has('house_edge')) {
+            $gameData['house_edge'] = $request->input('house_edge') / 100;
+        }
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $gameData['image'] = $request->file('image')->store('games', 'public');
+        }
+
+        // Parse settings JSON
+        if ($request->has('settings')) {
+            $gameData['settings'] = json_decode($request->settings, true);
+        }
+
+        $game->update($gameData);
+
+        return response()->json([
+            'success' => true,
+            'data' => $game->load('sport'),
+            'message' => 'Jogo atualizado com sucesso'
+        ]);
+    }
+
+    /**
+     * Delete game
+     */
+    public function deleteGame(Game $game)
+    {
+        // Check if game has active matches
+        $activeMatches = $game->matches()->whereIn('status', ['scheduled', 'live'])->count();
+        
+        if ($activeMatches > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível excluir jogo com partidas ativas'
+            ], 400);
+        }
+
+        $game->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jogo excluído com sucesso'
+        ]);
+    }
+
+    /**
+     * List all matches
+     */
+    public function matches(Request $request)
+    {
+        $query = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer', 'bets']);
+
+        // Filters
+        if ($request->has('game_id')) {
+            $query->where('game_id', $request->game_id);
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('date_from')) {
+            $query->whereDate('match_start', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to')) {
+            $query->whereDate('match_start', '<=', $request->date_to);
+        }
+
+        if ($request->has('search')) {
+            $query->where(function($q) use ($request) {
+                $q->whereHas('firstPlayer', function($sq) use ($request) {
+                    $sq->where('name', 'like', '%' . $request->search . '%');
+                })->orWhereHas('secondPlayer', function($sq) use ($request) {
+                    $sq->where('name', 'like', '%' . $request->search . '%');
+                });
+            });
+        }
+
+        $matches = $query->orderBy('match_start', 'desc')->paginate(15);
+        $games = Game::where('status', 'active')->with('sport')->get();
+        $players = Player::orderBy('name')->get();
+        $sports = Sport::orderBy('name')->get();
+
+        return view('admin.matches.index', compact('matches', 'games', 'players', 'sports'));
+    }
+
+    public function showCreateMatchForm()
+    {
+        $games = Game::where('status', 'active')->with('sport')->get();
+        $players = Player::orderBy('name')->get();
+
+        return view('admin.matches.create', compact('games', 'players'));
+    }
+
+    public function showEditMatchForm(GameMatch $match)
+    {
+        $games = Game::where('status', 'active')->with('sport')->get();
+        $players = Player::orderBy('name')->get();
+
+        return view('admin.matches.edit', compact('match', 'games', 'players'));
+    }
+
+    public function confirmDeleteMatch(GameMatch $match)
+    {
+        return view('admin.matches.delete', compact('match'));
+    }
+
+    /**
+     * Create new match
+     */
+    public function createMatch(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'nullable|string|max:255',
+            'game_id' => 'required|exists:games,id',
+            'first_player_id' => 'required|exists:players,id',
+            'second_player_id' => 'required|exists:players,id|different:first_player_id',
+            'match_start' => 'required|date|after:now',
+            'betting_deadline' => 'required|date|before:match_start',
+            'first_player_odds' => 'required|numeric|min:1.01',
+            'second_player_odds' => 'required|numeric|min:1.01',
+            'par_odds' => 'nullable|numeric|min:1.01',
+            'impar_odds' => 'nullable|numeric|min:1.01',
+            'description' => 'nullable|string',
+            'featured' => 'boolean',
+            'betting_options' => 'nullable|json',
+            'status' => 'nullable|in:scheduled,live,finished,cancelled,postponed',
+            'banner_image' => 'nullable|image|max:4096',
+            'banner_button_label' => 'nullable|string|max:40',
+            'banner_button_link' => 'nullable|url'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link']);
+        $matchData['created_by'] = auth()->id();
+        $matchData['status'] = $request->input('status', 'scheduled');
+
+        // Parse betting options JSON
+        if ($request->has('betting_options')) {
+            $matchData['betting_options'] = json_decode($request->betting_options, true);
+        }
+
+        $metadata = $matchData['metadata'] ?? [];
+        if ($request->hasFile('banner_image')) {
+            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
+        }
+        if ($request->filled('banner_button_label')) {
+            $metadata['banner_button_label'] = $request->input('banner_button_label');
+        }
+        if ($request->filled('banner_button_link')) {
+            $metadata['banner_button_link'] = $request->input('banner_button_link');
+        }
+        $matchData['metadata'] = $metadata;
+
+        $match = GameMatch::create($matchData);
+
+        return response()->json([
+            'success' => true,
+            'data' => $match->load(['game', 'firstPlayer', 'secondPlayer']),
+            'message' => 'Partida criada com sucesso'
+        ]);
+    }
+
+    /**
+     * Update match
+     */
+    public function updateMatch(Request $request, GameMatch $match)
+    {
+        $validator = Validator::make($request->all(), [
+            'match_start' => 'sometimes|date',
+            'betting_deadline' => 'sometimes|date',
+            'first_player_odds' => 'sometimes|numeric|min:1.01',
+            'second_player_odds' => 'sometimes|numeric|min:1.01',
+            'status' => 'sometimes|in:scheduled,live,finished,cancelled,postponed',
+            'description' => 'sometimes|nullable|string',
+            'featured' => 'sometimes|boolean',
+            'result' => 'sometimes|nullable|json',
+            'betting_options' => 'sometimes|nullable|json',
+            'banner_image' => 'sometimes|nullable|image|max:4096',
+            'banner_button_label' => 'sometimes|nullable|string|max:40',
+            'banner_button_link' => 'sometimes|nullable|url'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link']);
+        $matchData['updated_by'] = auth()->id();
+
+        // Parse JSON fields
+        if ($request->has('result')) {
+            $matchData['result'] = json_decode($request->result, true);
+        }
+
+        if ($request->has('betting_options')) {
+            $matchData['betting_options'] = json_decode($request->betting_options, true);
+        }
+
+        // Handle status changes
+        if ($request->has('status')) {
+            $this->handleStatusChange($match, $request->status, $matchData);
+        }
+
+        $metadata = $match->metadata ?? [];
+        if ($request->hasFile('banner_image')) {
+            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
+        }
+        if ($request->has('banner_button_label')) {
+            $metadata['banner_button_label'] = $request->input('banner_button_label');
+        }
+        if ($request->has('banner_button_link')) {
+            $metadata['banner_button_link'] = $request->input('banner_button_link');
+        }
+        if (!empty($metadata)) {
+            $matchData['metadata'] = $metadata;
+        }
+
+        $match->update($matchData);
+
+        return response()->json([
+            'success' => true,
+            'data' => $match->load(['game', 'firstPlayer', 'secondPlayer']),
+            'message' => 'Partida atualizada com sucesso'
+        ]);
+    }
+
+    /**
+     * Handle match status changes
+     */
+    private function handleStatusChange(GameMatch $match, $newStatus, &$matchData)
+    {
+        switch ($newStatus) {
+            case 'live':
+                if ($match->status === 'scheduled') {
+                    $matchData['actual_start'] = now();
+                }
+                break;
+
+            case 'finished':
+                if (in_array($match->status, ['scheduled', 'live'])) {
+                    $matchData['finished_at'] = now();
+                    // Process bets resolution will be handled by a job
+                }
+                break;
+
+            case 'cancelled':
+                if (in_array($match->status, ['scheduled', 'live'])) {
+                    $matchData['cancelled_at'] = now();
+                    // Cancel and refund bets will be handled by a job
+                }
+                break;
+        }
+    }
+
+    /**
+     * Delete match
+     */
+    public function deleteMatch(GameMatch $match)
+    {
+        // Check if match has bets
+        $betsCount = $match->bets()->count();
+        
+        if ($betsCount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível excluir partida com apostas'
+            ], 400);
+        }
+
+        $match->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Partida excluída com sucesso'
+        ]);
+    }
+
+    /**
+     * Get match statistics
+     */
+    public function getMatchStats(GameMatch $match)
+    {
+        $stats = [
+            'total_bets' => $match->bets()->count(),
+            'total_amount' => $match->bets()->sum('amount'),
+            'first_player_bets' => $match->bets()->where('bet_type', 'first_player')->count(),
+            'second_player_bets' => $match->bets()->where('bet_type', 'second_player')->count(),
+            'first_player_amount' => $match->bets()->where('bet_type', 'first_player')->sum('amount'),
+            'second_player_amount' => $match->bets()->where('bet_type', 'second_player')->sum('amount'),
+            'average_bet' => $match->bets()->avg('amount'),
+            'largest_bet' => $match->bets()->max('amount'),
+            'unique_bettors' => $match->bets()->distinct('user_id')->count('user_id'),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ]);
+    }
+
+    /**
+     * Bulk update matches
+     */
+    public function bulkUpdateMatches(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'match_ids' => 'required|array',
+            'match_ids.*' => 'exists:matches,id',
+            'action' => 'required|in:activate,deactivate,cancel,feature,unfeature',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $matches = GameMatch::whereIn('id', $request->match_ids);
+        $updated = 0;
+
+        switch ($request->action) {
+            case 'activate':
+                $updated = $matches->update(['status' => 'scheduled']);
+                break;
+            case 'deactivate':
+                $updated = $matches->update(['status' => 'cancelled']);
+                break;
+            case 'cancel':
+                $updated = $matches->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+                break;
+            case 'feature':
+                $updated = $matches->update(['featured' => true]);
+                break;
+            case 'unfeature':
+                $updated = $matches->update(['featured' => false]);
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$updated} partidas atualizadas com sucesso"
+        ]);
+    }
+}

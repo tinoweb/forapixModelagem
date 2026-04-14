@@ -1,0 +1,324 @@
+/**
+ * ForaPix - UI Components
+ * Componentes reutilizáveis da interface
+ */
+
+const Components = {
+    /**
+     * Show toast notification
+     */
+    showToast(message, type = 'info', duration = Config.TOAST.DURATION) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = this.getToastIcon(type);
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div class="toast-content">
+                <p class="text-sm font-medium">${message}</p>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto remove
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, duration);
+        
+        // Click to remove
+        toast.addEventListener('click', () => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        });
+    },
+
+    /**
+     * Get toast icon
+     */
+    getToastIcon(type) {
+        const icons = {
+            success: 'fa-check',
+            error: 'fa-times',
+            warning: 'fa-exclamation',
+            info: 'fa-info'
+        };
+        return icons[type] || icons.info;
+    },
+
+    /**
+     * Show/hide loading overlay
+     */
+    showLoading(show = true) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.toggle('hidden', !show);
+        }
+    },
+
+    /**
+     * Show modal
+     */
+    showModal(content, options = {}) {
+        const container = document.getElementById('modalsContainer');
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                ${content}
+            </div>
+        `;
+        
+        container.appendChild(modal);
+        
+        // Close on backdrop click
+        if (options.closeOnBackdrop !== false) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal(modal);
+                }
+            });
+        }
+        
+        // Close on escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeModal(modal);
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        return modal;
+    },
+
+    /**
+     * Close modal
+     */
+    closeModal(modal = null) {
+        if (!modal) {
+            const container = document.getElementById('modalsContainer');
+            const modals = container.querySelectorAll('.modal-overlay');
+            modal = modals[modals.length - 1]; // Close last opened modal
+        }
+        
+        if (modal && modal.parentNode) {
+            modal.parentNode.removeChild(modal);
+        }
+    },
+
+    /**
+     * Render match card
+     */
+    renderMatchCard(match) {
+        const firstPlayer = match.first_player?.name || match.firstPlayer?.name || match.fighter1 || 'Jogador 1';
+        const secondPlayer = match.second_player?.name || match.secondPlayer?.name || match.fighter2 || 'Jogador 2';
+        const odds1 = match.first_player_odds || match.odds1 || '--';
+        const odds2 = match.second_player_odds || match.odds2 || '--';
+        const sportLabel = match.game?.sport?.name || match.game?.name || match.sport?.name || match.sport || 'Evento';
+        const dateLabel = Utils.formatDate(match.match_start || match.betting_deadline || match.date || new Date());
+        const matchId = match.id || match.match_id || 0;
+
+        return `
+            <div class="bg-[#1f213a] rounded-3xl p-5 mb-4 border border-[#4f46e5]/40 hover:border-[#6366f1]/80 shadow-[0_0_15px_rgba(79,70,229,0.15)] transition-all cursor-pointer relative overflow-hidden" onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 ${match.status === 'live' ? 'bg-[#e88b20] animate-pulse' : 'bg-[#e88b20]'} rounded-full shadow-[0_0_8px_#e88b20]"></div>
+                        <span class="text-sm font-bold text-gray-200 uppercase tracking-wide">SINUCA ${match.title || 'HEAD TO HEAD'}</span>
+                    </div>
+                    <span class="text-xs text-gray-400 font-medium">${dateLabel}</span>
+                </div>
+                
+                <!-- Players Section -->
+                <div class="flex items-center justify-between px-2">
+                    <!-- First Player -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="w-16 h-16 bg-[#4b5563] rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
+                            <span class="text-xl font-bold text-white">${Utils.getInitials(firstPlayer)}</span>
+                        </div>
+                        <p class="text-[15px] font-bold text-white text-center leading-tight mb-1">${Utils.truncate(firstPlayer, 15)}</p>
+                        <p class="text-[13px] text-[#8b5cf6] font-bold">${odds1 !== '--' ? parseFloat(odds1).toFixed(2) : '--'}</p>
+                    </div>
+                    
+                    <!-- VS separator -->
+                    <div class="text-center px-4 flex items-center justify-center">
+                        <span class="text-lg font-medium text-[#4b5563] uppercase tracking-widest">VS</span>
+                    </div>
+                    
+                    <!-- Second Player -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="w-16 h-16 bg-[#4b5563] rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
+                            <span class="text-xl font-bold text-white">${Utils.getInitials(secondPlayer)}</span>
+                        </div>
+                        <p class="text-[15px] font-bold text-white text-center leading-tight mb-1">${Utils.truncate(secondPlayer, 15)}</p>
+                        <p class="text-[13px] text-[#8b5cf6] font-bold">${odds2 !== '--' ? parseFloat(odds2).toFixed(2) : '--'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Render service item
+     */
+    renderServiceItem(service) {
+        return `
+            <div class="service-item" onclick="${service.action}">
+                <i class="fas ${service.icon}"></i>
+                <span>${service.name}</span>
+            </div>
+        `;
+    },
+
+    /**
+     * Render game card
+     */
+    renderGameCard(game) {
+        return `
+            <div class="game-card" onclick="App.navigateTo('matches', { gameId: ${game.id} })">
+                <img src="${game.image}" alt="${game.name}" onerror="this.src='https://via.placeholder.com/200x100/7c3aed/ffffff?text=${encodeURIComponent(game.name)}'">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent rounded-2xl"></div>
+                <div class="absolute bottom-4 left-4 right-4">
+                    <h3 class="text-white font-bold text-lg">${game.name}</h3>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Render transaction item
+     */
+    renderTransactionItem(transaction) {
+        const isCredit = transaction.amount > 0;
+        const icon = this.getTransactionIcon(transaction.type);
+        const color = isCredit ? 'text-success' : 'text-danger';
+        
+        return `
+            <div class="transaction-item bg-card-bg rounded-xl p-4 mb-3 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
+                            <i class="fas ${icon} text-accent"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">${transaction.description}</p>
+                            <p class="text-xs text-gray-400">${Utils.formatDate(transaction.date)}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold ${color}">${isCredit ? '+' : ''}${Utils.formatCurrency(Math.abs(transaction.amount), true)}</p>
+                        <p class="text-xs text-gray-400">${this.getTransactionStatus(transaction.status)}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    /**
+     * Get transaction icon
+     */
+    getTransactionIcon(type) {
+        const icons = {
+            deposit: 'fa-arrow-down',
+            withdraw: 'fa-arrow-up',
+            bet: 'fa-dice',
+            win: 'fa-trophy'
+        };
+        return icons[type] || 'fa-exchange-alt';
+    },
+
+    /**
+     * Get transaction status
+     */
+    getTransactionStatus(status) {
+        const statuses = {
+            completed: 'Concluída',
+            pending: 'Pendente',
+            failed: 'Falhou',
+            cancelled: 'Cancelada'
+        };
+        return statuses[status] || status;
+    },
+
+    /**
+     * Render empty state
+     */
+    renderEmptyState(icon, title, message) {
+        return `
+            <div class="empty-state text-center py-12">
+                <div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas ${icon} text-3xl text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">${title}</h3>
+                <p class="text-gray-400 text-sm">${message}</p>
+            </div>
+        `;
+    },
+
+    /**
+     * Render sport tabs
+     */
+    renderSportTabs(sports, activeId = null) {
+        return sports.map(sport => `
+            <button class="sport-tab ${sport.id === activeId ? 'active' : ''}" data-sport="${sport.id}">
+                <i class="fas ${sport.icon}"></i>
+                <span>${sport.name}</span>
+            </button>
+        `).join('');
+    },
+
+    /**
+     * Render quick values
+     */
+    renderQuickValues(inputId) {
+        return `
+            <div class="quick-values">
+                ${Config.BETTING.QUICK_VALUES.map(value => `
+                    <button class="quick-value" onclick="document.getElementById('${inputId}').value = ${value}; document.getElementById('${inputId}').dispatchEvent(new Event('input'));">
+                        ${Utils.formatCurrency(value, true)}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    /**
+     * Render bet summary
+     */
+    renderBetSummary(bet) {
+        return `
+            <div class="bet-summary bg-secondary rounded-xl p-4">
+                <h4 class="font-semibold mb-3">Resumo da Aposta</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Lutador:</span>
+                        <span class="font-semibold">${bet.fighterName}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Odd:</span>
+                        <span class="font-semibold text-accent">${bet.odds}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Valor:</span>
+                        <span class="font-semibold">${Utils.formatCurrency(bet.amount, true)}</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-600 pt-2">
+                        <span class="text-gray-400">Ganho potencial:</span>
+                        <span class="font-bold text-success">${Utils.formatCurrency(bet.potentialWin, true)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+// Global function to close modals (for onclick handlers)
+window.closeModal = () => Components.closeModal();

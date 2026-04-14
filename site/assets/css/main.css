@@ -1,0 +1,1063 @@
+/* ========================================
+   FORAPIX - Main Stylesheet
+   Mobile-First Design
+======================================== */
+
+/* CSS Variables */
+:root {
+    --primary: #1a1a2e;
+    --secondary: #16213e;
+    --accent: #7c3aed;
+    --accent-light: #8b5cf6;
+    --dark: #0f0f1a;
+    --card-bg: #1e1e3f;
+    --card-hover: #2a2a4a;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+}
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: var(--dark);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+
+/* ========================================
+   Navigation Styles
+======================================== */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    color: var(--accent);
+}
+
+.nav-item.active i {
+    transform: scale(1.1);
+}
+
+.nav-item.deposit-btn {
+    padding-top: 0;
+}
+
+.nav-item.deposit-btn:hover .bg-accent,
+.nav-item.deposit-btn.active .bg-accent {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+}
+
+/* ========================================
+   Card Styles
+======================================== */
+.card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    background: var(--card-hover);
+    transform: translateY(-2px);
+}
+
+.card-game {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    cursor: pointer;
+}
+
+.card-game img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card-game:hover img {
+    transform: scale(1.05);
+}
+
+.card-game .overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+}
+
+/* ========================================
+   Service Grid
+======================================== */
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.service-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.service-item:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.service-item .icon {
+    width: 48px;
+    height: 48px;
+    background: var(--secondary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--accent-light);
+}
+
+.service-item span {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   Match Card Styles
+======================================== */
+.match-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.match-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.match-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.match-sport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.match-sport img {
+    width: 20px;
+    height: 20px;
+}
+
+.match-time {
+    font-size: 11px;
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.match-fighters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.fighter {
+    flex: 1;
+    text-align: center;
+}
+
+.fighter-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    background: var(--secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+}
+
+.fighter-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fighter-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.fighter-odds {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-light);
+}
+
+.match-vs {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.match-action {
+    margin-top: 16px;
+    text-align: center;
+}
+
+.btn-bet {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-bet:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+}
+
+/* ========================================
+   Bet Selection Styles
+======================================== */
+.bet-selection {
+    background: var(--secondary);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.bet-fighter-option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.bet-fighter-option:hover {
+    border-color: var(--accent);
+}
+
+.bet-fighter-option.selected {
+    border-color: var(--accent);
+    background: rgba(124, 58, 237, 0.1);
+}
+
+.bet-fighter-option .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--secondary);
+    overflow: hidden;
+}
+
+.bet-fighter-option .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bet-fighter-option .info {
+    flex: 1;
+}
+
+.bet-fighter-option .name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.bet-fighter-option .odds {
+    font-size: 14px;
+    color: var(--accent-light);
+    font-weight: 700;
+}
+
+.bet-fighter-option .check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.bet-fighter-option.selected .check {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ========================================
+   Input Styles
+======================================== */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.input-field {
+    width: 100%;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 16px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.input-field::placeholder {
+    color: var(--text-secondary);
+}
+
+.quick-values {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.quick-value-btn {
+    background: var(--secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-value-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ========================================
+   Button Styles
+======================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    width: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--card-hover);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success), #34d399);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #f87171);
+    color: white;
+}
+
+/* ========================================
+   Modal Styles
+======================================== */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    background: var(--secondary);
+    border: none;
+    border-radius: 50%;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: var(--danger);
+    color: white;
+}
+
+/* ========================================
+   Toast Notifications
+======================================== */
+.toast {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast.warning {
+    border-left: 4px solid var(--warning);
+}
+
+.toast .icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast.success .icon {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.toast.error .icon {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.toast.warning .icon {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   Banner/Carousel Styles
+======================================== */
+.banner-carousel {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.banner-slide {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+.banner-indicators {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.banner-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.banner-indicator.active {
+    background: white;
+    width: 24px;
+    border-radius: 4px;
+}
+
+/* ========================================
+   Section Headers
+======================================== */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+.section-link {
+    font-size: 13px;
+    color: var(--accent-light);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.section-link:hover {
+    text-decoration: underline;
+}
+
+/* ========================================
+   Games Grid
+======================================== */
+.games-grid {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.games-grid .game-card {
+    flex: 1;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 120px;
+}
+
+.games-grid .game-card:hover {
+    transform: scale(1.02);
+}
+
+.games-grid .game-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+}
+
+.game-card .title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 12px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ========================================
+   Sport Tabs
+======================================== */
+.sport-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sport-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.sport-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 25px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.sport-tab:hover,
+.sport-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.sport-tab img {
+    width: 20px;
+    height: 20px;
+}
+
+/* ========================================
+   Empty State
+======================================== */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.empty-state .icon {
+    font-size: 48px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* ========================================
+   Bet Summary
+======================================== */
+.bet-summary {
+    background: var(--secondary);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.bet-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bet-summary-row:last-child {
+    border-bottom: none;
+}
+
+.bet-summary-row .label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.bet-summary-row .value {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.bet-summary-row .value.highlight {
+    color: var(--success);
+    font-size: 20px;
+}
+
+/* ========================================
+   Wallet Styles
+======================================== */
+.wallet-balance {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.wallet-balance .label {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.wallet-balance .amount {
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.wallet-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.wallet-action {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.wallet-action:hover {
+    background: var(--card-hover);
+}
+
+.wallet-action .icon {
+    width: 48px;
+    height: 48px;
+    background: var(--secondary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 20px;
+}
+
+.wallet-action.deposit .icon {
+    color: var(--success);
+}
+
+.wallet-action.withdraw .icon {
+    color: var(--warning);
+}
+
+/* ========================================
+   Transaction History
+======================================== */
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+
+.transaction-item .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.transaction-item.deposit .icon {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.transaction-item.withdraw .icon {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.transaction-item.bet .icon {
+    background: rgba(124, 58, 237, 0.2);
+    color: var(--accent-light);
+}
+
+.transaction-item .info {
+    flex: 1;
+}
+
+.transaction-item .title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.transaction-item .date {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.transaction-item .amount {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.transaction-item .amount.positive {
+    color: var(--success);
+}
+
+.transaction-item .amount.negative {
+    color: var(--danger);
+}
+
+/* ========================================
+   Page Transitions
+======================================== */
+.page-enter {
+    animation: pageEnter 0.3s ease;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ========================================
+   Responsive Adjustments
+======================================== */
+@media (min-width: 768px) {
+    .service-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .games-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ========================================
+   Sinuca Page Styles
+======================================== */
+.status-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-tab:hover,
+.status-tab.active {
+    background: var(--warning);
+    border-color: var(--warning);
+    color: var(--dark);
+}
+
+.sinuca-match-card {
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary) 100%);
+}
+
+.bet-option div.border-accent {
+    border-color: var(--accent) !important;
+    background: rgba(124, 58, 237, 0.1) !important;
+}
+
+/* ========================================
+   Welcome Card
+======================================== */
+.welcome-card {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary) 100%);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.welcome-card .text-accent {
+    color: var(--success);
+}
+
+/* ========================================
+   Utility Classes
+======================================== */
+.text-accent {
+    color: var(--accent-light);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-muted {
+    color: var(--text-secondary);
+}
+
+.mt-4 {
+    margin-top: 16px;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+
+.p-4 {
+    padding: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

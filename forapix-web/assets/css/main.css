@@ -1,0 +1,720 @@
+/* ========================================
+   CSS Variables
+======================================== */
+:root {
+    --primary: #1a1a2e;
+    --secondary: #16213e;
+    --accent: #7c3aed;
+    --accent-light: #8b5cf6;
+    --dark: #0f0f1a;
+    --card-bg: #1e1e3f;
+    --card-hover: #2a2a4a;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+}
+
+/* ========================================
+   Base Styles
+======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--dark);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 2px;
+}
+
+/* ========================================
+   Navigation Styles
+======================================== */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 12px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    color: var(--accent);
+}
+
+.nav-item.deposit-btn {
+    position: relative;
+}
+
+.nav-item.deposit-btn .bg-accent {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+}
+
+/* ========================================
+   Welcome Card
+======================================== */
+.welcome-card {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary) 100%);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+}
+
+.welcome-card .text-accent {
+    color: var(--success);
+}
+
+/* ========================================
+   Game Cards
+======================================== */
+.games-grid {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.games-grid .game-card {
+    flex: 1;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 120px;
+}
+
+.games-grid .game-card:hover {
+    transform: scale(1.02);
+}
+
+.games-grid .game-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+}
+
+.game-card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    transform: scale(1.02);
+}
+
+.game-card img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+}
+
+/* Aposta Casada Banner */
+.game-card img[alt="Aposta Casada"] {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Casino and Bingo Cards */
+.games-grid .game-card img[alt="Cassino"],
+.games-grid .game-card img[alt="Bingo"] {
+    height: 120px;
+    object-fit: cover;
+}
+
+/* Sinuca Toggle */
+.sinuca-toggle {
+    width: 36px;
+    height: 18px;
+    border-radius: 9px;
+    background: transparent;
+    padding: 0;
+}
+
+.sinuca-toggle-track {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--border-color);
+    position: relative;
+    transition: background 0.3s ease;
+}
+
+.sinuca-toggle-track.active {
+    background: var(--success);
+}
+
+.sinuca-toggle-thumb {
+    position: absolute;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.3s ease;
+}
+
+.sinuca-toggle-thumb.active {
+    transform: translateX(18px);
+}
+
+header.hidden,
+#bottomNav.hidden {
+    display: none;
+}
+
+/* ========================================
+   Section Headers
+======================================== */
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ========================================
+   Service Grid
+======================================== */
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.service-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.service-item:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.service-item i {
+    font-size: 24px;
+    color: var(--accent);
+    margin-bottom: 8px;
+}
+
+.service-item span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ========================================
+   Buttons
+======================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-light);
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: var(--dark);
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+/* ========================================
+   Modals
+======================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+    background: var(--secondary);
+}
+
+/* ========================================
+   Toast Notifications
+======================================== */
+.toast {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideInRight 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toast.success {
+    border-color: var(--success);
+}
+
+.toast.error {
+    border-color: var(--danger);
+}
+
+.toast.warning {
+    border-color: var(--warning);
+}
+
+.toast-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.toast.success .toast-icon {
+    background: var(--success);
+    color: white;
+}
+
+.toast.error .toast-icon {
+    background: var(--danger);
+    color: white;
+}
+
+.toast.warning .toast-icon {
+    background: var(--warning);
+    color: var(--dark);
+}
+
+/* ========================================
+   Form Elements
+======================================== */
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+.input-field::placeholder {
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   Quick Values
+======================================== */
+.quick-values {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.quick-value {
+    background: var(--secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-value:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* ========================================
+   Página Sinuca / Partida
+======================================== */
+#sinucaPage {
+    background: var(--dark);
+}
+
+.bg-primary {
+    background: var(--primary);
+}
+
+.bg-secondary {
+    background: var(--secondary);
+}
+
+.bg-dark {
+    background: var(--dark);
+}
+
+.bg-card-bg {
+    background: var(--card-bg);
+}
+
+.status-tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+}
+
+.status-tab.active {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--text-primary);
+    border-color: rgba(124, 58, 237, 0.6);
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+}
+
+.game-match-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, rgba(30, 30, 63, 0.95), rgba(15, 15, 26, 0.95));
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+.game-match-card img {
+    display: block;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+}
+
+.betting-option {
+    text-align: left;
+    border-radius: 18px;
+    padding: 18px;
+    background: var(--secondary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    transition: all 0.25s ease;
+    min-height: 94px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.betting-option:hover,
+.betting-option.selected {
+    border-color: var(--accent);
+    box-shadow: 0 12px 25px rgba(124, 58, 237, 0.25);
+    transform: translateY(-2px);
+}
+
+.betting-modal-option {
+    width: 100%;
+    text-align: left;
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    transition: all 0.25s ease;
+}
+
+.betting-modal-option.selected {
+    border-color: var(--warning);
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.25);
+}
+
+.betting-modal-option:hover {
+    border-color: var(--accent);
+}
+
+.stats-card {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--secondary);
+    border-radius: 18px;
+}
+
+.sinuca-match-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(145deg, rgba(30, 30, 63, 0.95), rgba(15, 15, 26, 0.95));
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    min-height: 400px;
+}
+
+.betting-tab {
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+
+.betting-tab:hover {
+    background: var(--accent) !important;
+    color: white !important;
+}
+
+.betting-tab.active {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #60a5fa;
+}
+
+/* ========================================
+   Animations
+======================================== */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.page-enter {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ========================================
+   Responsive Design
+======================================== */
+@media (min-width: 768px) {
+    .service-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .games-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ========================================
+   Utility Classes
+======================================== */
+.text-accent {
+    color: var(--accent-light);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.bg-accent {
+    background-color: var(--accent);
+}
+
+.bg-success {
+    background-color: var(--success);
+}
+
+.bg-warning {
+    background-color: var(--warning);
+}
+
+.bg-danger {
+    background-color: var(--danger);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
