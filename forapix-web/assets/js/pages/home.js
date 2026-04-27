@@ -15,14 +15,14 @@ const HomePage = {
         return `
             <div class="page-enter p-4">
                 <!-- Welcome Card -->
-                <div class="welcome-card bg-card-bg rounded-2xl p-5 mb-4">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">${greeting}</p>
-                    <h2 class="text-xl font-bold mb-3">Bem-vindo(a), <span class="text-accent">${user.name.split(' ')[0].toLowerCase()}</span></h2>
-                    
-                    <p class="text-xs text-gray-500 uppercase tracking-wider">SALDO DISPONÍVEL</p>
+                <div class="welcome-card p-5 mb-4">
+                    <p class="greeting mb-1">${greeting}</p>
+                    <h2 class="text-xl font-bold mb-3">Bem-vindo(a), <span class="user-name">${user.name.split(' ')[0].toLowerCase()}</span></h2>
+
+                    <p class="balance-label">Saldo Disponível</p>
                     <p class="text-2xl font-bold text-white mb-4">${Utils.formatCurrency(balance, true)}</p>
-                    
-                    <button class="w-full bg-accent hover:bg-accent-light text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all" onclick="HomePage.shareInvite()">
+
+                    <button class="invite-btn" onclick="HomePage.shareInvite()">
                         <i class="fas fa-user-plus"></i>
                         Convide seus amigos
                     </button>
@@ -72,10 +72,14 @@ const HomePage = {
      */
     renderServices() {
         const services = [
-            { name: 'Depósito', icon: 'fa-arrow-down', action: "App.navigateTo('deposit')" },
+            { name: 'Depósito', icon: 'fa-dice-five', action: "App.navigateTo('deposit')" },
             { name: 'Suporte', icon: 'fa-headset', action: "HomePage.openSupport()" },
             { name: 'Resultados', icon: 'fa-trophy', action: "HomePage.showResults()" },
-            { name: 'Histórico', icon: 'fa-history', action: "App.navigateTo('wallet')" }
+            { name: 'Palpites do Dia', icon: 'fa-star', action: "Components.showToast('Em breve!', 'info')" },
+            { name: 'Sonhos', icon: 'fa-moon', action: "Components.showToast('Em breve!', 'info')" },
+            { name: 'Atrasados', icon: 'fa-clock', action: "Components.showToast('Em breve!', 'info')" },
+            { name: 'Calculadora', icon: 'fa-calculator', action: "Components.showToast('Em breve!', 'info')" },
+            { name: 'Tabela de Bichos', icon: 'fa-paw', action: "Components.showToast('Em breve!', 'info')" }
         ];
 
         return services.map(service => Components.renderServiceItem(service)).join('');
@@ -149,7 +153,7 @@ const HomePage = {
      */
     getGreeting() {
         const hour = new Date().getHours();
-        if (hour >= 5 && hour < 12) return 'BOA TARDE';
+        if (hour >= 5 && hour < 12) return 'BOM DIA';
         if (hour >= 12 && hour < 18) return 'BOA TARDE';
         return 'BOA NOITE';
     },

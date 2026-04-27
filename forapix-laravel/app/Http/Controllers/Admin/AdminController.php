@@ -20,8 +20,113 @@ class AdminController extends Controller
     public function dashboard()
     {
         $stats = $this->getDashboardStats();
-        
-        return view('admin.dashboard', compact('stats'));
+        $recentActivities = $this->buildRecentActivities();
+        $chartData = $this->buildDashboardCharts();
+
+        return view('admin.dashboard', compact('stats', 'recentActivities', 'chartData'));
+    }
+
+    /**
+     * Consolidated recent activities (for the dashboard feed)
+     */
+    private function buildRecentActivities(int $limit = 8): array
+    {
+        $activities = collect();
+
+        try {
+            $recentBets = Bet::with(['user', 'match.game'])
+                ->latest()
+                ->limit($limit)
+                ->get()
+                ->map(function ($bet) {
+                    return [
+                        'type' => 'bet',
+                        'icon' => 'fa-dice',
+                        'color' => 'purple',
+                        'title' => 'Nova aposta',
+                        'description' => ($bet->user->name ?? 'Usuário') . ' apostou R$ ' . number_format($bet->amount, 2, ',', '.') . ' em ' . ($bet->match->game->name ?? 'partida'),
+                        'created_at' => $bet->created_at,
+                    ];
+                });
+            $activities = $activities->merge($recentBets);
+        } catch (\Throwable $e) {}
+
+        try {
+            $recentTransactions = Transaction::with('user')
+                ->latest()
+                ->limit($limit)
+                ->get()
+                ->map(function ($transaction) {
+                    $isDeposit = $transaction->type === 'deposit';
+                    return [
+                        'type' => 'transaction',
+                        'icon' => $isDeposit ? 'fa-arrow-down' : 'fa-arrow-up',
+                        'color' => $isDeposit ? 'blue' : 'orange',
+                        'title' => $isDeposit ? 'Depósito' : 'Saque',
+                        'description' => ($transaction->user->name ?? 'Usuário') . ' ' . ($isDeposit ? 'depositou' : 'sacou') . ' R$ ' . number_format($transaction->amount, 2, ',', '.'),
+                        'created_at' => $transaction->created_at,
+                    ];
+                });
+            $activities = $activities->merge($recentTransactions);
+        } catch (\Throwable $e) {}
+
+        try {
+            $recentUsers = User::latest()
+                ->limit(5)
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'type' => 'user',
+                        'icon' => 'fa-user-plus',
+                        'color' => 'green',
+                        'title' => 'Novo usuário',
+                        'description' => ($user->name ?? 'Desconhecido') . ' se registrou na plataforma',
+                        'created_at' => $user->created_at,
+                    ];
+                });
+            $activities = $activities->merge($recentUsers);
+        } catch (\Throwable $e) {}
+
+        return $activities
+            ->sortByDesc('created_at')
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Pre-compute chart data for the dashboard (last 7 days)
+     */
+    private function buildDashboardCharts(): array
+    {
+        $labels = [];
+        $revenue = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $labels[] = $date->format('d/m');
+            $dayBets = Bet::whereDate('created_at', $date)->sum('amount');
+            $dayWins = Bet::where('status', 'won')->whereDate('created_at', $date)->sum('result_amount');
+            $revenue[] = round((float) ($dayBets - $dayWins), 2);
+        }
+
+        $gameBreakdown = Bet::join('matches', 'bets.match_id', '=', 'matches.id')
+            ->join('games', 'matches.game_id', '=', 'games.id')
+            ->selectRaw('games.name as name, COALESCE(SUM(bets.amount),0) as total')
+            ->groupBy('games.name')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get();
+
+        return [
+            'revenue' => [
+                'labels' => $labels,
+                'values' => $revenue,
+            ],
+            'games' => [
+                'labels' => $gameBreakdown->pluck('name')->all(),
+                'values' => $gameBreakdown->pluck('total')->map(fn($v) => (float) $v)->all(),
+            ],
+        ];
     }
 
     /**

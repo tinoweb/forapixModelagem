@@ -21,16 +21,18 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1a1a2e',
-                        secondary: '#16213e',
+                        primary: '#0f1226',
+                        secondary: '#151a35',
                         accent: '#7c3aed',
                         'accent-light': '#8b5cf6',
-                        dark: '#0f0f1a',
-                        'card-bg': '#1e1e3f',
-                        'card-hover': '#2a2a4a',
-                        success: '#10b981',
+                        dark: '#0a0b1a',
+                        'card-bg': '#1a1d3a',
+                        'card-hover': '#242849',
+                        success: '#22c55e',
                         warning: '#f59e0b',
-                        danger: '#ef4444'
+                        danger: '#ef4444',
+                        gold: '#f59e0b',
+                        'gold-light': '#fbbf24'
                     }
                 }
             }
@@ -50,29 +52,29 @@
         </div>
 
         <!-- Header -->
-        <header id="header" class="bg-primary px-4 py-3 flex items-center justify-between sticky top-0 z-40">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-bolt text-accent text-xl"></i>
-                <span class="text-xl font-bold text-white">FORAPIX</span>
+        <header id="header" class="app-header px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+            <div id="headerBrand" class="flex items-center gap-2">
+                <span class="logo-icon"><i class="fas fa-leaf"></i></span>
+                <span class="logo-text">FORAPIX</span>
             </div>
             <div class="flex items-center gap-3">
                 <!-- Theme Toggle -->
-                <button id="themeToggle" class="w-10 h-5 bg-success rounded-full relative">
-                    <span class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-all"></span>
+                <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">
+                    <span class="theme-toggle-thumb"></span>
                 </button>
                 
                 <!-- Eye Toggle -->
-                <button class="text-gray-400 hover:text-white transition">
+                <button class="text-gray-400 hover:text-white transition" aria-label="Ocultar saldo">
                     <i class="fas fa-eye"></i>
                 </button>
                 
                 <!-- Balance Display -->
-                <div id="balanceDisplay" class="bg-secondary px-3 py-1 rounded-lg text-sm font-semibold cursor-pointer hover:bg-card-hover transition">
+                <div id="balanceDisplay" class="balance-pill cursor-pointer">
                     R$ <span id="userBalance">0,00</span>
                 </div>
                 
                 <!-- Profile Button -->
-                <button id="profileBtn" class="w-8 h-8 bg-accent rounded-full flex items-center justify-center hover:bg-accent-light transition">
+                <button id="profileBtn" class="profile-btn" aria-label="Perfil">
                     <i class="fas fa-user text-sm"></i>
                 </button>
             </div>
@@ -84,28 +86,26 @@
         </main>
 
         <!-- Bottom Navigation -->
-        <nav id="bottomNav" class="bg-primary px-4 py-2 flex justify-around items-center border-t border-gray-700">
+        <nav id="bottomNav" class="bottom-nav">
             <button class="nav-item active" data-page="home">
-                <i class="fas fa-home text-lg mb-1"></i>
-                <span class="text-xs">Início</span>
+                <span class="nav-icon"><i class="fas fa-home"></i></span>
+                <span class="nav-label">Início</span>
             </button>
             <button class="nav-item" data-page="games">
-                <i class="fas fa-gamepad text-lg mb-1"></i>
-                <span class="text-xs">Jogos</span>
+                <span class="nav-icon"><i class="fas fa-gamepad"></i></span>
+                <span class="nav-label">Jogos</span>
             </button>
             <button class="nav-item deposit-btn" data-page="deposit">
-                <div class="bg-accent rounded-full p-3 -mt-6 shadow-lg">
-                    <i class="fas fa-plus text-white text-lg"></i>
-                </div>
-                <span class="text-xs mt-1">Depositar</span>
+                <span class="deposit-fab"><i class="fas fa-coins"></i></span>
+                <span class="nav-label">Depositar</span>
             </button>
             <button class="nav-item" data-page="wallet">
-                <i class="fas fa-wallet text-lg mb-1"></i>
-                <span class="text-xs">Carteira</span>
+                <span class="nav-icon"><i class="fas fa-wallet"></i></span>
+                <span class="nav-label">Carteira</span>
             </button>
             <button class="nav-item" data-page="menu">
-                <i class="fas fa-bars text-lg mb-1"></i>
-                <span class="text-xs">Menu</span>
+                <span class="nav-icon"><i class="fas fa-bars"></i></span>
+                <span class="nav-label">Menu</span>
             </button>
         </nav>
 
@@ -125,6 +125,10 @@
     <script src="assets/js/pages/home.js"></script>
     <script src="assets/js/pages/matches.js"></script>
     <script src="assets/js/pages/sinuca.js"></script>
+    <script src="assets/js/pages/deposit.js"></script>
+    <script src="assets/js/pages/games.js"></script>
+    <script src="assets/js/pages/profile.js"></script>
+    <script src="assets/js/pages/wallet.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 </html>

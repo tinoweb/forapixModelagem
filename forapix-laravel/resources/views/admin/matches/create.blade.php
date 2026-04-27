@@ -78,7 +78,11 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-300">Odds Empate</label>
+                        <input type="number" step="0.01" min="1.01" name="draw_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="3.00">
+                    </div>
                     <div>
                         <label class="text-sm text-gray-300">Odds Par</label>
                         <input type="number" step="0.01" min="1.01" name="par_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="1.85">
@@ -92,6 +96,17 @@
                 <div>
                     <label class="text-sm text-gray-300">Descrição / transmissão</label>
                     <textarea name="description" rows="3" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="Detalhes, regras ou link da transmissão"></textarea>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-300">Link da transmissão (stream)</label>
+                        <input type="url" name="stream_url" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="https://youtube.com/...">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-300">Fim da partida (opcional)</label>
+                        <input type="datetime-local" name="match_end" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
+                    </div>
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-4">

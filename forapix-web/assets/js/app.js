@@ -126,7 +126,7 @@ const App = {
     updateShellVisibility(page) {
         const header = document.getElementById('header');
         const bottomNav = document.getElementById('bottomNav');
-        const pagesWithoutShell = ['sinuca'];
+        const pagesWithoutShell = [];
         const shouldHideShell = pagesWithoutShell.includes(page);
 
         if (header) {
@@ -135,6 +135,41 @@ const App = {
 
         if (bottomNav) {
             bottomNav.classList.toggle('hidden', shouldHideShell);
+        }
+
+        this.updateHeaderBrand(page);
+    },
+
+    /**
+     * Atualiza área da marca no header conforme a página atual.
+     * Páginas internas exibem back + título truncado.
+     */
+    updateHeaderBrand(page) {
+        const brand = document.getElementById('headerBrand');
+        if (!brand) return;
+
+        const titles = {
+            matches: 'PARTIDAS',
+            bet: 'APOSTAR',
+            deposit: 'DEPOSITAR',
+            wallet: 'CARTEIRA',
+            menu: 'PERFIL',
+            games: 'JOGOS',
+            sinuca: 'PARTIDA'
+        };
+
+        if (titles[page]) {
+            brand.innerHTML = `
+                <button class="header-back" onclick="App.goBack()" aria-label="Voltar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="header-title">${titles[page]}</span>
+            `;
+        } else {
+            brand.innerHTML = `
+                <span class="logo-icon"><i class="fas fa-leaf"></i></span>
+                <span class="logo-text">FORAPIX</span>
+            `;
         }
     },
 
@@ -154,7 +189,8 @@ const App = {
                     break;
                     
                 case 'games':
-                    html = this.renderPlaceholderPage('Jogos', 'fa-gamepad', 'Página de jogos em desenvolvimento');
+                    pageModule = GamesPage;
+                    html = GamesPage.render(params);
                     break;
                     
                 case 'matches':
@@ -172,15 +208,18 @@ const App = {
                     break;
                     
                 case 'deposit':
-                    html = this.renderDepositPage();
+                    pageModule = DepositPage;
+                    html = DepositPage.render();
                     break;
                     
                 case 'wallet':
-                    html = this.renderWalletPage();
+                    pageModule = WalletPage;
+                    html = WalletPage.render(params);
                     break;
                     
                 case 'menu':
-                    html = this.renderMenuPage();
+                    pageModule = ProfilePage;
+                    html = ProfilePage.render(params);
                     break;
                     
                 default:
@@ -217,119 +256,6 @@ const App = {
                     <p class="text-gray-400 mb-8">${message}</p>
                     <button class="btn btn-primary" onclick="App.goBack()">
                         <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
-                </div>
-            </div>
-        `;
-    },
-
-
-
-    /**
-     * Render deposit page
-     */
-    renderDepositPage() {
-        return `
-            <div class="page-enter p-4">
-                <div class="text-center py-12">
-                    <div class="w-24 h-24 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-arrow-down text-5xl text-success"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold mb-4">Depositar</h2>
-                    <p class="text-gray-400 mb-8">Adicione saldo à sua conta</p>
-                    <button class="btn btn-primary" onclick="App.goBack()">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Render wallet page
-     */
-    renderWalletPage() {
-        const balance = Storage.getBalance();
-        const transactions = Storage.getTransactions().slice(0, 10);
-
-        return `
-            <div class="page-enter p-4">
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold mb-2">Carteira</h2>
-                    <p class="text-4xl font-bold text-success">${Utils.formatCurrency(balance, true)}</p>
-                    <p class="text-sm text-gray-400">Saldo disponível</p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <button class="btn btn-success" onclick="App.navigateTo('deposit')">
-                        <i class="fas fa-plus"></i> Depositar
-                    </button>
-                    <button class="btn btn-warning">
-                        <i class="fas fa-minus"></i> Sacar
-                    </button>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold mb-4">Transações Recentes</h3>
-                    ${transactions.length > 0 ? 
-                        transactions.map(t => Components.renderTransactionItem(t)).join('') :
-                        Components.renderEmptyState('fa-receipt', 'Nenhuma transação', 'Suas transações aparecerão aqui')
-                    }
-                </div>
-            </div>
-        `;
-    },
-
-    /**
-     * Render menu page
-     */
-    renderMenuPage() {
-        const user = Storage.getUser();
-
-        return `
-            <div class="page-enter p-4">
-                <div class="text-center mb-6">
-                    <div class="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-2xl font-bold">${Utils.getInitials(user.name)}</span>
-                    </div>
-                    <h2 class="text-xl font-bold">${user.name}</h2>
-                    <p class="text-sm text-gray-400">${user.email}</p>
-                </div>
-
-                <div class="space-y-3">
-                    <button class="w-full bg-card-bg hover:bg-card-hover p-4 rounded-xl text-left transition">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-user text-accent"></i>
-                            <span>Meu Perfil</span>
-                        </div>
-                    </button>
-                    
-                    <button class="w-full bg-card-bg hover:bg-card-hover p-4 rounded-xl text-left transition">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-history text-accent"></i>
-                            <span>Histórico de Apostas</span>
-                        </div>
-                    </button>
-                    
-                    <button class="w-full bg-card-bg hover:bg-card-hover p-4 rounded-xl text-left transition">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-cog text-accent"></i>
-                            <span>Configurações</span>
-                        </div>
-                    </button>
-                    
-                    <button class="w-full bg-card-bg hover:bg-card-hover p-4 rounded-xl text-left transition" onclick="HomePage.openSupport()">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-headset text-accent"></i>
-                            <span>Suporte</span>
-                        </div>
-                    </button>
-                    
-                    <button class="w-full bg-danger hover:bg-red-600 p-4 rounded-xl text-left transition" onclick="App.logout()">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-sign-out-alt text-white"></i>
-                            <span class="text-white">Sair</span>
-                        </div>
                     </button>
                 </div>
             </div>

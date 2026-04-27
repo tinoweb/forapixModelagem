@@ -251,5 +251,26 @@ const Utils = {
         }
         const initials = this.getInitials(player.name || 'J');
         return this.buildAvatar(initials, fallbackColor);
+    },
+
+    /**
+     * Retorna a imagem de fundo correta para um card de partida.
+     * Partidas de sinuca SEMPRE usam sinuca-game.png.
+     */
+    getMatchBgImage(match) {
+        const sportSlug = (match.game?.sport?.slug || '').toLowerCase();
+        const sportName = (match.game?.sport?.name || '').toLowerCase();
+        const gameName  = (match.game?.name  || '').toLowerCase();
+        const gameSlug  = (match.game?.slug  || '').toLowerCase();
+
+        const isSinuca = sportSlug.includes('sinuca') || sportName.includes('sinuca')
+                      || gameName.includes('sinuca')  || gameSlug.includes('sinuca');
+
+        if (isSinuca) return 'assets/images/sinuca-game.png';
+
+        const meta = match.metadata?.banner_image || match.metadata?.banner || match.game?.image;
+        if (meta) return this.resolveImage(meta, null);
+
+        return null;
     }
 };

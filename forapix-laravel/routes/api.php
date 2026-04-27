@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MatchController;
+use App\Http\Controllers\Api\BetController;
+use App\Http\Controllers\Api\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,7 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/profile', [AuthController::class, 'profile']);
-    
+
     // User info
     Route::get('/user', function (Request $request) {
         return response()->json([
@@ -46,6 +48,19 @@ Route::middleware('auth:sanctum')->group(function () {
             'message' => 'Usuário autenticado'
         ]);
     });
+
+    // Bets
+    Route::get('/bets', [BetController::class, 'index']);
+    Route::post('/bets', [BetController::class, 'store']);
+    Route::get('/bets/{id}', [BetController::class, 'show']);
+    Route::post('/bets/{id}/cancel', [BetController::class, 'cancel']);
+
+    // Wallet
+    Route::get('/wallet/balance', [WalletController::class, 'balance']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/wallet/deposit/confirm', [WalletController::class, 'confirmDeposit']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
 });
 
 // Test route

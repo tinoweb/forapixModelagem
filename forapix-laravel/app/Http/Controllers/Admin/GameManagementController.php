@@ -265,15 +265,18 @@ class GameManagementController extends Controller
             'first_player_id' => 'required|exists:players,id',
             'second_player_id' => 'required|exists:players,id|different:first_player_id',
             'match_start' => 'required|date|after:now',
+            'match_end' => 'nullable|date|after:match_start',
             'betting_deadline' => 'required|date|before:match_start',
             'first_player_odds' => 'required|numeric|min:1.01',
             'second_player_odds' => 'required|numeric|min:1.01',
+            'draw_odds' => 'nullable|numeric|min:1.01',
             'par_odds' => 'nullable|numeric|min:1.01',
             'impar_odds' => 'nullable|numeric|min:1.01',
             'description' => 'nullable|string',
             'featured' => 'boolean',
             'betting_options' => 'nullable|json',
             'status' => 'nullable|in:scheduled,live,finished,cancelled,postponed',
+            'stream_url' => 'nullable|url',
             'banner_image' => 'nullable|image|max:4096',
             'banner_button_label' => 'nullable|string|max:40',
             'banner_button_link' => 'nullable|url'
@@ -286,7 +289,7 @@ class GameManagementController extends Controller
             ], 422);
         }
 
-        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link']);
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['created_by'] = auth()->id();
         $matchData['status'] = $request->input('status', 'scheduled');
 
@@ -296,6 +299,9 @@ class GameManagementController extends Controller
         }
 
         $metadata = $matchData['metadata'] ?? [];
+        if ($request->filled('stream_url')) {
+            $metadata['stream_url'] = $request->input('stream_url');
+        }
         if ($request->hasFile('banner_image')) {
             $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
         }
@@ -322,15 +328,26 @@ class GameManagementController extends Controller
     public function updateMatch(Request $request, GameMatch $match)
     {
         $validator = Validator::make($request->all(), [
+            'title' => 'sometimes|nullable|string|max:255',
+            'first_player_id' => 'sometimes|exists:players,id',
+            'second_player_id' => 'sometimes|exists:players,id',
             'match_start' => 'sometimes|date',
+            'match_end' => 'sometimes|nullable|date',
             'betting_deadline' => 'sometimes|date',
             'first_player_odds' => 'sometimes|numeric|min:1.01',
             'second_player_odds' => 'sometimes|numeric|min:1.01',
+            'draw_odds' => 'sometimes|nullable|numeric|min:1.01',
+            'par_odds' => 'sometimes|nullable|numeric|min:1.01',
+            'impar_odds' => 'sometimes|nullable|numeric|min:1.01',
+            'first_player_score' => 'sometimes|nullable|integer|min:0',
+            'second_player_score' => 'sometimes|nullable|integer|min:0',
+            'winner_player_id' => 'sometimes|nullable|exists:players,id',
             'status' => 'sometimes|in:scheduled,live,finished,cancelled,postponed',
             'description' => 'sometimes|nullable|string',
             'featured' => 'sometimes|boolean',
             'result' => 'sometimes|nullable|json',
             'betting_options' => 'sometimes|nullable|json',
+            'stream_url' => 'sometimes|nullable|url',
             'banner_image' => 'sometimes|nullable|image|max:4096',
             'banner_button_label' => 'sometimes|nullable|string|max:40',
             'banner_button_link' => 'sometimes|nullable|url'
@@ -343,7 +360,7 @@ class GameManagementController extends Controller
             ], 422);
         }
 
-        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link']);
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['updated_by'] = auth()->id();
 
         // Parse JSON fields
@@ -361,6 +378,9 @@ class GameManagementController extends Controller
         }
 
         $metadata = $match->metadata ?? [];
+        if ($request->has('stream_url')) {
+            $metadata['stream_url'] = $request->input('stream_url');
+        }
         if ($request->hasFile('banner_image')) {
             $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
         }

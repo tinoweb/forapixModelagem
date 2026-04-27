@@ -30,6 +30,7 @@ class GameMatch extends Model
         'match_end',
         'status',
         'result',
+        'winner_player_id',
         'first_player_score',
         'second_player_score',
         'external_id',
@@ -52,6 +53,10 @@ class GameMatch extends Model
         'metadata' => 'array',
         'featured' => 'boolean',
         'total_bets_amount' => 'decimal:2',
+    ];
+
+    protected $appends = [
+        'time_remaining'
     ];
 
     /**

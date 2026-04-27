@@ -115,51 +115,76 @@ const Components = {
     },
 
     /**
-     * Render match card
+     * Render match card (mobile-first compact layout)
      */
     renderMatchCard(match) {
-        const firstPlayer = match.first_player?.name || match.firstPlayer?.name || match.fighter1 || 'Jogador 1';
-        const secondPlayer = match.second_player?.name || match.secondPlayer?.name || match.fighter2 || 'Jogador 2';
-        const odds1 = match.first_player_odds || match.odds1 || '--';
-        const odds2 = match.second_player_odds || match.odds2 || '--';
-        const sportLabel = match.game?.sport?.name || match.game?.name || match.sport?.name || match.sport || 'Evento';
-        const dateLabel = Utils.formatDate(match.match_start || match.betting_deadline || match.date || new Date());
+        const firstPlayer = match.first_player || match.firstPlayer || {};
+        const secondPlayer = match.second_player || match.secondPlayer || {};
+        const firstName = firstPlayer.name || match.fighter1 || 'Jogador 1';
+        const secondName = secondPlayer.name || match.fighter2 || 'Jogador 2';
+        const firstOdds = match.first_player_odds ?? match.odds1 ?? null;
+        const secondOdds = match.second_player_odds ?? match.odds2 ?? null;
+        const sportLabel = (match.game?.sport?.name || match.game?.name || match.sport?.name || match.sport || 'Evento').toUpperCase();
         const matchId = match.id || match.match_id || 0;
+        const isLive = match.status === 'live';
+        const isFinished = match.status === 'finished';
+        const canBet = match.status !== 'finished' && match.betting_deadline && new Date(match.betting_deadline) > new Date();
+
+        const statusDot = isLive
+            ? '<span class="live-dot"></span>'
+            : (isFinished ? '<i class="fas fa-circle-check text-xs"></i>' : '<i class="far fa-clock text-xs"></i>');
+        const statusText = isLive ? 'AO VIVO' : (isFinished ? 'ENCERRADA' : Utils.formatDate(match.match_start, 'time'));
+        const statusClass = isLive ? 'live' : (isFinished ? 'finished' : 'scheduled');
+
+        const bgImg   = Utils.getMatchBgImage(match);
+        const bgStyle = bgImg ? `style="background-image:url('${bgImg}')"` : '';
+        const bgClass = bgImg ? 'match-list-card--bg' : '';
 
         return `
-            <div class="bg-[#1f213a] rounded-3xl p-5 mb-4 border border-[#4f46e5]/40 hover:border-[#6366f1]/80 shadow-[0_0_15px_rgba(79,70,229,0.15)] transition-all cursor-pointer relative overflow-hidden" onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
-                <!-- Header -->
-                <div class="flex items-center justify-between mb-8">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 ${match.status === 'live' ? 'bg-[#e88b20] animate-pulse' : 'bg-[#e88b20]'} rounded-full shadow-[0_0_8px_#e88b20]"></div>
-                        <span class="text-sm font-bold text-gray-200 uppercase tracking-wide">SINUCA ${match.title || 'HEAD TO HEAD'}</span>
+            <div class="match-list-card ${bgClass}" ${bgStyle} onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
+                <div class="match-list-header">
+                    <div class="match-list-sport">
+                        <span class="match-list-sport-icon"><i class="fas fa-gamepad"></i></span>
+                        <span class="match-list-sport-name">${sportLabel}</span>
                     </div>
-                    <span class="text-xs text-gray-400 font-medium">${dateLabel}</span>
+                    <div class="match-list-status ${statusClass}">
+                        ${statusDot}
+                        <span>${statusText}</span>
+                    </div>
                 </div>
-                
-                <!-- Players Section -->
-                <div class="flex items-center justify-between px-2">
-                    <!-- First Player -->
-                    <div class="flex flex-col items-center flex-1">
-                        <div class="w-16 h-16 bg-[#4b5563] rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
-                            <span class="text-xl font-bold text-white">${Utils.getInitials(firstPlayer)}</span>
+                <div class="match-list-body">
+                    <div class="match-list-player">
+                        <div class="match-list-player-info">
+                            <div class="match-list-avatar">
+                                <img src="${Utils.getPlayerPhoto(firstPlayer, '#22c55e')}" alt="${firstName}">
+                            </div>
+                            <div class="match-list-player-text">
+                                <span class="match-list-player-name">${Utils.truncate(firstName, 18)}</span>
+                                ${firstOdds ? `<span class="match-list-odds">${parseFloat(firstOdds).toFixed(2)}x</span>` : ''}
+                            </div>
                         </div>
-                        <p class="text-[15px] font-bold text-white text-center leading-tight mb-1">${Utils.truncate(firstPlayer, 15)}</p>
-                        <p class="text-[13px] text-[#8b5cf6] font-bold">${odds1 !== '--' ? parseFloat(odds1).toFixed(2) : '--'}</p>
+                        <div class="match-list-score">${match.first_player_score ?? 0}</div>
                     </div>
-                    
-                    <!-- VS separator -->
-                    <div class="text-center px-4 flex items-center justify-center">
-                        <span class="text-lg font-medium text-[#4b5563] uppercase tracking-widest">VS</span>
-                    </div>
-                    
-                    <!-- Second Player -->
-                    <div class="flex flex-col items-center flex-1">
-                        <div class="w-16 h-16 bg-[#4b5563] rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
-                            <span class="text-xl font-bold text-white">${Utils.getInitials(secondPlayer)}</span>
+                    <div class="match-list-vs">VS</div>
+                    <div class="match-list-player">
+                        <div class="match-list-player-info">
+                            <div class="match-list-avatar">
+                                <img src="${Utils.getPlayerPhoto(secondPlayer, '#ef4444')}" alt="${secondName}">
+                            </div>
+                            <div class="match-list-player-text">
+                                <span class="match-list-player-name">${Utils.truncate(secondName, 18)}</span>
+                                ${secondOdds ? `<span class="match-list-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
+                            </div>
                         </div>
-                        <p class="text-[15px] font-bold text-white text-center leading-tight mb-1">${Utils.truncate(secondPlayer, 15)}</p>
-                        <p class="text-[13px] text-[#8b5cf6] font-bold">${odds2 !== '--' ? parseFloat(odds2).toFixed(2) : '--'}</p>
+                        <div class="match-list-score">${match.second_player_score ?? 0}</div>
+                    </div>
+                </div>
+                <div class="match-list-footer">
+                    <div class="match-list-meta">
+                        <span><i class="far fa-clock"></i> ${Utils.formatDate(match.betting_deadline || match.match_start, 'time')}</span>
+                    </div>
+                    <div class="match-list-action ${canBet ? 'bet-open' : ''}">
+                        ${canBet ? '<i class="fas fa-bolt"></i> Apostar' : (isFinished ? '<i class="fas fa-eye"></i> Ver' : '<i class="fas fa-lock"></i>')}
                     </div>
                 </div>
             </div>
@@ -172,8 +197,8 @@ const Components = {
     renderServiceItem(service) {
         return `
             <div class="service-item" onclick="${service.action}">
-                <i class="fas ${service.icon}"></i>
-                <span>${service.name}</span>
+                <span class="service-icon"><i class="fas ${service.icon}"></i></span>
+                <span class="service-label">${service.name}</span>
             </div>
         `;
     },

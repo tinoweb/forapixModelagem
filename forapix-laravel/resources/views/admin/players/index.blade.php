@@ -38,26 +38,48 @@
                 </div>
             </div>
 
+            @if(session('success'))
+                <div class="mb-4 p-3 rounded-xl bg-success/15 border border-success/30 text-success-light text-sm">
+                    <i class="fas fa-circle-check mr-2"></i>{{ session('success') }}
+                </div>
+            @endif
+
             <div class="grid md:grid-cols-2 gap-5">
-                @foreach($players as $player)
-                    <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 flex gap-4">
-                        <div class="w-16 h-16 rounded-2xl overflow-hidden border border-white/10">
+                @forelse($players as $player)
+                    <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 flex gap-4 hover:border-white/10 transition">
+                        <div class="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 flex-shrink-0">
                             <img src="{{ $player->photo_url ? Storage::url($player->photo_url) : 'https://i.pravatar.cc/150?u=' . $player->id }}" alt="{{ $player->name }}" class="w-full h-full object-cover">
                         </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-lg font-semibold">{{ $player->name }}</h3>
-                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-100">{{ $player->sport->name ?? '---' }}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-lg font-semibold truncate">{{ $player->name }}</h3>
+                                <span class="badge badge-info">{{ $player->sport->name ?? '---' }}</span>
                             </div>
-                            <p class="text-sm text-gray-400">{{ $player->bio ? \Illuminate\Support\Str::limit($player->bio, 80) : 'Sem descrição' }}</p>
-                            <div class="flex items-center gap-3 mt-3 text-xs text-gray-400">
-                                <span><i class="fas fa-flag me-1"></i>{{ strtoupper($player->nationality ?? 'N/A') }}</span>
-                                <span><i class="fas fa-star me-1 text-amber-400"></i>{{ $player->rating }}</span>
-                                <span><i class="fas fa-calendar me-1"></i>{{ optional($player->birth_date)->format('d/m/Y') ?? '-' }}</span>
+                            <p class="text-sm text-gray-400 mt-1">{{ $player->bio ? \Illuminate\Support\Str::limit($player->bio, 80) : 'Sem descrição' }}</p>
+                            <div class="flex items-center gap-3 mt-3 text-xs text-gray-400 flex-wrap">
+                                <span><i class="fas fa-flag mr-1"></i>{{ strtoupper($player->nationality ?? 'N/A') }}</span>
+                                <span><i class="fas fa-star mr-1 text-gold-light"></i>{{ $player->rating ?? '0' }}</span>
+                                <span><i class="fas fa-calendar mr-1"></i>{{ optional($player->birth_date)->format('d/m/Y') ?? '-' }}</span>
+                            </div>
+                            <div class="flex gap-2 mt-3">
+                                <a href="{{ route('admin.players.edit', $player) }}" class="admin-btn-ghost text-xs px-3 py-1.5">
+                                    <i class="fas fa-pen"></i> Editar
+                                </a>
+                                <a href="{{ route('admin.players.delete', $player) }}" class="admin-btn-danger text-xs px-3 py-1.5">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="md:col-span-2 text-center py-12 text-gray-500">
+                        <i class="fas fa-users-slash text-4xl mb-3 opacity-60"></i>
+                        <p class="text-sm">Nenhum jogador cadastrado.</p>
+                        <a href="{{ route('admin.players.create') }}" class="inline-block mt-4 admin-btn-primary">
+                            <i class="fas fa-user-plus"></i> Cadastrar o primeiro
+                        </a>
+                    </div>
+                @endforelse
             </div>
 
             <div class="mt-6">

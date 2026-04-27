@@ -14,9 +14,15 @@ class MatchController extends Controller
      */
     public function index(Request $request)
     {
-        $query = GameMatch::with(['game', 'firstPlayer', 'secondPlayer'])
-            ->active()
-            ->orderBy('betting_deadline', 'asc');
+        $query = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer']);
+
+        // Filter by status - se status específico, não usar scope active
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        } elseif (!$request->has('status')) {
+            // Sem filtro de status: mostrar apenas ativas (scheduled + live) por padrão
+            $query->active();
+        }
 
         // Filter by game
         if ($request->has('game_id')) {
@@ -30,17 +36,12 @@ class MatchController extends Controller
             });
         }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
         // Featured matches
         if ($request->has('featured')) {
             $query->where('featured', true);
         }
 
-        $matches = $query->paginate(20);
+        $matches = $query->orderBy('match_start', 'desc')->paginate(20);
 
         return response()->json([
             'success' => true,
@@ -86,7 +87,7 @@ class MatchController extends Controller
      */
     public function live()
     {
-        $matches = GameMatch::with(['game', 'firstPlayer', 'secondPlayer'])
+        $matches = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer'])
             ->live()
             ->orderBy('match_start', 'asc')
             ->get();
@@ -103,7 +104,7 @@ class MatchController extends Controller
      */
     public function upcoming()
     {
-        $matches = GameMatch::with(['game', 'firstPlayer', 'secondPlayer'])
+        $matches = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer'])
             ->upcoming()
             ->orderBy('betting_deadline', 'asc')
             ->limit(10)

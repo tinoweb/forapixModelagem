@@ -18,12 +18,17 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1a1a2e',
-                        secondary: '#16213e',
-                        dark: '#0f0f1a',
+                        primary: '#0f1226',
+                        secondary: '#151a35',
+                        dark: '#0a0b1a',
                         accent: '#7c3aed',
-                        success: '#10b981',
-                        warning: '#f59e0b'
+                        'accent-light': '#8b5cf6',
+                        success: '#22c55e',
+                        'success-light': '#4ade80',
+                        warning: '#f59e0b',
+                        gold: '#f59e0b',
+                        'gold-light': '#fbbf24',
+                        danger: '#ef4444'
                     }
                 }
             }
@@ -37,11 +42,11 @@
         <!-- Sidebar -->
         <aside class="w-[260px] bg-[#0f1324]/95 backdrop-blur-xl border-r border-white/5 hidden lg:flex flex-col shadow-2xl">
             <div class="px-6 py-6 border-b border-white/5 flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg">
-                    <i class="fas fa-bolt text-white text-xl"></i>
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0f1226] to-[#151a35] border border-white/10 flex items-center justify-center shadow-lg">
+                    <i class="fas fa-leaf text-success-light text-xl -rotate-12" style="filter: drop-shadow(0 0 6px rgba(74, 222, 128, 0.55));"></i>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-400 uppercase tracking-[0.2em]">Painel Pro</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-[0.2em]">Painel Admin</p>
                     <p class="text-2xl font-bold tracking-tight">ForaPix</p>
                 </div>
             </div>
@@ -50,7 +55,6 @@
                 <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard*') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     Dashboard
-                    <span class="nav-link__pill">Live</span>
                 </a>
                 <a href="{{ route('admin.games.index') }}" class="nav-link {{ request()->routeIs('admin.games.*') ? 'active' : '' }}">
                     <i class="fas fa-gamepad"></i>
@@ -63,6 +67,10 @@
                 <a href="{{ route('admin.players.index') }}" class="nav-link {{ request()->routeIs('admin.players.*') ? 'active' : '' }}">
                     <i class="fas fa-user"></i>
                     Jogadores
+                </a>
+                <a href="{{ route('admin.bets.index') }}" class="nav-link {{ request()->routeIs('admin.bets.*') ? 'active' : '' }}">
+                    <i class="fas fa-ticket"></i>
+                    Apostas
                 </a>
             </nav>
             <div class="px-6 py-6 border-t border-white/5 text-xs text-gray-500">
@@ -246,16 +254,20 @@
             font-size: 10px;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            background: rgba(124, 58, 237, 0.2);
-            color: #c4b5fd;
+            background: rgba(34, 197, 94, 0.18);
+            color: #4ade80;
             padding: 2px 8px;
             border-radius: 999px;
         }
 
-        .nav-link:hover,
+        .nav-link:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
         .nav-link.active {
-            background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(99,102,241,0.15));
-            border-color: rgba(124,58,237,0.4);
+            background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(99,102,241,0.18));
+            border-color: rgba(124,58,237,0.45);
             color: #fff;
             box-shadow: 0 10px 30px rgba(15,23,42,0.35);
         }
@@ -278,6 +290,91 @@
             border: 1px solid rgba(124,58,237,0.2);
             padding: 1.5rem;
         }
+
+        .admin-btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .admin-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(124,58,237,0.4);
+        }
+
+        .admin-btn-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: #1a1208;
+        }
+
+        .admin-btn-gold:hover {
+            box-shadow: 0 10px 25px rgba(245,158,11,0.4);
+        }
+
+        .admin-btn-ghost {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #cbd5e1;
+        }
+
+        .admin-btn-ghost:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .admin-btn-danger {
+            background: rgba(239,68,68,0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .admin-btn-danger:hover {
+            background: rgba(239,68,68,0.22);
+            color: #fff;
+        }
+
+        .input-admin {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 0.9rem;
+            color: #fff;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-admin:focus {
+            outline: none;
+            border-color: rgba(124,58,237,0.6);
+            box-shadow: 0 0 0 2px rgba(124,58,237,0.25);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+        .badge-warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .badge-danger  { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-info    { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+        .badge-muted   { background: rgba(148,163,184,0.12); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
     </style>
 
     @stack('scripts')

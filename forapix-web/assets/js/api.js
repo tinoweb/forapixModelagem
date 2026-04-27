@@ -111,35 +111,38 @@ const API = {
     },
 
     /**
-     * Test API connection
-     */
-    async test() {
-        return await this.request('/test');
-    },
-
-    /**
-     * Simulate betting (for demo purposes)
+     * Bets (API real + fallback simulado)
      */
     async placeBet(betData) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
 
+        if (token) {
+            try {
+                return await this.request('/bets', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        match_id: betData.matchId,
+                        bet_type: betData.option,
+                        amount: betData.amount
+                    })
+                });
+            } catch (e) {
+                console.warn('API indisponível, usando fallback simulado');
+            }
+        }
+
+        // Fallback simulado
+        await new Promise(resolve => setTimeout(resolve, 1500));
         const user = Storage.getUser();
         const balance = Storage.getBalance();
 
-        // Validate bet amount
         if (betData.amount > balance) {
-            return {
-                success: false,
-                error: 'Saldo insuficiente'
-            };
+            return { success: false, error: 'Saldo insuficiente' };
         }
 
-        // Simulate bet placement
         const newBalance = balance - betData.amount;
         Storage.setBalance(newBalance);
 
-        // Store bet
         const bet = {
             id: Utils.generateId(),
             ...betData,
@@ -152,7 +155,6 @@ const API = {
         bets.push(bet);
         Storage.setBets(bets);
 
-        // Store transaction
         const transaction = {
             id: Utils.generateId(),
             type: 'bet',
@@ -166,24 +168,91 @@ const API = {
         transactions.push(transaction);
         Storage.setTransactions(transactions);
 
-        return {
-            success: true,
-            data: bet
-        };
+        return { success: true, data: bet };
+    },
+
+    async getBets(filters = {}) {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
+
+        if (token) {
+            try {
+                const params = new URLSearchParams(filters);
+                return await this.request(`/bets?${params}`);
+            } catch (e) {
+                console.warn('API indisponível, usando dados locais');
+            }
+        }
+
+        return { success: true, data: Storage.getBets() };
+    },
+
+    async cancelBet(betId) {
+        return await this.request(`/bets/${betId}/cancel`, {
+            method: 'POST'
+        });
     },
 
     /**
-     * Simulate deposit (for demo purposes)
+     * Wallet (API real + fallback simulado)
      */
-    async deposit(amount) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    async getBalance() {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
 
+        if (token) {
+            try {
+                return await this.request('/wallet/balance');
+            } catch (e) {
+                console.warn('API indisponível, usando saldo local');
+            }
+        }
+
+        return {
+            success: true,
+            data: {
+                balance: Storage.getBalance(),
+                total_deposited: 0,
+                total_withdrawn: 0,
+                total_bet: 0,
+                total_won: 0
+            }
+        };
+    },
+
+    async getTransactions(filters = {}) {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
+
+        if (token) {
+            try {
+                const params = new URLSearchParams(filters);
+                return await this.request(`/wallet/transactions?${params}`);
+            } catch (e) {
+                console.warn('API indisponível, usando transações locais');
+            }
+        }
+
+        return { success: true, data: Storage.getTransactions() };
+    },
+
+    async deposit(amount) {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
+
+        if (token) {
+            try {
+                return await this.request('/wallet/deposit', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount })
+                });
+            } catch (e) {
+                console.warn('API indisponível, usando fallback simulado');
+            }
+        }
+
+        // Fallback simulado
+        await new Promise(resolve => setTimeout(resolve, 2000));
         const currentBalance = Storage.getBalance();
         const newBalance = currentBalance + amount;
         Storage.setBalance(newBalance);
 
-        // Store transaction
         const transaction = {
             id: Utils.generateId(),
             type: 'deposit',
@@ -197,35 +266,41 @@ const API = {
         transactions.push(transaction);
         Storage.setTransactions(transactions);
 
-        return {
-            success: true,
-            data: {
-                newBalance,
-                transaction
-            }
-        };
+        return { success: true, data: { newBalance, transaction } };
     },
 
-    /**
-     * Simulate withdrawal (for demo purposes)
-     */
-    async withdraw(amount) {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    async confirmDeposit(transactionId) {
+        return await this.request('/wallet/deposit/confirm', {
+            method: 'POST',
+            body: JSON.stringify({ transaction_id: transactionId })
+        });
+    },
 
+    async withdraw(amount, pixKey) {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
+
+        if (token) {
+            try {
+                return await this.request('/wallet/withdraw', {
+                    method: 'POST',
+                    body: JSON.stringify({ amount, pix_key: pixKey })
+                });
+            } catch (e) {
+                console.warn('API indisponível, usando fallback simulado');
+            }
+        }
+
+        // Fallback simulado
+        await new Promise(resolve => setTimeout(resolve, 2000));
         const currentBalance = Storage.getBalance();
-        
+
         if (amount > currentBalance) {
-            return {
-                success: false,
-                error: 'Saldo insuficiente'
-            };
+            return { success: false, error: 'Saldo insuficiente' };
         }
 
         const newBalance = currentBalance - amount;
         Storage.setBalance(newBalance);
 
-        // Store transaction
         const transaction = {
             id: Utils.generateId(),
             type: 'withdraw',
@@ -239,12 +314,13 @@ const API = {
         transactions.push(transaction);
         Storage.setTransactions(transactions);
 
-        return {
-            success: true,
-            data: {
-                newBalance,
-                transaction
-            }
-        };
+        return { success: true, data: { newBalance, transaction } };
+    },
+
+    /**
+     * Test API connection
+     */
+    async test() {
+        return await this.request('/test');
     }
 };

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\GameManagementController;
 use App\Http\Controllers\Admin\PlayerManagementController;
+use App\Http\Controllers\Admin\BetManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +71,14 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::delete('/{match}', [GameManagementController::class, 'deleteMatch'])->name('destroy');
         Route::get('/{match}/stats', [GameManagementController::class, 'getMatchStats'])->name('stats');
         Route::post('/bulk-update', [GameManagementController::class, 'bulkUpdateMatches'])->name('bulk-update');
+        Route::post('/{match}/resolve-bets', [BetManagementController::class, 'resolveMatch'])->name('resolve-bets');
+    });
+
+    // Bet Management
+    Route::prefix('bets')->name('bets.')->group(function () {
+        Route::get('/', [BetManagementController::class, 'index'])->name('index');
+        Route::get('/{bet}', [BetManagementController::class, 'show'])->name('show');
+        Route::post('/{bet}/cancel', [BetManagementController::class, 'cancel'])->name('cancel');
     });
 
     // Player Management

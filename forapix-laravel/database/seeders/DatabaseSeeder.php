@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             SportSeeder::class,
             GameSeeder::class,
             AdminUserSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }
