@@ -36,7 +36,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.matches.destroy', $match) }}" method="POST" class="flex gap-3">
+            <form action="{{ route('admin.matches.destroy', $match) }}" method="POST" class="flex gap-3 ajax-form" data-redirect="{{ route('admin.matches.index') }}" data-reset="false">
                 @csrf
                 @method('DELETE')
                 <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost flex-1 justify-center">

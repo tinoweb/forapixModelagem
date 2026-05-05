@@ -28,13 +28,18 @@
                     <p class="text-[12px] uppercase tracking-[0.3em] text-gray-500">Filtros</p>
                     <h2 class="text-2xl font-semibold">Filtrar jogadores</h2>
                 </div>
-                <div class="ml-auto flex gap-3">
-                    <select class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-sm" onchange="window.location = '?sport_id=' + this.value">
+                <div class="ml-auto flex gap-3 items-center">
+                    <select class="input-admin" onchange="window.location = '?sport_id=' + this.value">
                         <option value="">Todos os esportes</option>
                         @foreach($sports as $sport)
                             <option value="{{ $sport->id }}" @selected(request('sport_id') == $sport->id)>{{ $sport->name }}</option>
                         @endforeach
                     </select>
+                    @if(request()->filled('sport_id'))
+                        <a href="{{ route('admin.players.index') }}" class="admin-btn-ghost" title="Limpar filtro">
+                            <i class="fas fa-xmark"></i>
+                        </a>
+                    @endif
                 </div>
             </div>
 
@@ -48,7 +53,7 @@
                 @forelse($players as $player)
                     <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 flex gap-4 hover:border-white/10 transition">
                         <div class="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 flex-shrink-0">
-                            <img src="{{ $player->photo_url ? Storage::url($player->photo_url) : 'https://i.pravatar.cc/150?u=' . $player->id }}" alt="{{ $player->name }}" class="w-full h-full object-cover">
+                            <img src="{{ $player->photo_url ? Storage::disk('public')->url($player->photo_url) : 'https://i.pravatar.cc/150?u=' . $player->id }}" alt="{{ $player->name }}" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">

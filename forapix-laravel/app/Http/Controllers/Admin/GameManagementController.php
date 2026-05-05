@@ -21,19 +21,19 @@ class GameManagementController extends Controller
         $query = Game::with(['sport', 'matches']);
 
         // Filters
-        if ($request->has('sport_id')) {
+        if ($request->filled('sport_id')) {
             $query->where('sport_id', $request->sport_id);
         }
 
-        if ($request->has('type')) {
+        if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
@@ -199,23 +199,23 @@ class GameManagementController extends Controller
         $query = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer', 'bets']);
 
         // Filters
-        if ($request->has('game_id')) {
+        if ($request->filled('game_id')) {
             $query->where('game_id', $request->game_id);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('date_from')) {
+        if ($request->filled('date_from')) {
             $query->whereDate('match_start', '>=', $request->date_from);
         }
 
-        if ($request->has('date_to')) {
+        if ($request->filled('date_to')) {
             $query->whereDate('match_start', '<=', $request->date_to);
         }
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->whereHas('firstPlayer', function($sq) use ($request) {
                     $sq->where('name', 'like', '%' . $request->search . '%');

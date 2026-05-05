@@ -56,7 +56,7 @@
                     <label class="text-sm text-gray-300">Foto / Avatar</label>
                     <input type="file" name="photo" accept="image/*" class="mt-1 w-full text-sm text-gray-400">
                     @if($player->photo_url)
-                        <p class="text-xs text-gray-500 mt-1">Atual: <a href="{{ Storage::url($player->photo_url) }}" class="text-accent" target="_blank">ver foto</a></p>
+                        <p class="text-xs text-gray-500 mt-1">Atual: <a href="{{ Storage::disk('public')->url($player->photo_url) }}" class="text-accent" target="_blank">ver foto</a></p>
                     @endif
                 </div>
 

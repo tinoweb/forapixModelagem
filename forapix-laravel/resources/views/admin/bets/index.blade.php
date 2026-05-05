@@ -68,9 +68,16 @@
                 @endforeach
             </select>
 
-            <button type="submit" class="admin-btn-primary justify-center">
-                <i class="fas fa-filter"></i> Filtrar
-            </button>
+            <div class="flex gap-2">
+                <button type="submit" class="admin-btn-primary flex-1 justify-center">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                @if(request()->hasAny(['search','match_id','status','bet_type']))
+                    <a href="{{ route('admin.bets.index') }}" class="admin-btn-ghost" title="Limpar filtros">
+                        <i class="fas fa-xmark"></i>
+                    </a>
+                @endif
+            </div>
         </form>
 
         <div class="overflow-x-auto">

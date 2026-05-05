@@ -69,6 +69,11 @@
                     <button type="submit" class="admin-btn-primary flex-1 justify-center">
                         <i class="fas fa-filter"></i> Filtrar
                     </button>
+                    @if(request()->hasAny(['search','game_id','status','date_from','date_to']))
+                        <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost" title="Limpar filtros">
+                            <i class="fas fa-xmark"></i>
+                        </a>
+                    @endif
                 </div>
             </form>
 

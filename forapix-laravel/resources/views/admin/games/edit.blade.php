@@ -80,7 +80,7 @@
                     <label class="text-sm text-gray-300">Imagem / Banner</label>
                     <input type="file" name="image" accept="image/*" class="mt-1 w-full text-sm text-gray-400">
                     @if($game->image)
-                        <p class="text-xs text-gray-500 mt-1">Atual: <a href="{{ Storage::url($game->image) }}" class="text-accent" target="_blank">ver banner</a></p>
+                        <p class="text-xs text-gray-500 mt-1">Atual: <a href="{{ Storage::disk('public')->url($game->image) }}" class="text-accent" target="_blank">ver banner</a></p>
                     @endif
                 </div>
 

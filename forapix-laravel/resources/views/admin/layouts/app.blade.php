@@ -209,7 +209,9 @@
                         if (form.dataset.reset !== 'false') {
                             form.reset();
                         }
-                        if (form.dataset.reload !== 'false') {
+                        if (form.dataset.redirect) {
+                            setTimeout(() => window.location.href = form.dataset.redirect, 800);
+                        } else if (form.dataset.reload !== 'false') {
                             setTimeout(() => window.location.reload(), 800);
                         }
                     } catch (error) {
@@ -350,12 +352,28 @@
             color: #fff;
             font-size: 0.875rem;
             transition: all 0.2s ease;
+            color-scheme: dark;
         }
 
         .input-admin:focus {
             outline: none;
             border-color: rgba(124,58,237,0.6);
             box-shadow: 0 0 0 2px rgba(124,58,237,0.25);
+        }
+
+        select.input-admin {
+            background-color: #0f1629;
+        }
+
+        .input-admin option {
+            background-color: #0f1629;
+            color: #e5e7eb;
+        }
+
+        .input-admin option:hover,
+        .input-admin option:checked {
+            background-color: #1e2a4a;
+            color: #fff;
         }
 
         .badge {

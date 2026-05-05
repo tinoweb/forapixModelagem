@@ -6,7 +6,7 @@
 const Config = {
     // API Configuration
     API: {
-        BASE_URL: 'http://localhost:8000/api',
+        BASE_URL: 'https://apostacasada.net/api/index.php/api',
         TIMEOUT: 10000,
         HEADERS: {
             'Content-Type': 'application/json',

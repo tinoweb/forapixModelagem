@@ -22,27 +22,36 @@
         </div>
 
         <div class="glass-card p-6">
-            <form method="GET" class="grid md:grid-cols-4 gap-3 mb-6 text-sm">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nome"
-                    class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10" />
-                <select name="sport_id" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+            <form method="GET" class="grid md:grid-cols-5 gap-3 mb-6 text-sm">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nome" class="input-admin md:col-span-2" />
+                <select name="sport_id" class="input-admin">
                     <option value="">Todos os esportes</option>
                     @foreach($sports as $sport)
                         <option value="{{ $sport->id }}" @selected(request('sport_id') == $sport->id)>{{ $sport->name }}</option>
                     @endforeach
                 </select>
-                <select name="type" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+                <select name="type" class="input-admin">
                     <option value="">Todos os tipos</option>
                     @foreach(['head_to_head' => 'Head to head','sinuca' => 'Sinuca','par_impar' => 'Par/Ímpar','casino' => 'Cassino','bingo' => 'Bingo'] as $value => $label)
                         <option value="{{ $value }}" @selected(request('type') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
-                <select name="status" class="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
-                    <option value="">Status</option>
+                <select name="status" class="input-admin">
+                    <option value="">Todos os status</option>
                     @foreach(['active' => 'Ativo','inactive' => 'Inativo','maintenance' => 'Manutenção'] as $value => $label)
                         <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
+                <div class="flex gap-2">
+                    <button type="submit" class="admin-btn-primary flex-1 justify-center">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                    @if(request()->hasAny(['search','sport_id','type','status']))
+                        <a href="{{ route('admin.games.index') }}" class="admin-btn-ghost" title="Limpar filtros">
+                            <i class="fas fa-xmark"></i>
+                        </a>
+                    @endif
+                </div>
             </form>
 
             <div class="overflow-hidden rounded-2xl border border-white/5">

@@ -14,6 +14,8 @@ class PlayerManagementController extends Controller
     public function index(Request $request)
     {
         $players = Player::with('sport')
+            ->when($request->filled('sport_id'), fn($q) => $q->where('sport_id', $request->sport_id))
+            ->when($request->filled('search'), fn($q) => $q->where('name', 'like', '%' . $request->search . '%'))
             ->latest()
             ->paginate(12);
         $sports = Sport::orderBy('name')->get();
