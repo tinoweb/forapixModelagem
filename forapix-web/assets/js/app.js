@@ -28,8 +28,8 @@ const App = {
         // Load initial page
         this.navigateTo('home');
         
-        // Update balance display
-        this.updateBalance();
+        // Update auth UI (logged in or not)
+        this.updateAuthUI();
         
         // Test API connection
         this.testApiConnection();
@@ -300,6 +300,53 @@ const App = {
                 </div>
             </div>
         `;
+    },
+
+    /**
+     * Atualiza header conforme estado de autenticação
+     */
+    updateAuthUI() {
+        const loggedIn = Storage.isLoggedIn();
+        const authEl  = document.getElementById('headerAuth');
+        const guestEl = document.getElementById('headerGuest');
+        if (authEl)  authEl.classList.toggle('hidden', !loggedIn);
+        if (guestEl) guestEl.classList.toggle('hidden', loggedIn);
+        if (loggedIn) this.updateBalance();
+    },
+
+    /**
+     * Chamado após login bem-sucedido
+     */
+    handleLogin(data) {
+        const { user, token } = data;
+        Storage.setUser(user);
+        Storage.setItem(Config.STORAGE_KEYS.TOKEN, token);
+        Storage.setBalance(user.balance);
+        Storage.setBets([]);
+        Storage.setTransactions([]);
+        this.updateAuthUI();
+        Components.showToast(`Bem-vindo, ${user.name}!`, 'success');
+    },
+
+    /**
+     * Chamado em 401 — limpa sessão e redireciona para login
+     */
+    handleUnauthorized() {
+        Storage.logout();
+        this.updateAuthUI();
+        this.navigateTo('menu');
+        Components.showToast('Sessão expirada. Faça login novamente.', 'warning');
+    },
+
+    /**
+     * Logout
+     */
+    async logout() {
+        try { await API.logout(); } catch (_) {}
+        Storage.logout();
+        this.updateAuthUI();
+        this.navigateTo('home');
+        Components.showToast('Logout realizado!', 'success');
     },
 
     /**

@@ -12,6 +12,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/main.css">
     
@@ -58,25 +61,24 @@
                 <span class="logo-text">FORAPIX</span>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Theme Toggle -->
-                <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">
-                    <span class="theme-toggle-thumb"></span>
-                </button>
-                
-                <!-- Eye Toggle -->
-                <button class="text-gray-400 hover:text-white transition" aria-label="Ocultar saldo">
-                    <i class="fas fa-eye"></i>
-                </button>
-                
-                <!-- Balance Display -->
-                <div id="balanceDisplay" class="balance-pill cursor-pointer">
-                    R$ <span id="userBalance">0,00</span>
+                <!-- Autenticado -->
+                <div id="headerAuth" class="flex items-center gap-3 hidden">
+                    <!-- Balance Display -->
+                    <div id="balanceDisplay" class="balance-pill cursor-pointer">
+                        R$ <span id="userBalance">0,00</span>
+                    </div>
+                    <!-- Profile Button -->
+                    <button id="profileBtn" class="profile-btn" aria-label="Perfil">
+                        <i class="fas fa-user text-sm"></i>
+                    </button>
                 </div>
-                
-                <!-- Profile Button -->
-                <button id="profileBtn" class="profile-btn" aria-label="Perfil">
-                    <i class="fas fa-user text-sm"></i>
-                </button>
+
+                <!-- Não autenticado -->
+                <div id="headerGuest" class="flex items-center gap-2">
+                    <button onclick="App.navigateTo('menu')" class="btn btn-primary btn-sm" style="padding:6px 14px;font-size:13px;">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </button>
+                </div>
             </div>
         </header>
 

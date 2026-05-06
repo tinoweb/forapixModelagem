@@ -145,7 +145,7 @@ class GameMatch extends Model
      */
     public function isBettingOpen(): bool
     {
-        return $this->status === 'scheduled' && 
+        return in_array($this->status, ['scheduled', 'live']) && 
                $this->betting_deadline > now();
     }
 

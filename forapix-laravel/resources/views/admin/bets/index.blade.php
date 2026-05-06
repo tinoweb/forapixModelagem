@@ -12,9 +12,14 @@
             <p class="text-[12px] uppercase tracking-[0.3em] text-gray-500">Financeiro</p>
             <h2 class="text-2xl font-semibold">Gestão de Apostas</h2>
         </div>
-        <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost">
-            <i class="fas fa-fist-raised"></i> Ver Partidas
-        </a>
+        <div class="flex gap-2">
+            <button onclick="testEmail()" class="admin-btn-ghost" title="Enviar email de teste para seu email admin">
+                <i class="fas fa-envelope-circle-check"></i> Testar Email
+            </button>
+            <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost">
+                <i class="fas fa-fist-raised"></i> Ver Partidas
+            </a>
+        </div>
     </div>
 
     {{-- Stats --}}
@@ -206,6 +211,29 @@ async function cancelBet(id, betId) {
     const data = await res.json();
     alert(data.message);
     if (data.success) location.reload();
+}
+
+async function testEmail() {
+    const btn = event.target.closest('button');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    try {
+        const res = await fetch('/admin/test-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            }
+        });
+        const data = await res.json();
+        alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
+    } catch (e) {
+        alert('❌ Erro de conexão: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    }
 }
 </script>
 @endpush

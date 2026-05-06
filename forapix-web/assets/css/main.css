@@ -2228,142 +2228,206 @@ header.hidden,
 .match-page { display: flex; flex-direction: column; }
 .match-page-body { display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 16px; }
 
-/* ── HERO ── */
-.match-hero {
+/* ── HERO (novo) ── */
+.mh-hero {
     position: relative;
-    min-height: 260px;
+    min-height: 270px;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     overflow: hidden;
     margin: 12px 12px 0;
-    border-radius: 18px;
+    border-radius: 20px 20px 0 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-bottom: none;
 }
-.match-hero-overlay {
+.mh-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(10,11,26,0.55) 0%, rgba(10,11,26,0.78) 100%);
+    background: linear-gradient(180deg, rgba(8,10,24,0.6) 0%, rgba(8,10,24,0.82) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 14px 14px 20px;
+    padding: 14px 14px 18px;
     gap: 10px;
-    min-height: 260px;
+    min-height: 270px;
 }
-.match-hero-top {
+
+/* topo */
+.mh-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
 }
-.mh-badge-sport {
+.mh-sport-badge {
     background: #f59e0b;
     color: #0f1226;
     font-size: 11px;
     font-weight: 900;
-    padding: 4px 12px;
+    padding: 5px 13px;
     border-radius: 999px;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
 }
-.mh-badge-status {
-    background: rgba(10,11,26,0.75);
-    border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(6px);
+.mh-status-badge {
+    background: rgba(8,10,24,0.7);
+    border: 1px solid rgba(255,255,255,0.14);
+    backdrop-filter: blur(8px);
     color: #d1d5db;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 4px 10px;
+    padding: 5px 11px;
     border-radius: 999px;
     display: flex;
     align-items: center;
     gap: 5px;
+    max-width: 60%;
+    text-align: right;
 }
-.mh-modality {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.2);
+
+/* modalidade */
+.mh-modality-pill {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(6px);
     color: #fff;
     font-size: 13px;
     font-weight: 700;
-    padding: 4px 18px;
+    padding: 5px 20px;
     border-radius: 999px;
-    backdrop-filter: blur(4px);
+    text-align: center;
 }
-.mh-players {
+
+/* jogadores */
+.mh-players-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     margin-top: 4px;
+    gap: 8px;
 }
-.mh-player {
+.mh-player-col {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex: 1;
 }
-.mh-player--right { align-items: center; }
-.mh-avatar {
-    width: 64px;
-    height: 64px;
+.mh-av {
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     overflow: hidden;
-    border: 3px solid rgba(255,255,255,0.25);
-    background: rgba(0,0,0,0.3);
+    border: 3px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.35);
     flex-shrink: 0;
 }
-.mh-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.mh-player-name {
-    font-size: 12px;
+.mh-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mh-av--p1 { border-color: rgba(34,197,94,0.55); }
+.mh-av--p2 { border-color: rgba(239,68,68,0.55); }
+.mh-name {
+    font-size: 13px;
     font-weight: 700;
     color: #fff;
     text-align: center;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    line-height: 1.3;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.9);
+    line-height: 1.25;
 }
-.mh-score-area {
+
+/* score */
+.mh-score-col {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
-    padding: 0 8px;
 }
-.mh-score-num {
-    font-size: 44px;
+.mh-num {
+    font-size: 48px;
     font-weight: 900;
     color: #fff;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
     line-height: 1;
-    min-width: 32px;
+    min-width: 34px;
     text-align: center;
 }
-.mh-vs {
+.mh-vs-circle {
     width: 36px;
     height: 36px;
     border-radius: 50%;
     background: #f97316;
     color: #fff;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(249,115,22,0.5);
+    box-shadow: 0 2px 10px rgba(249,115,22,0.55);
 }
-.mh-game-detail {
-    font-size: 13px;
+
+/* título / subtítulo */
+.mh-title-pill {
+    font-size: 12px;
     font-weight: 800;
     color: #fff;
     text-transform: uppercase;
     letter-spacing: 1px;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.45);
     padding: 4px 16px;
     border-radius: 999px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
 
-/* ── BARRA DE ODDS ── */
+/* ── BARRA DE APOSTAS (nova) ── */
+.mh-bets-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 0 12px;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+}
+.mh-bets-side {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.mh-bets-side--right { flex-direction: row-reverse; }
+.mh-bets-av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.12);
+    background: #1a1d3a;
+    flex-shrink: 0;
+}
+.mh-bets-av img { width: 100%; height: 100%; object-fit: cover; }
+.mh-bets-pct {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    min-width: 34px;
+}
+.mh-bets-side--right .mh-bets-pct { text-align: right; }
+.mh-bets-track {
+    flex: 1;
+    display: flex;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+}
+.mh-bets-fill { height: 100%; transition: width 0.5s ease; }
+.mh-bets-fill--p1 { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.mh-bets-fill--p2 { background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+/* ── BARRA DE ODDS (legado) ── */
 .odds-bar-row {
     display: flex;
     align-items: center;
@@ -2404,68 +2468,329 @@ header.hidden,
 .odds-bar-seg--p1 { background: linear-gradient(90deg, #f59e0b, #f97316); }
 .odds-bar-seg--p2 { background: linear-gradient(90deg, #16a34a, #22c55e); }
 
+/* ── BARRA DE APOSTAS ── */
+.bets-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px 12px;
+    margin: -4px 0 4px;
+}
+.bets-bar-side {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 60px;
+}
+.bets-bar-side--right { justify-content: flex-end; }
+.bets-bar-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.bets-bar-pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 34px;
+    text-align: center;
+}
+.bets-bar-track {
+    flex: 1;
+    display: flex;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.06);
+}
+.bets-bar-seg { height: 100%; transition: width 0.4s ease; }
+.bets-bar-seg--p1 { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.bets-bar-seg--p2 { background: linear-gradient(90deg, #16a34a, #22c55e); }
+
+/* ── CARD DE PARTIDA v2 ── */
+.match-card-v2 {
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.match-card-v2:active { transform: scale(0.98); }
+
+/* Seção da imagem (topo) */
+.mc-image {
+    position: relative;
+    height: 140px;
+    background-color: #1a1d3a;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+}
+.mc-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,12,30,0.4) 0%, rgba(10,12,30,0.2) 50%, rgba(10,12,30,0.6) 100%);
+}
+.mc-image-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.mc-image-bottom {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+}
+.mc-badge-sport {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(15,18,38,0.75);
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.mc-badge-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(15,18,38,0.7);
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+.mc-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(220,38,38,0.85);
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+}
+.mc-finished-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(50,50,70,0.85);
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+}
+
+/* Seção inferior (escura) */
+.mc-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.mc-modalities {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.mc-modality-pill {
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+/* Jogadores */
+.mc-players {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.mc-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+.mc-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: #1a1d3a;
+}
+.mc-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.mc-avatar.winner {
+    border-color: #22c55e;
+    box-shadow: 0 0 10px rgba(34,197,94,0.35);
+}
+.mc-player-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+}
+.mc-odds {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a78bfa;
+}
+
+/* Score */
+.mc-score-area {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.mc-score {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+}
+.mc-score.winner {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+}
+.mc-vs {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+}
+
+/* Botão */
+.mc-bet-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.mc-bet-btn:active { transform: scale(0.97); }
+.mc-bet-btn--locked {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.4);
+    cursor: default;
+}
+
 /* ── DETALHES DA PARTIDA ── */
 .md-card {
     background: var(--card-bg);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 16px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: rgba(255,255,255,0.04);
 }
 .md-title {
     font-size: 14px;
     font-weight: 700;
     color: #fff;
-    padding: 14px 16px 10px;
+    padding: 14px 16px 12px;
+    background: var(--card-bg);
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.md-row {
+.md-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: var(--card-bg);
+    text-align: center;
+}
+.md-item:last-child { border-radius: 0 0 16px 16px; }
+.md-item-header {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    min-height: 48px;
+    gap: 8px;
+    justify-content: center;
 }
-.md-row:last-child { border-bottom: none; }
-.md-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(124,58,237,0.15);
-    color: var(--accent-light);
+.md-item-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.07);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--text-secondary);
     font-size: 13px;
     flex-shrink: 0;
 }
-.md-label {
+.md-item-label {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
     color: #6b7280;
     letter-spacing: 1px;
     text-transform: uppercase;
-    flex: 0 0 130px;
 }
-.md-value {
-    font-size: 13px;
-    font-weight: 600;
+.md-item-value {
+    font-size: 14px;
+    font-weight: 700;
     color: #fff;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
+    line-height: 1.4;
 }
 .md-status-badge {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    padding: 3px 12px;
+    padding: 4px 16px;
     border-radius: 999px;
+    margin-top: 2px;
 }
-.md-status-badge--open  { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
-.md-status-badge--closed{ background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-.md-deadline { font-size: 11px; color: #6b7280; }
+.md-status-badge--open   { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+.md-status-badge--closed { background: rgba(239,68,68,0.15);   color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 
 /* ── BOTÃO APOSTAR ── */
 .apostar-btn {
@@ -2526,6 +2851,54 @@ header.hidden,
     font-size: 13px;
     padding: 20px 16px;
 }
+
+/* ── ITENS DE APOSTA (Minhas Apostas) ── */
+.mbi-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.mbi-row:last-child { border-bottom: none; }
+.mbi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.mbi-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+}
+.mbi-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.mbi-pending   { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.mbi-won       { background: rgba(34,197,94,0.12);   color: #22c55e; border: 1px solid rgba(34,197,94,0.25);  }
+.mbi-lost      { background: rgba(239,68,68,0.12);   color: #ef4444; border: 1px solid rgba(239,68,68,0.25);  }
+.mbi-cancelled { background: rgba(107,114,128,0.12); color: #9ca3af; border: 1px solid rgba(107,114,128,0.25); }
+.mbi-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+.mbi-details strong { color: #e5e7eb; }
+.mbi-code {
+    font-size: 10px;
+    color: #4b5563;
+    font-family: monospace;
+}
+
 .match-stream-card {
     background: var(--card-bg);
     border: 1px solid rgba(255,255,255,0.05);

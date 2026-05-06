@@ -6,10 +6,15 @@
 const ProfilePage = {
     currentTab: 'profile',
     editingProfile: false,
+    authTab: 'login',
 
     render(params = {}) {
         this.currentTab = params.tab || 'profile';
         this.editingProfile = false;
+
+        if (!Storage.isLoggedIn()) {
+            return this.renderAuthPage();
+        }
 
         return `
             <div class="page-enter p-4">
@@ -74,6 +79,136 @@ const ProfilePage = {
         }
     },
 
+    /* ── AUTH (não logado) ─────────────────────────────────── */
+    renderAuthPage() {
+        return `
+        <div class="page-enter p-4 max-w-sm mx-auto">
+            <div class="text-center mb-8 mt-4">
+                <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-leaf text-3xl text-accent"></i>
+                </div>
+                <h2 class="text-2xl font-bold">ForaPix</h2>
+                <p class="text-gray-400 text-sm">Apostas esportivas ao vivo</p>
+            </div>
+
+            <div class="flex gap-2 mb-6">
+                <button id="authTabLogin" onclick="ProfilePage.switchAuthTab('login')" class="flex-1 py-2 rounded-xl text-sm font-semibold transition ${this.authTab === 'login' ? 'bg-accent text-black' : 'bg-white/5 text-gray-400'}">
+                    Entrar
+                </button>
+                <button id="authTabRegister" onclick="ProfilePage.switchAuthTab('register')" class="flex-1 py-2 rounded-xl text-sm font-semibold transition ${this.authTab === 'register' ? 'bg-accent text-black' : 'bg-white/5 text-gray-400'}">
+                    Criar conta
+                </button>
+            </div>
+
+            <div id="authFormContent">
+                ${this.authTab === 'login' ? this.renderLoginForm() : this.renderRegisterForm()}
+            </div>
+        </div>`;
+    },
+
+    switchAuthTab(tab) {
+        this.authTab = tab;
+        const el = document.getElementById('authFormContent');
+        if (el) el.innerHTML = tab === 'login' ? this.renderLoginForm() : this.renderRegisterForm();
+        const tl = document.getElementById('authTabLogin');
+        const tr = document.getElementById('authTabRegister');
+        if (tl) { tl.className = `flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab==='login'?'bg-accent text-black':'bg-white/5 text-gray-400'}`; }
+        if (tr) { tr.className = `flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab==='register'?'bg-accent text-black':'bg-white/5 text-gray-400'}`; }
+    },
+
+    renderLoginForm() {
+        return `
+        <div class="space-y-4">
+            <div>
+                <label class="input-label">Email</label>
+                <input type="email" id="loginEmail" class="input-field" placeholder="seu@email.com" autocomplete="email">
+            </div>
+            <div>
+                <label class="input-label">Senha</label>
+                <input type="password" id="loginPassword" class="input-field" placeholder="Sua senha" autocomplete="current-password">
+            </div>
+            <button onclick="ProfilePage.doLogin()" class="btn btn-primary w-full" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            <p id="loginError" class="text-red-400 text-sm text-center hidden"></p>
+        </div>`;
+    },
+
+    renderRegisterForm() {
+        return `
+        <div class="space-y-4">
+            <div>
+                <label class="input-label">Nome completo</label>
+                <input type="text" id="regName" class="input-field" placeholder="Seu nome">
+            </div>
+            <div>
+                <label class="input-label">Email</label>
+                <input type="email" id="regEmail" class="input-field" placeholder="seu@email.com" autocomplete="email">
+            </div>
+            <div>
+                <label class="input-label">Senha</label>
+                <input type="password" id="regPassword" class="input-field" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+            </div>
+            <button onclick="ProfilePage.doRegister()" class="btn btn-primary w-full" id="regBtn">
+                <i class="fas fa-user-plus"></i> Criar conta
+            </button>
+            <p id="regError" class="text-red-400 text-sm text-center hidden"></p>
+        </div>`;
+    },
+
+    async doLogin() {
+        const email    = document.getElementById('loginEmail')?.value?.trim();
+        const password = document.getElementById('loginPassword')?.value;
+        const errEl    = document.getElementById('loginError');
+        const btn      = document.getElementById('loginBtn');
+        if (!email || !password) { this._showAuthError(errEl, 'Preencha email e senha.'); return; }
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+        try {
+            const res = await API.login({ email, password });
+            if (res.success) {
+                App.handleLogin(res.data);
+                App.navigateTo('home');
+            } else {
+                this._showAuthError(errEl, res.message || 'Credenciais inválidas');
+            }
+        } catch (e) {
+            this._showAuthError(errEl, e.message || 'Erro ao conectar');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+        }
+    },
+
+    async doRegister() {
+        const name     = document.getElementById('regName')?.value?.trim();
+        const email    = document.getElementById('regEmail')?.value?.trim();
+        const password = document.getElementById('regPassword')?.value;
+        const errEl    = document.getElementById('regError');
+        const btn      = document.getElementById('regBtn');
+        if (!name || !email || !password) { this._showAuthError(errEl, 'Preencha todos os campos.'); return; }
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
+        try {
+            const res = await API.register({ name, email, password, password_confirmation: password });
+            if (res.success) {
+                App.handleLogin(res.data);
+                App.navigateTo('home');
+            } else {
+                this._showAuthError(errEl, res.message || 'Erro ao criar conta');
+            }
+        } catch (e) {
+            this._showAuthError(errEl, e.message || 'Erro ao conectar');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar conta';
+        }
+    },
+
+    _showAuthError(el, msg) {
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        setTimeout(() => el.classList.add('hidden'), 5000);
+    },
+
+    /* ── PERFIL LOGADO ──────────────────────────────────────── */
     renderProfileTab() {
         const user = Storage.getUser();
 
@@ -284,6 +419,12 @@ const ProfilePage = {
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
+            </div>
+
+            <div class="settings-section mb-6">
+                <button onclick="App.logout()" class="btn w-full" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);">
+                    <i class="fas fa-sign-out-alt"></i> Sair da conta
+                </button>
             </div>
 
             <div class="settings-section">

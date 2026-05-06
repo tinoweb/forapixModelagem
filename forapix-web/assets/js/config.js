@@ -3,10 +3,13 @@
  * Configurações globais do sistema
  */
 
+const _isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+const _apiBaseUrl = _isLocalDev ? 'http://localhost:8000/api' : `${window.location.origin}/api`;
+
 const Config = {
     // API Configuration
     API: {
-        BASE_URL: 'https://apostacasada.net/api/index.php/api',
+        BASE_URL: _apiBaseUrl,
         TIMEOUT: 10000,
         HEADERS: {
             'Content-Type': 'application/json',
@@ -74,7 +77,7 @@ const Config = {
 
     // Demo Configuration
     DEMO: {
-        ENABLED: true,
+        ENABLED: false,
         USER: {
             name: 'Carlos Silva',
             email: 'carlos@demo.com',

@@ -120,72 +120,74 @@ const Components = {
     renderMatchCard(match) {
         const firstPlayer = match.first_player || match.firstPlayer || {};
         const secondPlayer = match.second_player || match.secondPlayer || {};
-        const firstName = firstPlayer.name || match.fighter1 || 'Jogador 1';
-        const secondName = secondPlayer.name || match.fighter2 || 'Jogador 2';
+        const firstName = (firstPlayer.name || match.fighter1 || 'Jogador 1').split(' ')[0];
+        const secondName = (secondPlayer.name || match.fighter2 || 'Jogador 2').split(' ')[0];
         const firstOdds = match.first_player_odds ?? match.odds1 ?? null;
         const secondOdds = match.second_player_odds ?? match.odds2 ?? null;
         const sportLabel = (match.game?.sport?.name || match.game?.name || match.sport?.name || match.sport || 'Evento').toUpperCase();
+        const modality = match.game?.name || '';
         const matchId = match.id || match.match_id || 0;
         const isLive = match.status === 'live';
         const isFinished = match.status === 'finished';
         const canBet = match.status !== 'finished' && match.betting_deadline && new Date(match.betting_deadline) > new Date();
+        const firstScore = match.first_player_score ?? 0;
+        const secondScore = match.second_player_score ?? 0;
+        const winnerIs = isFinished && firstScore > secondScore ? 'first' : (isFinished && secondScore > firstScore ? 'second' : null);
+        const matchDate = Utils.formatDate(match.match_start, 'datetime');
 
-        const statusDot = isLive
-            ? '<span class="live-dot"></span>'
-            : (isFinished ? '<i class="fas fa-circle-check text-xs"></i>' : '<i class="far fa-clock text-xs"></i>');
-        const statusText = isLive ? 'AO VIVO' : (isFinished ? 'ENCERRADA' : Utils.formatDate(match.match_start, 'time'));
-        const statusClass = isLive ? 'live' : (isFinished ? 'finished' : 'scheduled');
+        const bgImg = Utils.getMatchBgImage(match);
+        const bgStyle = bgImg ? `background-image:url('${bgImg}')` : '';
+        const sportIcon = Config.SPORTS.find(s => s.name.toUpperCase() === sportLabel)?.icon || 'fa-gamepad';
 
-        const bgImg   = Utils.getMatchBgImage(match);
-        const bgStyle = bgImg ? `style="background-image:url('${bgImg}')"` : '';
-        const bgClass = bgImg ? 'match-list-card--bg' : '';
+        const statusBadge = isLive
+            ? '<span class="mc-live-badge"><span class="live-dot"></span> AO VIVO</span>'
+            : (isFinished ? '<span class="mc-finished-badge"><i class="fas fa-circle-check"></i> ENCERRADA</span>' : '');
 
         return `
-            <div class="match-list-card ${bgClass}" ${bgStyle} onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
-                <div class="match-list-header">
-                    <div class="match-list-sport">
-                        <span class="match-list-sport-icon"><i class="fas fa-gamepad"></i></span>
-                        <span class="match-list-sport-name">${sportLabel}</span>
+            <div class="match-card-v2" onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
+                <div class="mc-image" style="${bgStyle}">
+                    <div class="mc-image-overlay"></div>
+                    <div class="mc-image-top">
+                        <span class="mc-badge-sport">
+                            <i class="fas ${sportIcon}"></i>
+                            ${sportLabel}
+                        </span>
+                        ${statusBadge}
                     </div>
-                    <div class="match-list-status ${statusClass}">
-                        ${statusDot}
-                        <span>${statusText}</span>
-                    </div>
-                </div>
-                <div class="match-list-body">
-                    <div class="match-list-player">
-                        <div class="match-list-player-info">
-                            <div class="match-list-avatar">
-                                <img src="${Utils.getPlayerPhoto(firstPlayer, '#22c55e')}" alt="${firstName}">
-                            </div>
-                            <div class="match-list-player-text">
-                                <span class="match-list-player-name">${Utils.truncate(firstName, 18)}</span>
-                                ${firstOdds ? `<span class="match-list-odds">${parseFloat(firstOdds).toFixed(2)}x</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="match-list-score">${match.first_player_score ?? 0}</div>
-                    </div>
-                    <div class="match-list-vs">VS</div>
-                    <div class="match-list-player">
-                        <div class="match-list-player-info">
-                            <div class="match-list-avatar">
-                                <img src="${Utils.getPlayerPhoto(secondPlayer, '#ef4444')}" alt="${secondName}">
-                            </div>
-                            <div class="match-list-player-text">
-                                <span class="match-list-player-name">${Utils.truncate(secondName, 18)}</span>
-                                ${secondOdds ? `<span class="match-list-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="match-list-score">${match.second_player_score ?? 0}</div>
+                    <div class="mc-image-bottom">
+                        <span class="mc-badge-date">
+                            <i class="fas fa-clock"></i> ${matchDate}
+                        </span>
                     </div>
                 </div>
-                <div class="match-list-footer">
-                    <div class="match-list-meta">
-                        <span><i class="far fa-clock"></i> ${Utils.formatDate(match.betting_deadline || match.match_start, 'time')}</span>
+                <div class="mc-body">
+                    ${modality ? `<div class="mc-modalities"><span class="mc-modality-pill">${modality.toUpperCase()}</span></div>` : ''}
+                    <div class="mc-players">
+                        <div class="mc-player">
+                            <div class="mc-avatar ${winnerIs === 'first' ? 'winner' : ''}">
+                                <img src="${Utils.getPlayerPhoto(firstPlayer)}" alt="${firstName}" onerror="this.src='assets/images/jogador1.png'">
+                            </div>
+                            <span class="mc-player-name">${firstName}</span>
+                            ${firstOdds ? `<span class="mc-odds">${parseFloat(firstOdds).toFixed(2)}x</span>` : ''}
+                        </div>
+                        <div class="mc-score-area">
+                            <span class="mc-score ${winnerIs === 'first' ? 'winner' : ''}">${firstScore}</span>
+                            <span class="mc-vs">vs</span>
+                            <span class="mc-score ${winnerIs === 'second' ? 'winner' : ''}">${secondScore}</span>
+                        </div>
+                        <div class="mc-player">
+                            <div class="mc-avatar ${winnerIs === 'second' ? 'winner' : ''}">
+                                <img src="${Utils.getPlayerPhoto(secondPlayer)}" alt="${secondName}" onerror="this.src='assets/images/jogador2.png'">
+                            </div>
+                            <span class="mc-player-name">${secondName}</span>
+                            ${secondOdds ? `<span class="mc-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
+                        </div>
                     </div>
-                    <div class="match-list-action ${canBet ? 'bet-open' : ''}">
-                        ${canBet ? '<i class="fas fa-bolt"></i> Apostar' : (isFinished ? '<i class="fas fa-eye"></i> Ver' : '<i class="fas fa-lock"></i>')}
-                    </div>
+                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: ${matchId} })">
+                        ${canBet
+                            ? '<i class="fas fa-bolt"></i> Apostar agora'
+                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
+                    </button>
                 </div>
             </div>
         `;

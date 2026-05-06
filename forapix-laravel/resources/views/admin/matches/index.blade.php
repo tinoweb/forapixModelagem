@@ -88,20 +88,42 @@
                             'postponed' => ['label' => 'Adiada', 'class' => 'badge-muted'],
                         ];
                         $st = $statusMap[$match->status] ?? ['label' => $match->status, 'class' => 'badge-muted'];
+
+                        // Calcular porcentagem de apostas por jogador
+                        $totalBets = $match->bets->count();
+                        $player1Bets = $match->bets->where('bet_type', 'first_player')->count();
+                        $player2Bets = $match->bets->where('bet_type', 'second_player')->count();
+                        $player1Percent = $totalBets > 0 ? round(($player1Bets / $totalBets) * 100) : 0;
+                        $player2Percent = $totalBets > 0 ? round(($player2Bets / $totalBets) * 100) : 0;
                     @endphp
                     <div class="bg-[#10152b] border border-white/5 rounded-2xl p-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between hover:border-white/10 transition">
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="material-icons text-accent-light text-lg">sports</span>
                                 <span class="text-[11px] uppercase tracking-[0.2em] text-gray-500">{{ $match->game->name ?? 'Jogo' }}</span>
                                 <span class="badge {{ $st['class'] }}">{{ $st['label'] }}</span>
                                 @if($match->featured)
                                     <span class="badge badge-warning"><i class="fas fa-star"></i> Destaque</span>
                                 @endif
                             </div>
-                            <h3 class="text-lg font-semibold truncate">
-                                {{ $match->title ?? (($match->firstPlayer->name ?? 'Jog. 1') . ' vs ' . ($match->secondPlayer->name ?? 'Jog. 2')) }}
-                            </h3>
-                            <p class="text-sm text-gray-400 flex items-center gap-2 mt-1">
+                            <div class="flex items-center justify-between gap-4 mt-3">
+                                <div class="text-left">
+                                    <p class="text-sm text-gray-400">Jogador 1</p>
+                                    <p class="text-lg font-semibold">{{ explode(' ', $match->firstPlayer->name ?? 'Jog. 1')[0] }}</p>
+                                    <p class="text-accent-light font-semibold">{{ number_format($match->first_player_odds, 2) }}x</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ $player1Percent }}% das apostas</p>
+                                </div>
+                                <div class="text-center">
+                                    <span class="text-gray-500 font-bold text-sm">VS</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-400">Jogador 2</p>
+                                    <p class="text-lg font-semibold">{{ explode(' ', $match->secondPlayer->name ?? 'Jog. 2')[0] }}</p>
+                                    <p class="text-accent-light font-semibold">{{ number_format($match->second_player_odds, 2) }}x</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ $player2Percent }}% das apostas</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400 flex items-center gap-2 mt-3">
                                 <i class="fas fa-calendar"></i>
                                 {{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}
                                 @if($match->betting_deadline)
@@ -109,12 +131,6 @@
                                 @endif
                             </p>
                             <div class="flex flex-wrap gap-2 text-xs mt-3">
-                                <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                                    {{ $match->firstPlayer->name ?? 'J1' }} <span class="text-accent-light font-semibold">{{ number_format($match->first_player_odds, 2) }}x</span>
-                                </span>
-                                <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                                    {{ $match->secondPlayer->name ?? 'J2' }} <span class="text-accent-light font-semibold">{{ number_format($match->second_player_odds, 2) }}x</span>
-                                </span>
                                 @if($match->draw_odds)
                                     <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">Empate <span class="text-accent-light font-semibold">{{ number_format($match->draw_odds, 2) }}x</span></span>
                                 @endif
@@ -136,6 +152,12 @@
                             <a href="{{ route('admin.bets.index', ['match_id' => $match->id]) }}" class="admin-btn-ghost" title="Apostas">
                                 <i class="fas fa-ticket"></i> Apostas
                             </a>
+                            @if(!in_array($match->status, ['finished','cancelled']))
+                            <button onclick="openCancelModal({{ $match->id }}, '{{ addslashes($match->title ?? ($match->firstPlayer->name ?? '') . ' vs ' . ($match->secondPlayer->name ?? '')) }}')"
+                                    class="admin-btn-warning" title="Cancelar partida">
+                                <i class="fas fa-ban"></i> Cancelar
+                            </button>
+                            @endif
                             <a href="{{ route('admin.matches.delete', $match) }}" class="admin-btn-danger" title="Excluir">
                                 <i class="fas fa-trash"></i> Excluir
                             </a>
@@ -157,4 +179,99 @@
             </div>
         </div>
     </div>
+<!-- Modal Cancelar Partida -->
+<div id="cancelMatchModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+    <div class="bg-[#10152b] border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-ban text-red-400"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-lg">Cancelar Partida</h3>
+                <p class="text-sm text-gray-400" id="cancelMatchTitle"></p>
+            </div>
+        </div>
+
+        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-4 text-sm text-yellow-300">
+            <i class="fas fa-triangle-exclamation mr-1"></i>
+            Todas as apostas pendentes serão <strong>reembolsadas automaticamente</strong>.
+        </div>
+
+        <label class="block text-sm text-gray-400 mb-1">Motivo do cancelamento</label>
+        <textarea id="cancelReason" rows="3"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-400 resize-none"
+            placeholder="Ex: Jogador desistiu, data alterada, problema técnico..."></textarea>
+
+        <div class="flex gap-3 mt-5">
+            <button onclick="closeCancelModal()" class="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-300 text-sm font-semibold hover:bg-white/5 transition">
+                Voltar
+            </button>
+            <button onclick="confirmCancelMatch()" id="cancelConfirmBtn"
+                class="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition flex items-center justify-center gap-2">
+                <i class="fas fa-ban"></i> Confirmar cancelamento
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let _cancelMatchId = null;
+
+function openCancelModal(matchId, title) {
+    _cancelMatchId = matchId;
+    document.getElementById('cancelMatchTitle').textContent = title;
+    document.getElementById('cancelReason').value = '';
+    const modal = document.getElementById('cancelMatchModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeCancelModal() {
+    _cancelMatchId = null;
+    const modal = document.getElementById('cancelMatchModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function confirmCancelMatch() {
+    if (!_cancelMatchId) return;
+    const reason = document.getElementById('cancelReason').value.trim() || 'Cancelada pelo administrador';
+    const btn = document.getElementById('cancelConfirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
+
+    try {
+        const res = await fetch(`/admin/matches/${_cancelMatchId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ reason })
+        });
+        const data = await res.json();
+        closeCancelModal();
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showAdminToast(data.message || 'Erro ao cancelar', 'error');
+        }
+    } catch (e) {
+        showAdminToast('Erro de conexão.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-ban"></i> Confirmar cancelamento';
+    }
+}
+
+function showAdminToast(msg, type = 'success') {
+    const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500' };
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] ${colors[type] ?? colors.success} text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-2xl transition-all`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+</script>
 @endsection

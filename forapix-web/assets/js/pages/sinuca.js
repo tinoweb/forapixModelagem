@@ -31,6 +31,7 @@ const SinucaPage = {
             this.currentMatch = response.data;
             this.betOptions = this.buildBetOptions(response.data);
             container.innerHTML = this.renderContent();
+            this.loadMyBets();
         } catch (error) {
             console.error('Erro ao carregar partida', error);
             container.innerHTML = this.renderError(error.message || 'Erro ao carregar partida.');
@@ -56,7 +57,7 @@ const SinucaPage = {
         return `
             <div class="match-page">
                 ${this.renderHero(match)}
-                ${this.renderOddsBar(match)}
+                ${this.renderBetsBar(match)}
                 <div class="match-page-body">
                     ${this.renderMatchDetails(match)}
                     ${this.renderApostarBtn(match)}
@@ -72,51 +73,88 @@ const SinucaPage = {
         const p2  = match.second_player || {};
         const img = this.getMatchImage(match);
         const canBet    = this.canBet(match);
+        const isLive    = match.status === 'live';
         const sport     = match.game?.sport?.name || 'Sinuca';
         const modality  = match.game?.name || '';
+        const title     = match.title || '';
         const s1 = match.first_player_score  ?? 0;
         const s2 = match.second_player_score ?? 0;
-        const statusLabel = canBet ? 'Apostas estão abertas' : 'Apostas bloqueadas até empate';
+        const statusLabel = canBet ? 'Apostas abertas' : 'Apostas bloqueadas até empate';
+
+        const p1Name = this.breakName(p1.name || 'Jogador 1');
+        const p2Name = this.breakName(p2.name || 'Jogador 2');
 
         return `
-        <div class="match-hero" style="background-image:url('${img}')">
-            <div class="match-hero-overlay">
-                <!-- badges topo -->
-                <div class="match-hero-top">
-                    <span class="mh-badge-sport">${sport.toUpperCase()}</span>
-                    <span class="mh-badge-status"><i class="far fa-clock"></i> ${statusLabel}</span>
+        <div class="mh-hero" style="background-image:url('${img}')">
+            <div class="mh-overlay">
+
+                <!-- topo: esporte + status -->
+                <div class="mh-top">
+                    <span class="mh-sport-badge">${sport.toUpperCase()}</span>
+                    <span class="mh-status-badge">
+                        ${isLive ? '<span class="live-dot"></span>' : '<i class="far fa-clock"></i>'}
+                        ${statusLabel}
+                    </span>
                 </div>
 
-                <!-- modalidade (centro) -->
-                <div class="mh-modality">${modality}</div>
+                <!-- modalidade centralizada -->
+                ${modality ? `<div class="mh-modality-pill">${modality}</div>` : ''}
 
                 <!-- jogadores + placar -->
-                <div class="mh-players">
-                    <div class="mh-player">
-                        <div class="mh-avatar">
-                            <img src="${Utils.getPlayerPhoto(p1)}" alt="${p1.name || ''}"
-                                 onerror="this.src='assets/images/jogador1.png'">
+                <div class="mh-players-row">
+                    <div class="mh-player-col">
+                        <div class="mh-av mh-av--p1">
+                            <img src="${Utils.getPlayerPhoto(p1)}" alt="${p1Name}" onerror="this.src='assets/images/jogador1.png'">
                         </div>
-                        <span class="mh-player-name">${this.breakName(p1.name || 'Jogador 1')}</span>
+                        <span class="mh-name">${p1Name}</span>
                     </div>
 
-                    <div class="mh-score-area">
-                        <span class="mh-score-num">${s1}</span>
-                        <span class="mh-vs">vs</span>
-                        <span class="mh-score-num">${s2}</span>
+                    <div class="mh-score-col">
+                        <span class="mh-num">${s1}</span>
+                        <div class="mh-vs-circle">vs</div>
+                        <span class="mh-num">${s2}</span>
                     </div>
 
-                    <div class="mh-player mh-player--right">
-                        <div class="mh-avatar">
-                            <img src="${Utils.getPlayerPhoto(p2)}" alt="${p2.name || ''}"
-                                 onerror="this.src='assets/images/jogador2.png'">
+                    <div class="mh-player-col">
+                        <div class="mh-av mh-av--p2">
+                            <img src="${Utils.getPlayerPhoto(p2)}" alt="${p2Name}" onerror="this.src='assets/images/jogador2.png'">
                         </div>
-                        <span class="mh-player-name">${this.breakName(p2.name || 'Jogador 2')}</span>
+                        <span class="mh-name">${p2Name}</span>
                     </div>
                 </div>
 
-                <!-- detalhe do jogo abaixo do placar -->
-                <div class="mh-game-detail">${match.title || modality}</div>
+                <!-- título abaixo -->
+                ${title && title !== modality ? `<div class="mh-title-pill">${title.toUpperCase()}</div>` : ''}
+            </div>
+        </div>`;
+    },
+
+    /* ── BARRA DE APOSTAS (porcentagem) ──────────────────────── */
+    renderBetsBar(match) {
+        const totalBets = match.bets?.length || match.total_bets || 0;
+
+        const p1Bets = match.bets?.filter(b => b.bet_type === 'first_player').length || 0;
+        const p2Bets = match.bets?.filter(b => b.bet_type === 'second_player').length || 0;
+
+        const p1Percent = totalBets > 0 ? Math.round((p1Bets / totalBets) * 100) : 50;
+        const p2Percent = totalBets > 0 ? 100 - p1Percent : 50;
+
+        const p1src = Utils.getPlayerPhoto(match.first_player  || {});
+        const p2src = Utils.getPlayerPhoto(match.second_player || {});
+
+        return `
+        <div class="mh-bets-bar">
+            <div class="mh-bets-side">
+                <div class="mh-bets-av"><img src="${p1src}" onerror="this.src='assets/images/jogador1.png'"></div>
+                <span class="mh-bets-pct">${p1Percent}%</span>
+            </div>
+            <div class="mh-bets-track">
+                <div class="mh-bets-fill mh-bets-fill--p1" style="width:${p1Percent}%"></div>
+                <div class="mh-bets-fill mh-bets-fill--p2" style="width:${p2Percent}%"></div>
+            </div>
+            <div class="mh-bets-side mh-bets-side--right">
+                <span class="mh-bets-pct">${p2Percent}%</span>
+                <div class="mh-bets-av"><img src="${p2src}" onerror="this.src='assets/images/jogador2.png'"></div>
             </div>
         </div>`;
     },
@@ -163,39 +201,47 @@ const SinucaPage = {
         <div class="md-card">
             <h3 class="md-title">Detalhes da partida</h3>
 
-            <div class="md-row">
-                <div class="md-icon"><i class="fas fa-gamepad"></i></div>
-                <span class="md-label">ESPORTE</span>
-                <span class="md-value">${sport}</span>
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-gamepad"></i></div>
+                    <span class="md-item-label">ESPORTE</span>
+                </div>
+                <span class="md-item-value">${sport}</span>
             </div>
 
-            <div class="md-row">
-                <div class="md-icon"><i class="fas fa-circle-dot"></i></div>
-                <span class="md-label">MODALIDADE</span>
-                <span class="md-value">${modality}</span>
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-circle-dot"></i></div>
+                    <span class="md-item-label">MODALIDADE</span>
+                </div>
+                <span class="md-item-value">${modality}</span>
             </div>
 
-            <div class="md-row">
-                <div class="md-icon"><i class="fas fa-circle-info"></i></div>
-                <span class="md-label">DETALHES DO JOGO</span>
-                <span class="md-value">${detail}</span>
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-circle-info"></i></div>
+                    <span class="md-item-label">DETALHES DO JOGO</span>
+                </div>
+                <span class="md-item-value">${detail}</span>
             </div>
 
             ${info ? `
-            <div class="md-row">
-                <div class="md-icon"><i class="fas fa-circle-info"></i></div>
-                <span class="md-label">INFORMAÇÕES</span>
-                <span class="md-value">${info}</span>
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-circle-info"></i></div>
+                    <span class="md-item-label">INFORMAÇÕES</span>
+                </div>
+                <span class="md-item-value">${info}</span>
             </div>` : ''}
 
-            <div class="md-row">
-                <div class="md-icon"><i class="fas fa-calendar-days"></i></div>
-                <span class="md-label">PRAZO PARA APOSTAS</span>
-                <span class="md-value">
-                    <span class="md-status-badge ${canBet ? 'md-status-badge--open' : 'md-status-badge--closed'}">
-                        ${canBet ? 'Aberta' : 'Encerrada'}
-                    </span>
-                    <span class="md-deadline">${deadline}</span>
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-calendar-days"></i></div>
+                    <span class="md-item-label">PRAZO PARA APOSTAS</span>
+                </div>
+                <span class="md-item-value">${deadline}</span>
+                <span class="md-status-badge ${canBet ? 'md-status-badge--open' : 'md-status-badge--closed'}">
+                    ${canBet ? 'Aberta' : 'Encerrada'}
                 </span>
             </div>
         </div>`;
@@ -218,25 +264,115 @@ const SinucaPage = {
 
     /* ── MINHAS APOSTAS ──────────────────────────────────────── */
     renderMyBets() {
+        const user = Storage.getUser();
+        if (!user) return '';
         return `
         <div class="match-section-card">
             <div class="match-section-header">
                 <span>Minhas apostas</span>
-                <button class="match-section-refresh" onclick="SinucaPage.refreshMyBets()">
+                <button class="match-section-refresh" onclick="SinucaPage.loadMyBets()">
                     <i class="fas fa-rotate-right"></i>
                 </button>
             </div>
-            <div id="myBetsList" class="match-section-empty">Você ainda não apostou</div>
+            <div id="myBetsList"><div class="match-section-empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</div></div>
         </div>`;
     },
 
+    async loadMyBets() {
+        const el = document.getElementById('myBetsList');
+        if (!el || !this.matchId) return;
+        el.innerHTML = '<div class="match-section-empty"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+        try {
+            const res = await API.getMyBetsForMatch(this.matchId);
+            const bets = res?.data?.data || res?.data || [];
+            if (!bets.length) {
+                el.innerHTML = '<div class="match-section-empty">Você ainda não apostou nesta partida</div>';
+                return;
+            }
+            el.innerHTML = bets.map(b => this.renderBetItem(b)).join('');
+        } catch (e) {
+            el.innerHTML = '<div class="match-section-empty">Erro ao carregar apostas</div>';
+        }
+    },
+
+    renderBetItem(bet) {
+        const statusMap = {
+            pending:   { label: 'Pendente',   cls: 'mbi-pending'  },
+            won:       { label: 'Ganhou',      cls: 'mbi-won'      },
+            lost:      { label: 'Perdeu',      cls: 'mbi-lost'     },
+            cancelled: { label: 'Cancelada',   cls: 'mbi-cancelled'},
+            refunded:  { label: 'Reembolsada', cls: 'mbi-cancelled'},
+        };
+        const st = statusMap[bet.status] || { label: bet.status, cls: 'mbi-pending' };
+        // Resolver nomes usando currentMatch (já carregado) ou dados do próprio bet
+        const m  = this.currentMatch || bet.match || {};
+        const p1 = (m.first_player?.name || m.firstPlayer?.name || bet.match?.first_player?.name || 'Jogador 1').split(' ')[0];
+        const p2 = (m.second_player?.name || m.secondPlayer?.name || bet.match?.second_player?.name || 'Jogador 2').split(' ')[0];
+        const typeLabels = {
+            first_player:  p1,
+            second_player: p2,
+            draw: 'Empate', par: 'Par', impar: 'Ímpar'
+        };
+        const betType = bet.bet_type || bet.option || '';
+        const label  = typeLabels[betType] || betType || '--';
+        const amount = Utils.formatCurrency(bet.amount ?? bet.betAmount ?? 0);
+        const odds   = parseFloat(bet.odds || 1).toFixed(2);
+        const potWin = Utils.formatCurrency(bet.potential_win ?? bet.potentialWin ?? 0);
+        const code   = bet.bet_id || bet.id || '--';
+        return `
+        <div class="mbi-row">
+            <div class="mbi-top">
+                <span class="mbi-label">${label}</span>
+                <span class="mbi-badge ${st.cls}">${st.label}</span>
+            </div>
+            <div class="mbi-details">
+                <span>Valor: <strong>R$ ${amount}</strong></span>
+                <span>Odds: <strong>${odds}x</strong></span>
+                <span>Ganho pot.: <strong>R$ ${potWin}</strong></span>
+            </div>
+            <div class="mbi-code">Cód: ${code}</div>
+        </div>`;
+    },
+
+    refreshMyBets() { this.loadMyBets(); },
+
     /* ── STREAM ──────────────────────────────────────────────── */
+    toEmbedUrl(url) {
+        if (!url) return null;
+        try {
+            const u = new URL(url);
+            // youtube.com/watch?v=ID
+            if ((u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com') && u.searchParams.get('v')) {
+                const id = u.searchParams.get('v');
+                return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+            }
+            // youtu.be/ID
+            if (u.hostname === 'youtu.be') {
+                const id = u.pathname.replace('/', '');
+                return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+            }
+            // youtube.com/shorts/ID
+            if (u.pathname.startsWith('/shorts/')) {
+                const id = u.pathname.replace('/shorts/', '');
+                return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+            }
+            // já é embed ou outra plataforma — usa direto
+            return url;
+        } catch (e) {
+            return url;
+        }
+    },
+
     renderStream(match) {
-        if (match.metadata?.stream_url) {
+        const raw = match.metadata?.stream_url;
+        if (raw) {
+            const embedUrl = this.toEmbedUrl(raw);
             return `
             <div class="match-stream-card">
                 <div class="aspect-video">
-                    <iframe src="${match.metadata.stream_url}" frameborder="0" allowfullscreen class="w-full h-full rounded-xl"></iframe>
+                    <iframe src="${embedUrl}" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen class="w-full h-full rounded-xl"></iframe>
                 </div>
             </div>`;
         }
@@ -386,9 +522,22 @@ const SinucaPage = {
     },
 
     async confirmBet() {
-        const validation = Utils.validateBetAmount(this.betAmount, Storage.getBalance());
-        if (!validation.valid) { Components.showToast(validation.error, 'error'); return; }
         if (!this.selectedBet) { Components.showToast('Selecione um competidor.', 'warning'); return; }
+        if (this.betAmount <= 0)  { Components.showToast('Informe um valor válido para apostar.', 'warning'); return; }
+
+        // Pré-validação de saldo no frontend
+        const balance = Storage.getBalance();
+        if (this.betAmount > balance) {
+            const faltam = this.betAmount - balance;
+            Components.showToast(
+                `Não foi possível realizar esta ação: Saldo insuficiente para apostar (Valor R$ ${Utils.formatCurrency(this.betAmount)}, faltam R$ ${Utils.formatCurrency(faltam)})`,
+                'error'
+            );
+            return;
+        }
+
+        const btn = document.getElementById('bpConfirmBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; }
 
         try {
             const betData = {
@@ -397,7 +546,7 @@ const SinucaPage = {
                 amount: this.betAmount,
                 odds: this.selectedBet.odds,
                 potentialWin: this.betAmount * this.selectedBet.odds,
-                fighterName: `${this.selectedBet.label} — ${this.currentMatch.first_player?.name || ''} vs ${this.currentMatch.second_player?.name || ''}`
+                fighterName: `${this.selectedBet.label} — ${(this.currentMatch.first_player?.name || '').split(' ')[0]} vs ${(this.currentMatch.second_player?.name || '').split(' ')[0]}`
             };
             const result = await API.placeBet(betData);
             Components.closeModal();
@@ -405,11 +554,16 @@ const SinucaPage = {
                 Components.showToast('Aposta realizada com sucesso!', 'success');
                 App.updateBalance();
                 this.showBetConfirmation(betData);
+                this.loadMyBets();
             } else {
-                Components.showToast(result.error || 'Erro ao realizar aposta', 'error');
+                const msg = result.message || result.error || 'Erro ao realizar aposta';
+                Components.showToast(msg, 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> CONFIRMAR'; }
             }
         } catch (e) {
-            Components.showToast('Erro ao processar aposta.', 'error');
+            const msg = e.message || 'Erro ao processar aposta.';
+            Components.showToast(msg, 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> CONFIRMAR'; }
         }
     },
 
@@ -436,8 +590,10 @@ const SinucaPage = {
     /* ── HELPERS ─────────────────────────────────────────────── */
     buildBetOptions(match) {
         const opts = [];
-        if (match.first_player_odds)  opts.push({ type:'first_player',  label: match.first_player?.name  || 'Jogador 1', odds: parseFloat(match.first_player_odds) });
-        if (match.second_player_odds) opts.push({ type:'second_player', label: match.second_player?.name || 'Jogador 2', odds: parseFloat(match.second_player_odds) });
+        const p1Name = (match.first_player?.name  || 'Jogador 1').split(' ')[0];
+        const p2Name = (match.second_player?.name || 'Jogador 2').split(' ')[0];
+        if (match.first_player_odds)  opts.push({ type:'first_player',  label: p1Name, odds: parseFloat(match.first_player_odds) });
+        if (match.second_player_odds) opts.push({ type:'second_player', label: p2Name, odds: parseFloat(match.second_player_odds) });
         if (match.draw_odds)          opts.push({ type:'draw',          label: 'Empate',  odds: parseFloat(match.draw_odds) });
         if (match.par_odds)           opts.push({ type:'par',           label: 'Par',     odds: parseFloat(match.par_odds) });
         if (match.impar_odds)         opts.push({ type:'impar',         label: 'Ímpar',   odds: parseFloat(match.impar_odds) });
@@ -460,8 +616,7 @@ const SinucaPage = {
 
     breakName(name) {
         const parts = (name || '').trim().split(' ');
-        if (parts.length <= 2) return parts.join('<br>');
-        return parts[0] + '<br>' + parts.slice(1).join(' ');
+        return parts[0] || name;
     },
 
     formatDate(date, mode = 'short') {

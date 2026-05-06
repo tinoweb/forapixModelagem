@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Bet;
 use App\Models\GameMatch;
+use App\Services\ResendService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BetController extends Controller
 {
@@ -42,9 +44,12 @@ class BetController extends Controller
 
         // Validate balance
         if ($user->balance < $validated['amount']) {
+            $faltam = $validated['amount'] - $user->balance;
             return response()->json([
                 'success' => false,
-                'message' => 'Saldo insuficiente'
+                'message' => 'Não foi possível realizar esta ação: Saldo insuficiente para apostar (Valor R$ ' .
+                    number_format($validated['amount'], 2, ',', '.') . ', faltam R$ ' .
+                    number_format($faltam, 2, ',', '.') . ')'
             ], 422);
         }
 
@@ -72,6 +77,13 @@ class BetController extends Controller
 
             DB::commit();
 
+            // Disparar email de confirmação (não bloqueia a resposta)
+            try {
+                $this->sendBetConfirmationEmail($user, $bet, $match);
+            } catch (\Throwable $e) {
+                Log::error('Erro ao enviar email de aposta: ' . $e->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => $bet->load('match.game', 'match.firstPlayer', 'match.secondPlayer'),
@@ -89,6 +101,41 @@ class BetController extends Controller
     }
 
     /**
+     * Send bet confirmation email via Resend
+     */
+    private function sendBetConfirmationEmail($user, $bet, $match): void
+    {
+        $betLabels = [
+            'first_player'  => $match->firstPlayer->name ?? 'Jogador 1',
+            'second_player' => $match->secondPlayer->name ?? 'Jogador 2',
+            'draw'          => 'Empate',
+            'par'           => 'Par',
+            'impar'         => 'Ímpar',
+        ];
+
+        $html = view('emails.bet_confirmed', [
+            'userName'     => $user->name,
+            'gameName'     => $match->game->name ?? 'Sinuca',
+            'player1'      => explode(' ', $match->firstPlayer->name ?? 'Jogador 1')[0],
+            'player2'      => explode(' ', $match->secondPlayer->name ?? 'Jogador 2')[0],
+            'matchDate'    => optional($match->match_start)->format('d/m/Y H:i') ?? '--',
+            'betLabel'     => $betLabels[$bet->bet_type] ?? $bet->bet_type,
+            'amount'       => number_format($bet->amount, 2, ',', '.'),
+            'odds'         => number_format($bet->odds, 2, ',', '.'),
+            'potentialWin' => number_format($bet->potential_win, 2, ',', '.'),
+            'betCode'      => $bet->bet_id ?? "#" . $bet->id,
+            'appUrl'       => config('app.url', 'https://apostacasada.net'),
+        ])->render();
+
+        (new ResendService())->send(
+            $user->email,
+            $user->name,
+            '✅ Aposta confirmada — ApostaCasada',
+            $html
+        );
+    }
+
+    /**
      * Get user's bets
      */
     public function index(Request $request)
@@ -99,6 +146,11 @@ class BetController extends Controller
         // Filter by status
         if ($request->has('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter by match
+        if ($request->has('match_id')) {
+            $query->where('match_id', $request->match_id);
         }
 
         $bets = $query->orderBy('created_at', 'desc')->paginate(20);

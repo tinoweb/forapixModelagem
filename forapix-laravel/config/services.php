@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'resend' => [
+        'api_key'      => env('RESEND_API_KEY', ''),
+        'from_address' => env('RESEND_FROM_ADDRESS', 'noreply@apostacasada.net'),
+        'from_name'    => env('RESEND_FROM_NAME', 'ApostaCasada'),
+    ],
+
 ];

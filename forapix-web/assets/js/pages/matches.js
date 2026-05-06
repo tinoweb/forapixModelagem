@@ -126,6 +126,7 @@ const MatchesPage = {
 
     renderMatchCard(match) {
         const sportName = (match.game?.sport?.name || match.game?.name || 'Sinuca').toUpperCase();
+        const modality = match.game?.name || '';
         const firstPlayer = match.first_player || match.firstPlayer || {};
         const secondPlayer = match.second_player || match.secondPlayer || {};
         const firstScore = match.first_player_score ?? match.firstPlayerScore ?? 0;
@@ -137,76 +138,74 @@ const MatchesPage = {
         const matchId = match.id || match.match_id || 0;
         const firstOdds = match.first_player_odds ?? match.firstPlayerOdds ?? null;
         const secondOdds = match.second_player_odds ?? match.secondPlayerOdds ?? null;
-        const totalBets = match.total_bets_count ?? 0;
-        const totalAmount = match.total_bets_amount ?? 0;
+        const matchDate = this.formatDate(match.match_start, 'datetime');
 
-        const statusDot = isLive
-            ? '<span class="live-dot"></span>'
-            : (isFinished ? '<i class="fas fa-circle-check text-xs"></i>' : '<i class="far fa-clock text-xs"></i>');
-        const statusText = isLive ? 'AO VIVO' : (isFinished ? 'ENCERRADA' : this.formatDate(match.match_start, 'time'));
-        const statusClass = isLive ? 'live' : (isFinished ? 'finished' : 'scheduled');
+        const bgImg = Utils.getMatchBgImage(match);
+        const bgStyle = bgImg ? `background-image:url('${bgImg}')` : '';
 
-        const bgImg  = Utils.getMatchBgImage(match);
-        const bgStyle = bgImg ? `style="background-image:url('${bgImg}')"` : '';
-        const bgClass = bgImg ? 'match-list-card--bg' : '';
+        const p1Name = (firstPlayer.name || 'Jogador 1').split(' ')[0];
+        const p2Name = (secondPlayer.name || 'Jogador 2').split(' ')[0];
+
+        const statusBadge = isLive
+            ? '<span class="mc-live-badge"><span class="live-dot"></span> AO VIVO</span>'
+            : (isFinished ? '<span class="mc-finished-badge"><i class="fas fa-circle-check"></i> ENCERRADA</span>' : '');
 
         return `
-            <div class="match-list-card ${bgClass}" ${bgStyle} onclick="MatchesPage.openMatch(${matchId})">
-                <!-- Header do card -->
-                <div class="match-list-header">
-                    <div class="match-list-sport">
-                        <span class="match-list-sport-icon"><i class="fas ${this.getSportIcon(match)}"></i></span>
-                        <span class="match-list-sport-name">${sportName}</span>
+            <div class="match-card-v2" onclick="MatchesPage.openMatch(${matchId})">
+
+                <!-- IMAGEM TOPO -->
+                <div class="mc-image" style="${bgStyle}">
+                    <div class="mc-image-overlay"></div>
+                    <div class="mc-image-top">
+                        <span class="mc-badge-sport">
+                            <i class="fas ${this.getSportIcon(match)}"></i>
+                            ${sportName}
+                        </span>
+                        ${statusBadge}
                     </div>
-                    <div class="match-list-status ${statusClass}">
-                        ${statusDot}
-                        <span>${statusText}</span>
+                    <div class="mc-image-bottom">
+                        <span class="mc-badge-date">
+                            <i class="fas fa-clock"></i> ${matchDate}
+                        </span>
                     </div>
                 </div>
 
-                <!-- Jogadores e Odds -->
-                <div class="match-list-body">
-                    <div class="match-list-player ${winnerIs === 'first' ? 'winner' : ''}">
-                        <div class="match-list-player-info">
-                            <div class="match-list-avatar">
-                                <img src="${Utils.getPlayerPhoto(firstPlayer, '#22c55e')}" alt="${firstPlayer.name || 'Jogador 1'}">
-                                ${winnerIs === 'first' ? '<span class="avatar-winner"><i class="fas fa-trophy"></i></span>' : ''}
+                <!-- BODY ESCURO -->
+                <div class="mc-body">
+                    <!-- Modalidade(s) -->
+                    ${modality ? `<div class="mc-modalities"><span class="mc-modality-pill">${modality.toUpperCase()}</span></div>` : ''}
+
+                    <!-- Jogadores e Score -->
+                    <div class="mc-players">
+                        <div class="mc-player">
+                            <div class="mc-avatar ${winnerIs === 'first' ? 'winner' : ''}">
+                                <img src="${Utils.getPlayerPhoto(firstPlayer)}" alt="${p1Name}" onerror="this.src='assets/images/jogador1.png'">
                             </div>
-                            <div class="match-list-player-text">
-                                <span class="match-list-player-name">${Utils.truncate(firstPlayer.name || 'Jogador 1', 18)}</span>
-                                ${firstOdds ? `<span class="match-list-odds">${parseFloat(firstOdds).toFixed(2)}x</span>` : ''}
-                            </div>
+                            <span class="mc-player-name">${p1Name}</span>
+                            ${firstOdds ? `<span class="mc-odds">${parseFloat(firstOdds).toFixed(2)}x</span>` : ''}
                         </div>
-                        <div class="match-list-score ${winnerIs === 'first' ? 'winner' : ''}">${firstScore}</div>
-                    </div>
 
-                    <div class="match-list-vs">VS</div>
-
-                    <div class="match-list-player ${winnerIs === 'second' ? 'winner' : ''}">
-                        <div class="match-list-player-info">
-                            <div class="match-list-avatar">
-                                <img src="${Utils.getPlayerPhoto(secondPlayer, '#ef4444')}" alt="${secondPlayer.name || 'Jogador 2'}">
-                                ${winnerIs === 'second' ? '<span class="avatar-winner"><i class="fas fa-trophy"></i></span>' : ''}
-                            </div>
-                            <div class="match-list-player-text">
-                                <span class="match-list-player-name">${Utils.truncate(secondPlayer.name || 'Jogador 2', 18)}</span>
-                                ${secondOdds ? `<span class="match-list-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
-                            </div>
+                        <div class="mc-score-area">
+                            <span class="mc-score ${winnerIs === 'first' ? 'winner' : ''}">${firstScore}</span>
+                            <span class="mc-vs">vs</span>
+                            <span class="mc-score ${winnerIs === 'second' ? 'winner' : ''}">${secondScore}</span>
                         </div>
-                        <div class="match-list-score ${winnerIs === 'second' ? 'winner' : ''}">${secondScore}</div>
-                    </div>
-                </div>
 
-                <!-- Footer do card -->
-                <div class="match-list-footer">
-                    <div class="match-list-meta">
-                        ${totalBets > 0 ? `<span><i class="fas fa-users"></i> ${totalBets}</span>` : ''}
-                        ${totalAmount > 0 ? `<span><i class="fas fa-coins"></i> ${Utils.formatCurrency(totalAmount, true)}</span>` : ''}
-                        <span><i class="far fa-clock"></i> ${this.formatDate(match.betting_deadline || match.match_start, 'time')}</span>
+                        <div class="mc-player">
+                            <div class="mc-avatar ${winnerIs === 'second' ? 'winner' : ''}">
+                                <img src="${Utils.getPlayerPhoto(secondPlayer)}" alt="${p2Name}" onerror="this.src='assets/images/jogador2.png'">
+                            </div>
+                            <span class="mc-player-name">${p2Name}</span>
+                            ${secondOdds ? `<span class="mc-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
+                        </div>
                     </div>
-                    <div class="match-list-action ${canBet ? 'bet-open' : ''}">
-                        ${canBet ? '<i class="fas fa-bolt"></i> Apostar' : (isFinished ? '<i class="fas fa-eye"></i> Ver' : '<i class="fas fa-lock"></i>')}
-                    </div>
+
+                    <!-- Botão sempre visível -->
+                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: ${matchId} })">
+                        ${canBet
+                            ? '<i class="fas fa-bolt"></i> Apostar agora'
+                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
+                    </button>
                 </div>
             </div>
         `;

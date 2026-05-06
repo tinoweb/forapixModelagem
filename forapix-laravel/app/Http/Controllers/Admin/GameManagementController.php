@@ -8,6 +8,7 @@ use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Sport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -304,6 +305,13 @@ class GameManagementController extends Controller
         }
         if ($request->hasFile('banner_image')) {
             $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
+        } elseif (empty($metadata['banner_image'])) {
+            $game = Game::with('sport')->find($request->game_id);
+            $sportSlug = strtolower($game?->sport?->slug ?? '');
+            $sportName = strtolower($game?->sport?->name ?? '');
+            if (str_contains($sportSlug, 'sinuca') || str_contains($sportName, 'sinuca')) {
+                $metadata['banner_image'] = 'matches/banners/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png';
+            }
         }
         if ($request->filled('banner_button_label')) {
             $metadata['banner_button_label'] = $request->input('banner_button_label');
@@ -428,6 +436,116 @@ class GameManagementController extends Controller
                     // Cancel and refund bets will be handled by a job
                 }
                 break;
+        }
+    }
+
+    /**
+     * Test Resend email integration
+     */
+    public function testEmail(\Illuminate\Http\Request $request)
+    {
+        $admin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+        $apiKey = config('services.resend.api_key', '');
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RESEND_API_KEY não configurada no .env do servidor.'
+            ], 422);
+        }
+
+        $html = view('emails.bet_confirmed', [
+            'userName'     => $admin->name ?? 'Admin',
+            'gameName'     => 'Sinuca',
+            'player1'      => 'Carlos',
+            'player2'      => 'João',
+            'matchDate'    => now()->format('d/m/Y H:i'),
+            'betLabel'     => 'Carlos',
+            'amount'       => '50,00',
+            'odds'         => '1,75',
+            'potentialWin' => '87,50',
+            'betCode'      => 'BETTEST01',
+            'appUrl'       => config('app.url', 'https://forapix.com'),
+        ])->render();
+
+        $resend = new \App\Services\ResendService();
+        $sent = $resend->send(
+            $admin->email,
+            $admin->name ?? 'Admin',
+            '🧪 Teste de email — ForaPix',
+            $html
+        );
+
+        if ($sent) {
+            return response()->json([
+                'success' => true,
+                'message' => "Email de teste enviado para {$admin->email} com sucesso!"
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Falha ao enviar. Verifique os logs do Laravel (storage/logs/laravel.log).'
+        ], 500);
+    }
+
+    /**
+     * Cancel match and refund all pending bets
+     */
+    public function cancelMatch(Request $request, GameMatch $match)
+    {
+        if (in_array($match->status, ['finished', 'cancelled'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta partida não pode ser cancelada (já encerrada ou cancelada).'
+            ], 422);
+        }
+
+        $reason = $request->input('reason', 'Partida cancelada pelo administrador');
+
+        DB::beginTransaction();
+        try {
+            $pendingBets = $match->bets()->where('status', 'pending')->with('user')->get();
+            $refundedCount = 0;
+
+            foreach ($pendingBets as $bet) {
+                $bet->update([
+                    'status'              => 'cancelled',
+                    'cancellation_reason' => $reason,
+                    'resolved_at'         => now(),
+                ]);
+                $bet->user->increment('balance', $bet->amount);
+                \App\Models\Transaction::create([
+                    'user_id'     => $bet->user_id,
+                    'type'        => 'refund',
+                    'amount'      => $bet->amount,
+                    'net_amount'  => $bet->amount,
+                    'status'      => 'completed',
+                    'description' => "Reembolso — partida #{$match->id} cancelada: {$reason}",
+                    'reference'   => $bet->bet_id ?? "bet-{$bet->id}",
+                ]);
+                $refundedCount++;
+            }
+
+            $match->update([
+                'status'       => 'cancelled',
+                'cancelled_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Partida cancelada com sucesso. {$refundedCount} aposta(s) reembolsada(s).",
+                'refunded_count' => $refundedCount,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao cancelar partida: ' . $e->getMessage()
+            ], 500);
         }
     }
 

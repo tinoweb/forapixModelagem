@@ -34,6 +34,11 @@ const API = {
             const response = await fetch(url, finalOptions);
             const data = await response.json();
 
+            if (response.status === 401) {
+                if (typeof App !== 'undefined') App.handleUnauthorized();
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+
             if (!response.ok) {
                 throw new Error(data.message || `HTTP ${response.status}`);
             }
@@ -113,22 +118,33 @@ const API = {
     /**
      * Bets (API real + fallback simulado)
      */
+    async getMyBetsForMatch(matchId) {
+        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
+        if (token) {
+            try {
+                return await this.request(`/bets?match_id=${matchId}`);
+            } catch (e) {
+                console.warn('API indisponível, usando bets do localStorage');
+            }
+        }
+        const bets = (Storage.getBets() || []).filter(b => b.matchId == matchId || b.match_id == matchId);
+        return { success: true, data: { data: bets } };
+    },
+
     async placeBet(betData) {
         const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
 
         if (token) {
-            try {
-                return await this.request('/bets', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        match_id: betData.matchId,
-                        bet_type: betData.option,
-                        amount: betData.amount
-                    })
-                });
-            } catch (e) {
-                console.warn('API indisponível, usando fallback simulado');
-            }
+            // Usuário autenticado: sempre usa a API real.
+            // Qualquer erro (4xx, 5xx, rede) é propagado ao caller — sem fallback simulado.
+            return await this.request('/bets', {
+                method: 'POST',
+                body: JSON.stringify({
+                    match_id: betData.matchId,
+                    bet_type: betData.option,
+                    amount: betData.amount
+                })
+            });
         }
 
         // Fallback simulado
@@ -137,7 +153,12 @@ const API = {
         const balance = Storage.getBalance();
 
         if (betData.amount > balance) {
-            return { success: false, error: 'Saldo insuficiente' };
+            const faltam = (betData.amount - balance).toFixed(2).replace('.', ',');
+            const valor  = parseFloat(betData.amount).toFixed(2).replace('.', ',');
+            return {
+                success: false,
+                message: `Não foi possível realizar esta ação: Saldo insuficiente para apostar (Valor R$ ${valor}, faltam R$ ${faltam})`
+            };
         }
 
         const newBalance = balance - betData.amount;
