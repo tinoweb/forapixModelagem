@@ -44,6 +44,24 @@ const ProfilePage = {
 
     init() {
         this.bindEvents();
+        if (Storage.isLoggedIn()) this._refreshProfileData();
+    },
+
+    async _refreshProfileData() {
+        try {
+            const res = await API.request('/auth/profile');
+            if (res && res.success && res.data) {
+                const fresh = res.data;
+                const stored = Storage.getUser() || {};
+                Storage.setUser({ ...stored, ...fresh });
+                Storage.setBalance(parseFloat(fresh.balance) || 0);
+                // Re-renderiza aba de perfil se estiver ativa
+                const profileTab = document.getElementById('profileTabContent');
+                if (profileTab) profileTab.innerHTML = this.renderProfileTab();
+                // Atualiza saldo do header
+                App.updateBalance && App.updateBalance();
+            }
+        } catch (_) {}
     },
 
     bindEvents() {
@@ -247,7 +265,7 @@ const ProfilePage = {
                     </div>
                     <div class="settings-item-content">
                         <p class="settings-item-label">Membro desde</p>
-                        <p class="settings-item-value">${Utils.formatDate(new Date(), 'long')}</p>
+                        <p class="settings-item-value">${user.created_at ? Utils.formatDate(user.created_at) : 'N/A'}</p>
                     </div>
                 </div>
                 <div class="settings-item">
@@ -256,7 +274,7 @@ const ProfilePage = {
                     </div>
                     <div class="settings-item-content">
                         <p class="settings-item-label">Saldo</p>
-                        <p class="settings-item-value text-success font-bold">${Utils.formatCurrency(Storage.getBalance(), true)}</p>
+                        <p id="profileBalance" class="settings-item-value text-success font-bold">${Utils.formatCurrency(Storage.getBalance(), true)}</p>
                     </div>
                 </div>
             </div>
@@ -266,12 +284,12 @@ const ProfilePage = {
                 <h3 class="settings-section-title">Estatísticas</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <p class="stat-value">${Storage.getBets().length}</p>
+                        <p class="stat-value">${user.total_bets ?? Storage.getBets().length}</p>
                         <p class="stat-label">Apostas</p>
                     </div>
                     <div class="stat-card">
-                        <p class="stat-value">${Storage.getTransactions().length}</p>
-                        <p class="stat-label">Transações</p>
+                        <p class="stat-value">${user.total_deposited != null ? Utils.formatCurrency(user.total_deposited) : Storage.getTransactions().length}</p>
+                        <p class="stat-label">Depositado</p>
                     </div>
                 </div>
             </div>

@@ -255,39 +255,17 @@ const API = {
     },
 
     async deposit(amount) {
-        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
-
-        if (token) {
-            try {
-                return await this.request('/wallet/deposit', {
-                    method: 'POST',
-                    body: JSON.stringify({ amount })
-                });
-            } catch (e) {
-                console.warn('API indisponível, usando fallback simulado');
-            }
+        if (!Storage.getItem(Config.STORAGE_KEYS.TOKEN)) {
+            return { success: false, message: 'Você precisa estar logado para depositar.' };
         }
+        return await this.request('/wallet/deposit', {
+            method: 'POST',
+            body: JSON.stringify({ amount })
+        });
+    },
 
-        // Fallback simulado
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const currentBalance = Storage.getBalance();
-        const newBalance = currentBalance + amount;
-        Storage.setBalance(newBalance);
-
-        const transaction = {
-            id: Utils.generateId(),
-            type: 'deposit',
-            amount: amount,
-            description: 'Depósito via PIX',
-            date: new Date().toISOString(),
-            status: 'completed'
-        };
-
-        const transactions = Storage.getTransactions();
-        transactions.push(transaction);
-        Storage.setTransactions(transactions);
-
-        return { success: true, data: { newBalance, transaction } };
+    async getDepositStatus(transactionId) {
+        return await this.request(`/wallet/deposit/${transactionId}/status`);
     },
 
     async confirmDeposit(transactionId) {
@@ -298,44 +276,13 @@ const API = {
     },
 
     async withdraw(amount, pixKey) {
-        const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
-
-        if (token) {
-            try {
-                return await this.request('/wallet/withdraw', {
-                    method: 'POST',
-                    body: JSON.stringify({ amount, pix_key: pixKey })
-                });
-            } catch (e) {
-                console.warn('API indisponível, usando fallback simulado');
-            }
+        if (!Storage.getItem(Config.STORAGE_KEYS.TOKEN)) {
+            return { success: false, message: 'Você precisa estar logado para sacar.' };
         }
-
-        // Fallback simulado
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const currentBalance = Storage.getBalance();
-
-        if (amount > currentBalance) {
-            return { success: false, error: 'Saldo insuficiente' };
-        }
-
-        const newBalance = currentBalance - amount;
-        Storage.setBalance(newBalance);
-
-        const transaction = {
-            id: Utils.generateId(),
-            type: 'withdraw',
-            amount: -amount,
-            description: 'Saque via PIX',
-            date: new Date().toISOString(),
-            status: 'pending'
-        };
-
-        const transactions = Storage.getTransactions();
-        transactions.push(transaction);
-        Storage.setTransactions(transactions);
-
-        return { success: true, data: { newBalance, transaction } };
+        return await this.request('/wallet/withdraw', {
+            method: 'POST',
+            body: JSON.stringify({ amount, pix_key: pixKey })
+        });
     },
 
     /**

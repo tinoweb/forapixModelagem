@@ -79,7 +79,8 @@ const SinucaPage = {
         const title     = match.title || '';
         const s1 = match.first_player_score  ?? 0;
         const s2 = match.second_player_score ?? 0;
-        const statusLabel = canBet ? 'Apostas abertas' : 'Apostas bloqueadas até empate';
+        const isLiveBetting = match.status === 'live' && match.live_betting_open;
+        const statusLabel = isLiveBetting ? '⚡ Apostas ao vivo' : canBet ? 'Apostas abertas' : 'Apostas encerradas';
 
         const p1Name = this.breakName(p1.name || 'Jogador 1');
         const p2Name = this.breakName(p2.name || 'Jogador 2');
@@ -129,42 +130,51 @@ const SinucaPage = {
         </div>`;
     },
 
-    /* ── BARRA DE APOSTAS (porcentagem) ──────────────────────── */
+    /* ── BARRA DE APOSTAS CASADAS (pool real) ───────────────── */
     renderBetsBar(match) {
-        const totalBets = match.bets?.length || match.total_bets || 0;
+        const s     = match.bet_stats || {};
+        const fp    = s.first_player  || { total: 0, matched: 0, unmatched: 0, count: 0 };
+        const sp    = s.second_player || { total: 0, matched: 0, unmatched: 0, count: 0 };
+        const pool  = s.total_matched_pool || 0;
+        const p1    = match.first_player  || {};
+        const p2    = match.second_player || {};
 
-        const p1Bets = match.bets?.filter(b => b.bet_type === 'first_player').length || 0;
-        const p2Bets = match.bets?.filter(b => b.bet_type === 'second_player').length || 0;
+        const totalAll = fp.total + sp.total;
+        const pFp = totalAll > 0 ? Math.round((fp.total / totalAll) * 100) : 50;
+        const pSp = 100 - pFp;
 
-        const p1Percent = totalBets > 0 ? Math.round((p1Bets / totalBets) * 100) : 50;
-        const p2Percent = totalBets > 0 ? 100 - p1Percent : 50;
-
-        const p1src = Utils.getPlayerPhoto(match.first_player  || {});
-        const p2src = Utils.getPlayerPhoto(match.second_player || {});
+        const fmtR = v => 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         return `
         <div class="mh-bets-bar">
-            <div class="mh-bets-side">
-                <div class="mh-bets-av"><img src="${p1src}" onerror="this.src='assets/images/jogador1.png'"></div>
-                <span class="mh-bets-pct">${p1Percent}%</span>
+            <div class="flex justify-between text-xs mb-1 px-1">
+                <span class="text-white font-semibold">${(p1.name || 'J1').split(' ')[0]}</span>
+                <span class="text-gray-400 text-[10px]">⚔️ Pool casado: ${fmtR(pool)}</span>
+                <span class="text-white font-semibold">${(p2.name || 'J2').split(' ')[0]}</span>
             </div>
-            <div class="mh-bets-track">
-                <div class="mh-bets-fill mh-bets-fill--p1" style="width:${p1Percent}%"></div>
-                <div class="mh-bets-fill mh-bets-fill--p2" style="width:${p2Percent}%"></div>
+            <div class="mh-bets-track" style="border-radius:8px;overflow:hidden;display:flex;height:10px;gap:1px">
+                <div style="width:${pFp}%;background:#8b5cf6;transition:width .4s"></div>
+                <div style="width:${pSp}%;background:#f59e0b;transition:width .4s"></div>
             </div>
-            <div class="mh-bets-side mh-bets-side--right">
-                <span class="mh-bets-pct">${p2Percent}%</span>
-                <div class="mh-bets-av"><img src="${p2src}" onerror="this.src='assets/images/jogador2.png'"></div>
+            <div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
+                <span>
+                    <span class="text-purple-400 font-semibold">${fmtR(fp.total)}</span>
+                    <span class="text-gray-600 ml-1">(${fmtR(fp.matched)} casado)</span>
+                </span>
+                <span>
+                    <span class="text-gray-600 mr-1">(${fmtR(sp.matched)} casado)</span>
+                    <span class="text-yellow-400 font-semibold">${fmtR(sp.total)}</span>
+                </span>
             </div>
         </div>`;
     },
 
     /* ── BARRA DE ODDS ───────────────────────────────────────── */
-    renderOddsBar(match) {
-        const o1 = parseFloat(match.first_player_odds)  || 0;
-        const o2 = parseFloat(match.second_player_odds) || 0;
-        if (!o1 || !o2) return '';
+    renderOddsBar(_match) { return ''; },
 
+    _renderOddsBarLegacy(match) {
+        const o1 = 0, o2 = 0;
+        if (!o1 || !o2) return '';
         const i1 = 1 / o1, i2 = 1 / o2, tot = i1 + i2;
         const p1 = Math.round((i1 / tot) * 100);
         const p2 = 100 - p1;
@@ -249,15 +259,21 @@ const SinucaPage = {
 
     /* ── BOTÃO APOSTAR ───────────────────────────────────────── */
     renderApostarBtn(match) {
-        const canBet = this.canBet(match);
+        const canBet       = this.canBet(match);
+        const isLiveBetting = match.status === 'live' && match.live_betting_open;
+        const btnClass  = canBet ? (isLiveBetting ? 'apostar-btn apostar-btn--live' : '') : 'apostar-btn--disabled';
+        const btnLabel  = isLiveBetting
+            ? `<i class="fas fa-bolt"></i> APOSTAR AO VIVO`
+            : canBet
+                ? `<i class="fas fa-check-circle"></i> APOSTAR`
+                : `<i class="fas fa-lock"></i> Apostas encerradas`;
         return `
         <div class="px-4 pb-2">
-            <button class="apostar-btn ${canBet ? '' : 'apostar-btn--disabled'}"
+            ${isLiveBetting ? '<p class="text-center text-xs text-green-400 mb-2 animate-pulse">⚡ JANELA DE APOSTAS AO VIVO ABERTA</p>' : ''}
+            <button class="apostar-btn ${btnClass}"
                     onclick="SinucaPage.showBettingPanel()"
                     ${canBet ? '' : 'disabled'}>
-                ${canBet
-                    ? `<i class="fas fa-check-circle"></i> APOSTAR`
-                    : `<i class="fas fa-lock"></i> Apostas encerradas`}
+                ${btnLabel}
             </button>
         </div>`;
     },
@@ -395,21 +411,24 @@ const SinucaPage = {
         const balance = Storage.getBalance();
         const quickValues = [5, 10, 25, 50, 100, 200];
 
-        const playerOptions = this.betOptions
-            .filter(o => ['first_player','second_player','draw'].includes(o.type))
-            .map(o => {
-                const player = o.type === 'first_player' ? match.first_player
-                             : o.type === 'second_player' ? match.second_player : null;
-                const photo  = player ? Utils.getPlayerPhoto(player) : '';
-                const pFallback = o.type === 'first_player' ? 'assets/images/jogador1.png' : 'assets/images/jogador2.png';
-                return `
+        const stats = match.bet_stats || {};
+        const playerOptions = this.betOptions.map(o => {
+            const side  = stats[o.type] || { total: 0, matched: 0 };
+            const photo = Utils.getPlayerPhoto(o.player);
+            const pFall = o.type === 'first_player' ? 'assets/images/jogador1.png' : 'assets/images/jogador2.png';
+            const fmtR  = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+            return `
                 <label class="bp-competitor" onclick="SinucaPage.selectBetOption('${o.type}')">
-                    ${photo ? `<img src="${photo}" onerror="this.src='${pFallback}'" class="bp-comp-avatar">` : `<div class="bp-comp-avatar bp-comp-avatar--icon"><i class="fas fa-handshake"></i></div>`}
-                    <span class="bp-comp-name">${o.label}</span>
-                    <span class="bp-comp-odds">${o.odds.toFixed(2)}x</span>
+                    ${photo
+                        ? `<img src="${photo}" onerror="this.src='${pFall}'" class="bp-comp-avatar">`
+                        : `<div class="bp-comp-avatar bp-comp-avatar--icon"><i class="fas fa-user"></i></div>`}
+                    <div style="flex:1">
+                        <span class="bp-comp-name">${o.label}</span>
+                        <span style="display:block;font-size:10px;color:#9ca3af">${fmtR(side.matched)} casado / ${fmtR(side.total)} total</span>
+                    </div>
                     <div class="bp-radio" id="radio_${o.type}"></div>
                 </label>`;
-            }).join('');
+        }).join('');
 
         Components.showModal(`
         <div class="bp-panel">
@@ -426,7 +445,7 @@ const SinucaPage = {
                 <button class="bp-amount-btn" onclick="SinucaPage.adjustAmount(-10)">−</button>
                 <div class="bp-amount-display">
                     <span class="bp-amount-currency">R$</span>
-                    <input type="number" id="betAmountInput" class="bp-amount-input" value="0" min="1"
+                    <input type="number" id="betAmountInput" class="bp-amount-input" value="0" min="10"
                            oninput="SinucaPage.onAmountChange(this.value)">
                 </div>
                 <button class="bp-amount-btn" onclick="SinucaPage.adjustAmount(10)">+</button>
@@ -438,7 +457,8 @@ const SinucaPage = {
             </div>
 
             <div id="bpPotential" class="bp-potential hidden">
-                Ganho potencial: <strong id="bpPotentialVal"></strong>
+                Ganho estimado: <strong id="bpPotentialVal"></strong>
+                <span style="font-size:10px;color:#6b7280;display:block;margin-top:2px">*baseado no pool atual &mdash; 10% taxa da casa</span>
             </div>
 
             <button id="bpConfirmBtn" class="bp-confirm-btn" onclick="SinucaPage.confirmBet()" disabled>
@@ -585,25 +605,6 @@ const SinucaPage = {
         <div class="mt-6">
             <button class="btn btn-primary w-full" onclick="Components.closeModal()"><i class="fas fa-check"></i> OK</button>
         </div>`);
-    },
-
-    /* ── HELPERS ─────────────────────────────────────────────── */
-    buildBetOptions(match) {
-        const opts = [];
-        const p1Name = (match.first_player?.name  || 'Jogador 1').split(' ')[0];
-        const p2Name = (match.second_player?.name || 'Jogador 2').split(' ')[0];
-        if (match.first_player_odds)  opts.push({ type:'first_player',  label: p1Name, odds: parseFloat(match.first_player_odds) });
-        if (match.second_player_odds) opts.push({ type:'second_player', label: p2Name, odds: parseFloat(match.second_player_odds) });
-        if (match.draw_odds)          opts.push({ type:'draw',          label: 'Empate',  odds: parseFloat(match.draw_odds) });
-        if (match.par_odds)           opts.push({ type:'par',           label: 'Par',     odds: parseFloat(match.par_odds) });
-        if (match.impar_odds)         opts.push({ type:'impar',         label: 'Ímpar',   odds: parseFloat(match.impar_odds) });
-        return opts;
-    },
-
-    canBet(match) {
-        if (typeof match.can_bet !== 'undefined') return !!match.can_bet;
-        if (!match.betting_deadline) return false;
-        return match.status !== 'finished' && new Date(match.betting_deadline) > new Date();
     },
 
     getMatchImage(match) {

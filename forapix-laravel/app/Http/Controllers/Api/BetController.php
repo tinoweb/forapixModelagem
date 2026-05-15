@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Bet;
 use App\Models\GameMatch;
+use App\Services\BetMatchingService;
 use App\Services\ResendService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +20,8 @@ class BetController extends Controller
     {
         $validated = $request->validate([
             'match_id' => 'required|exists:matches,id',
-            'bet_type' => 'required|in:first_player,second_player,draw,par,impar',
-            'amount' => 'required|numeric|min:1'
+            'bet_type' => 'required|in:first_player,second_player',
+            'amount'   => 'required|numeric|min:10'
         ]);
 
         $user = $request->user();
@@ -61,21 +62,15 @@ class BetController extends Controller
             ], 422);
         }
 
-        // Validate odds exist for bet type
-        $odds = $match->getOddsForBetType($validated['bet_type']);
-        if (!$odds) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tipo de aposta indisponível para esta partida'
-            ], 422);
-        }
-
         try {
             DB::beginTransaction();
 
             $bet = $user->placeBet($match, $validated['bet_type'], $validated['amount']);
 
             DB::commit();
+
+            // Casamento automático com apostas do lado oposto (FIFO)
+            $bet = (new BetMatchingService())->matchBet($bet);
 
             // Disparar email de confirmação (não bloqueia a resposta)
             try {

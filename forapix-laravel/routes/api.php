@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\BetController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\DepositWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,9 +60,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet/balance', [WalletController::class, 'balance']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::get('/wallet/deposit/{transactionId}/status', [WalletController::class, 'depositStatus']);
     Route::post('/wallet/deposit/confirm', [WalletController::class, 'confirmDeposit']);
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
 });
+
+// Webhook VeoPag (sem autenticação — chamado pela plataforma)
+Route::post('/webhooks/deposit', [DepositWebhookController::class, 'handle'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Test route
 Route::get('/test', function () {

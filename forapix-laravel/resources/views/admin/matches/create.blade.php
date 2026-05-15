@@ -67,17 +67,6 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Odds jogador 1</label>
-                        <input type="number" step="0.01" min="1.01" name="first_player_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" value="1.80" required>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Odds jogador 2</label>
-                        <input type="number" step="0.01" min="1.01" name="second_player_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" value="1.90" required>
-                    </div>
-                </div>
-
                 <div class="grid md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-sm text-gray-300">Odds Empate</label>

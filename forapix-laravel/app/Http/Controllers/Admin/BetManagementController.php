@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bet;
 use App\Models\GameMatch;
 use App\Models\Transaction;
+use App\Services\BetMatchingService;
 use Illuminate\Http\Request;
 
 class BetManagementController extends Controller
@@ -64,40 +65,62 @@ class BetManagementController extends Controller
     }
 
     /**
-     * Encerra uma partida e processa todas as apostas pendentes
+     * Encerra uma partida e processa todas as apostas pendentes (pool casado)
      */
     public function resolveMatch(Request $request, GameMatch $match)
     {
         $request->validate([
-            'result'              => 'required|in:first_player,second_player,draw,par,impar',
+            'result'              => 'required|in:first_player,second_player,cancelled',
             'winner_player_id'    => 'nullable|exists:players,id',
             'first_player_score'  => 'nullable|integer|min:0',
             'second_player_score' => 'nullable|integer|min:0',
         ]);
 
-        if ($match->status === 'finished') {
+        if ($match->status === 'finished' || $match->status === 'cancelled') {
             return response()->json([
                 'success' => false,
-                'message' => 'Esta partida já foi encerrada anteriormente.',
+                'message' => 'Esta partida já foi encerrada ou cancelada.',
             ], 400);
         }
 
-        $match->resolveMatch($request->result, [
-            'first_player'  => $request->first_player_score,
-            'second_player' => $request->second_player_score,
-        ]);
+        $service = new BetMatchingService();
 
-        $updates = ['status' => 'finished', 'match_end' => now()];
+        if ($request->result === 'cancelled') {
+            // Devolução total
+            $count = $service->cancelMatch($match, 'Partida cancelada pelo administrador');
+            $match->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Partida cancelada! {$count} aposta(s) devolvidas integralmente.",
+            ]);
+        }
+
+        // Resolver apostas com pool casado
+        $stats = $service->resolveMatch($match, $request->result);
+
+        $updates = [
+            'status'              => 'finished',
+            'match_end'          => now(),
+            'first_player_score'  => $request->first_player_score ?? $match->first_player_score,
+            'second_player_score' => $request->second_player_score ?? $match->second_player_score,
+        ];
         if ($request->filled('winner_player_id')) {
             $updates['winner_player_id'] = $request->winner_player_id;
         }
+        $updates['result'] = ['winning_bet_type' => $request->result];
         $match->update($updates);
 
-        $processed = $match->bets()->whereIn('status', ['won', 'lost'])->count();
+        $winnerLabel = $request->result === 'first_player'
+            ? ($match->firstPlayer->name ?? 'Jogador 1')
+            : ($match->secondPlayer->name ?? 'Jogador 2');
 
         return response()->json([
             'success' => true,
-            'message' => "Partida encerrada! {$processed} apostas foram processadas.",
+            'message' => "Partida encerrada! Vencedor: {$winnerLabel}. "
+                . "{$stats['processed']} apostas processadas. "
+                . "Pool casado: R$ " . number_format($stats['winner_pool'] + $stats['house_cut'], 2, ',', '.') . " "
+                . "(casa: R$ " . number_format($stats['house_cut'], 2, ',', '.') . ").",
         ]);
     }
 

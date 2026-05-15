@@ -69,17 +69,6 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Odds jogador 1</label>
-                        <input type="number" step="0.01" min="1.01" name="first_player_odds" value="{{ $match->first_player_odds }}" class="input-admin mt-1">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Odds jogador 2</label>
-                        <input type="number" step="0.01" min="1.01" name="second_player_odds" value="{{ $match->second_player_odds }}" class="input-admin mt-1">
-                    </div>
-                </div>
-
                 <div class="grid md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-sm text-gray-300">Odds Empate</label>
@@ -213,6 +202,51 @@
             </p>
         </div>
 
+        {{-- Painel: Apostas Ao Vivo (só quando partida está live) --}}
+        @if($match->status === 'live')
+        <div class="glass-card p-6 border {{ $match->live_betting_open ? 'border-green-500/40' : 'border-white/10' }}">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-[11px] uppercase tracking-[0.3em] {{ $match->live_betting_open ? 'text-green-400' : 'text-gray-400' }}">Apostas Ao Vivo</p>
+                    <h3 class="text-lg font-semibold">Controle de Apostas em Tempo Real</h3>
+                    <p class="text-sm text-gray-400 mt-1">
+                        Abra as apostas quando estiver empatado e feche quando um jogador sair na frente.
+                    </p>
+                </div>
+                <div id="liveBettingStatus" class="text-right">
+                    @if($match->live_betting_open)
+                        <span class="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-sm font-bold">
+                            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> APOSTAS ABERTAS
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-4 py-2 rounded-xl text-sm font-bold">
+                            <span class="w-2 h-2 bg-red-400 rounded-full"></span> APOSTAS FECHADAS
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            @if($match->live_betting_open && $match->live_betting_opened_at)
+                <p class="text-xs text-green-400/70 mb-4">
+                    Abertas desde: {{ $match->live_betting_opened_at->format('H:i:s') }}
+                </p>
+            @endif
+
+            <button id="toggleLiveBettingBtn"
+                onclick="toggleLiveBetting({{ $match->id }})"
+                class="w-full px-4 py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition hover:opacity-90
+                       {{ $match->live_betting_open
+                           ? 'bg-gradient-to-r from-red-500 to-red-600'
+                           : 'bg-gradient-to-r from-green-500 to-emerald-500' }}">
+                @if($match->live_betting_open)
+                    <i class="fas fa-lock"></i> Fechar Apostas Ao Vivo
+                @else
+                    <i class="fas fa-bolt"></i> Abrir Apostas Ao Vivo
+                @endif
+            </button>
+        </div>
+        @endif
+
         {{-- Painel: Encerrar e Resolver Apostas --}}
         @if($match->status !== 'finished' && $match->status !== 'cancelled')
         <div class="glass-card p-6 border border-emerald-500/20">
@@ -225,20 +259,40 @@
                 </p>
             </div>
 
+            {{-- Resumo do pool atual --}}
+            @php
+                $poolStats = (new \App\Services\BetMatchingService())->getMatchStats($match);
+            @endphp
+            <div class="grid grid-cols-3 gap-3 mb-5 text-center text-sm">
+                <div class="bg-[#10162c] rounded-xl p-3">
+                    <p class="text-gray-400 text-xs mb-1">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</p>
+                    <p class="font-bold text-white">R$ {{ number_format($poolStats['first_player']['total'], 2, ',', '.') }}</p>
+                    <p class="text-emerald-400 text-xs">R$ {{ number_format($poolStats['first_player']['matched'], 2, ',', '.') }} casado</p>
+                </div>
+                <div class="bg-[#10162c] rounded-xl p-3">
+                    <p class="text-gray-400 text-xs mb-1">Pool casado</p>
+                    <p class="font-bold text-emerald-400">R$ {{ number_format($poolStats['total_matched_pool'], 2, ',', '.') }}</p>
+                    <p class="text-yellow-400 text-xs">Casa: R$ {{ number_format($poolStats['house_cut'], 2, ',', '.') }}</p>
+                </div>
+                <div class="bg-[#10162c] rounded-xl p-3">
+                    <p class="text-gray-400 text-xs mb-1">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</p>
+                    <p class="font-bold text-white">R$ {{ number_format($poolStats['second_player']['total'], 2, ',', '.') }}</p>
+                    <p class="text-emerald-400 text-xs">R$ {{ number_format($poolStats['second_player']['matched'], 2, ',', '.') }} casado</p>
+                </div>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="text-sm text-gray-300">Resultado da partida <span class="text-red-400">*</span></label>
                     <select id="resolveResult" class="input-admin mt-1">
                         <option value="">Selecione o resultado</option>
-                        <option value="first_player">{{ $match->firstPlayer->name ?? 'Jogador 1' }} venceu</option>
-                        <option value="second_player">{{ $match->secondPlayer->name ?? 'Jogador 2' }} venceu</option>
-                        @if($match->draw_odds) <option value="draw">Empate</option> @endif
-                        @if($match->par_odds)  <option value="par">Par</option> @endif
-                        @if($match->impar_odds) <option value="impar">Ímpar</option> @endif
+                        <option value="first_player">🏆 {{ $match->firstPlayer->name ?? 'Jogador 1' }} venceu</option>
+                        <option value="second_player">🏆 {{ $match->secondPlayer->name ?? 'Jogador 2' }} venceu</option>
+                        <option value="cancelled">↩ Jogo não concluído — devolver tudo</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-300">Jogador vencedor (opcional)</label>
+                    <label class="text-sm text-gray-300">Jogador vencedor (placar)</label>
                     <select id="resolveWinner" class="input-admin mt-1">
                         <option value="">Nenhum / Não aplicável</option>
                         <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</option>
@@ -278,6 +332,30 @@
 
 @push('scripts')
 <script>
+async function toggleLiveBetting(matchId) {
+    const btn = document.getElementById('toggleLiveBettingBtn');
+    const isOpen = btn.textContent.trim().includes('Fechar');
+    const action = isOpen ? 'fechar' : 'abrir';
+
+    if (!confirm(`Confirmar: ${action} apostas ao vivo agora?`)) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aguarde...';
+
+    const res = await fetch(`/admin/matches/${matchId}/toggle-live-betting`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+        },
+    });
+
+    const data = await res.json();
+    alert(data.message);
+    if (data.success) location.reload();
+    else btn.disabled = false;
+}
+
 async function resolveMatch(matchId) {
     const result = document.getElementById('resolveResult').value;
     if (!result) { alert('Selecione o resultado da partida antes de encerrar.'); return; }

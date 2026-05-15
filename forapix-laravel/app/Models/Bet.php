@@ -17,6 +17,7 @@ class Bet extends Model
         'match_id',
         'bet_type',
         'amount',
+        'matched_amount',
         'odds',
         'potential_win',
         'status',
@@ -31,6 +32,7 @@ class Bet extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'matched_amount' => 'decimal:2',
         'odds' => 'decimal:2',
         'potential_win' => 'decimal:2',
         'result_amount' => 'decimal:2',

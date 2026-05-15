@@ -48,6 +48,19 @@ const WalletPage = {
 
     init() {
         this.loadTransactions();
+        this._refreshBalanceCard();
+    },
+
+    async _refreshBalanceCard() {
+        try {
+            const res = await API.getBalance();
+            if (res && res.success && res.data) {
+                const fresh = parseFloat(res.data.balance) || 0;
+                Storage.setBalance(fresh);
+                const el = document.querySelector('.wallet-balance-value');
+                if (el) el.textContent = Utils.formatCurrency(fresh, true);
+            }
+        } catch (_) {}
     },
 
     switchTab(tab) {
@@ -242,7 +255,7 @@ const WalletPage = {
     },
 
     showWithdrawModal() {
-        const balance = Storage.getBalance();
+        const balance = parseFloat(Storage.getBalance()) || 0;
 
         Components.showModal(`
             <div class="modal-header">

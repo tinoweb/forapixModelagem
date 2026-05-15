@@ -17,10 +17,10 @@ const HomePage = {
                 <!-- Welcome Card -->
                 <div class="welcome-card p-5 mb-4">
                     <p class="greeting mb-1">${greeting}</p>
-                    <h2 class="text-xl font-bold mb-3">Bem-vindo(a), <span class="user-name">${user.name.split(' ')[0].toLowerCase()}</span></h2>
+                    <h2 class="text-xl font-bold mb-3">Bem-vindo(a), <span id="homeUserName" class="user-name">${user ? user.name.split(' ')[0] : 'você'}</span></h2>
 
                     <p class="balance-label">Saldo Disponível</p>
-                    <p class="text-2xl font-bold text-white mb-4">${Utils.formatCurrency(balance, true)}</p>
+                    <p id="homeBalance" class="text-2xl font-bold text-white mb-4">${Utils.formatCurrency(balance, true)}</p>
 
                     <button class="invite-btn" onclick="HomePage.shareInvite()">
                         <i class="fas fa-user-plus"></i>
@@ -127,6 +127,29 @@ const HomePage = {
      */
     init() {
         this.loadFeaturedMatches();
+        this._refreshUserCard();
+    },
+
+    async _refreshUserCard() {
+        if (!Storage.isLoggedIn()) return;
+        try {
+            const res = await API.request('/auth/profile');
+            if (res && res.success && res.data) {
+                const data = res.data;
+                const stored = Storage.getUser() || {};
+                Storage.setUser({ ...stored, ...data });
+                const fresh = parseFloat(data.balance) || 0;
+                Storage.setBalance(fresh);
+
+                const nameEl    = document.getElementById('homeUserName');
+                const balanceEl = document.getElementById('homeBalance');
+                if (nameEl)    nameEl.textContent    = data.name.split(' ')[0];
+                if (balanceEl) balanceEl.textContent = Utils.formatCurrency(fresh, true);
+
+                // Atualiza header também
+                if (typeof App !== 'undefined') App.updateBalance();
+            }
+        } catch (_) {}
     },
 
     /**

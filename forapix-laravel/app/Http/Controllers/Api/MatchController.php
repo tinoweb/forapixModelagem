@@ -56,12 +56,9 @@ class MatchController extends Controller
     public function show($id)
     {
         $match = GameMatch::with([
-            'game.sport', 
-            'firstPlayer', 
+            'game.sport',
+            'firstPlayer',
             'secondPlayer',
-            'bets' => function($query) {
-                $query->where('status', 'pending');
-            }
         ])->find($id);
 
         if (!$match) {
@@ -71,9 +68,13 @@ class MatchController extends Controller
             ], 404);
         }
 
-        // Add betting status
-        $match->can_bet = $match->isBettingOpen();
-        $match->time_remaining = $match->time_remaining;
+        // Estatísticas reais de apostas casadas (pool)
+        $poolStats = (new \App\Services\BetMatchingService())->getMatchStats($match);
+
+        $match->bet_stats          = $poolStats;
+        $match->total_bets         = $poolStats['first_player']['count'] + $poolStats['second_player']['count'];
+        $match->can_bet            = $match->isBettingOpen();
+        $match->time_remaining     = $match->time_remaining;
 
         return response()->json([
             'success' => true,

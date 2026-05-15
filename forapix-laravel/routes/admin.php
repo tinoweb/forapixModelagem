@@ -74,6 +74,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/bulk-update', [GameManagementController::class, 'bulkUpdateMatches'])->name('bulk-update');
         Route::post('/{match}/resolve-bets', [BetManagementController::class, 'resolveMatch'])->name('resolve-bets');
         Route::post('/{match}/cancel', [GameManagementController::class, 'cancelMatch'])->name('cancel');
+        Route::post('/{match}/toggle-live-betting', [GameManagementController::class, 'toggleLiveBetting'])->name('toggle-live-betting');
     });
 
     // Bet Management

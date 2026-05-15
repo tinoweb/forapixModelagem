@@ -283,12 +283,9 @@ class User extends Authenticatable
             throw new \Exception('Apostas fechadas para esta partida');
         }
 
-        $odds = $match->getOddsForBetType($betType);
-        if (!$odds) {
-            throw new \Exception('Tipo de aposta inválido');
-        }
-
-        $potentialWin = $match->calculatePotentialWin($betType, $amount);
+        // Sistema pool — odds e potential_win são estimativas, payout real calculado ao encerrar
+        $odds         = 0;
+        $potentialWin = 0;
 
         // Deduct balance
         $balanceBefore = $this->balance;

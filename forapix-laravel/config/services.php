@@ -37,4 +37,13 @@ return [
         'from_name'    => env('RESEND_FROM_NAME', 'ApostaCasada'),
     ],
 
+    'veopag' => [
+        'client_id'     => env('VEOPAG_CLIENT_ID', ''),
+        'client_secret' => env('VEOPAG_CLIENT_SECRET', ''),
+    ],
+
+    'admin' => [
+        'email' => env('ADMIN_EMAIL', 'admin@apostacasada.net'),
+    ],
+
 ];

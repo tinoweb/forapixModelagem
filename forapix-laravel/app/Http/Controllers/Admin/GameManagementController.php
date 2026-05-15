@@ -268,8 +268,8 @@ class GameManagementController extends Controller
             'match_start' => 'required|date|after:now',
             'match_end' => 'nullable|date|after:match_start',
             'betting_deadline' => 'required|date|before:match_start',
-            'first_player_odds' => 'required|numeric|min:1.01',
-            'second_player_odds' => 'required|numeric|min:1.01',
+            'first_player_odds' => 'nullable|numeric|min:1.01',
+            'second_player_odds' => 'nullable|numeric|min:1.01',
             'draw_odds' => 'nullable|numeric|min:1.01',
             'par_odds' => 'nullable|numeric|min:1.01',
             'impar_odds' => 'nullable|numeric|min:1.01',
@@ -342,8 +342,8 @@ class GameManagementController extends Controller
             'match_start' => 'sometimes|date',
             'match_end' => 'sometimes|nullable|date',
             'betting_deadline' => 'sometimes|date',
-            'first_player_odds' => 'sometimes|numeric|min:1.01',
-            'second_player_odds' => 'sometimes|numeric|min:1.01',
+            'first_player_odds' => 'sometimes|nullable|numeric|min:1.01',
+            'second_player_odds' => 'sometimes|nullable|numeric|min:1.01',
             'draw_odds' => 'sometimes|nullable|numeric|min:1.01',
             'par_odds' => 'sometimes|nullable|numeric|min:1.01',
             'impar_odds' => 'sometimes|nullable|numeric|min:1.01',
@@ -592,6 +592,44 @@ class GameManagementController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stats
+        ]);
+    }
+
+    /**
+     * Abre ou fecha apostas ao vivo manualmente (toggle)
+     */
+    public function toggleLiveBetting(Request $request, GameMatch $match)
+    {
+        if ($match->status !== 'live') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Apostas ao vivo só podem ser controladas quando a partida está em andamento (status: ao vivo).',
+            ], 422);
+        }
+
+        if (in_array($match->status, ['finished', 'cancelled'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Partida já encerrada.',
+            ], 422);
+        }
+
+        $opening = !$match->live_betting_open;
+
+        $match->update([
+            'live_betting_open'       => $opening,
+            'live_betting_opened_at'  => $opening ? now() : $match->live_betting_opened_at,
+            'live_betting_closed_at'  => !$opening ? now() : null,
+        ]);
+
+        $msg = $opening
+            ? '🟢 Apostas ao vivo ABERTAS! Apostadores podem apostar agora.'
+            : '🔴 Apostas ao vivo FECHADAS.';
+
+        return response()->json([
+            'success'           => true,
+            'message'           => $msg,
+            'live_betting_open' => $opening,
         ]);
     }
 

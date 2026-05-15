@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Services\VeoPagService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WalletController extends Controller
 {
@@ -57,100 +59,137 @@ class WalletController extends Controller
     }
 
     /**
-     * Request a deposit (generates PIX info)
+     * Cria depósito PIX via VeoPag
      */
     public function deposit(Request $request)
     {
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:1|max:50000'
+            'amount'   => 'required|numeric|min:10|max:50000',
+            'document' => 'nullable|string',
+            'phone'    => 'nullable|string',
         ]);
 
-        $user = $request->user();
+        $user   = $request->user();
+        $amount = (float) $validated['amount'];
 
-        // Generate PIX data
-        $pixKey = config('services.pix.key', 'forapix@pix.com.br');
-        $pixCode = $this->generatePixCode($validated['amount'], $user);
+        $veopag = app(VeoPagService::class);
 
-        // Create pending transaction
+        // Se VeoPag não configurada, retorna fallback (dev/testes)
+        if (!$veopag->isConfigured()) {
+            $pixCode = $this->generatePixCode($amount, $user);
+
+            $transaction = Transaction::create([
+                'user_id'        => $user->id,
+                'type'           => 'deposit',
+                'amount'         => $amount,
+                'net_amount'     => $amount,
+                'description'    => 'Depósito via PIX',
+                'status'         => 'pending',
+                'payment_method' => 'pix',
+                'balance_before' => $user->balance,
+                'balance_after'  => $user->balance,
+                'metadata'       => ['pix_code' => $pixCode, 'source' => 'fallback'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'transaction_id' => $transaction->transaction_id,
+                    'amount'         => $amount,
+                    'qrcode'         => $pixCode,
+                    'expires_at'     => now()->addMinutes(30)->toIso8601String(),
+                    'source'         => 'fallback',
+                ],
+                'message' => 'Depósito gerado (modo local)',
+            ]);
+        }
+
+        // external_id baseado no user + timestamp (idempotente)
+        $externalId  = 'fp-' . $user->id . '-' . time();
+        $callbackUrl = config('app.url') . '/api/webhooks/deposit';
+
+        try {
+            $result = $veopag->createDeposit($amount, $externalId, [
+                'name'     => $user->name,
+                'email'    => $user->email,
+                'document' => $validated['document'] ?? '00000000000',
+                'phone'    => $validated['phone'] ?? null,
+            ], $callbackUrl);
+
+        } catch (\Throwable $e) {
+            Log::error('VeoPag deposit error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao gerar PIX: ' . $e->getMessage(),
+            ], 422);
+        }
+
         $transaction = Transaction::create([
-            'user_id' => $user->id,
-            'type' => 'deposit',
-            'amount' => $validated['amount'],
-            'net_amount' => $validated['amount'],
-            'description' => 'Depósito via PIX',
-            'status' => 'pending',
-            'balance_before' => $user->balance,
-            'balance_after' => $user->balance,
-            'metadata' => [
-                'pix_code' => $pixCode,
-                'pix_key' => $pixKey,
-                'method' => 'pix'
-            ]
+            'user_id'                => $user->id,
+            'type'                   => 'deposit',
+            'amount'                 => $amount,
+            'net_amount'             => $amount,
+            'description'            => 'Depósito via PIX (VeoPag)',
+            'status'                 => 'pending',
+            'payment_method'         => 'pix',
+            'payment_reference'      => $result['transactionId'],
+            'external_transaction_id'=> $externalId,
+            'balance_before'         => $user->balance,
+            'balance_after'          => $user->balance,
+            'metadata'               => [
+                'veopag_transaction_id' => $result['transactionId'],
+                'qrcode'                => $result['qrcode'],
+                'fee'                   => $result['fee'],
+                'source'                => 'veopag',
+            ],
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'transaction_id' => $transaction->id,
-                'amount' => $validated['amount'],
-                'pix_key' => $pixKey,
-                'pix_code' => $pixCode,
-                'qr_code_url' => null,
-                'expires_at' => now()->addMinutes(30)->toIso8601String()
+            'data'    => [
+                'transaction_id' => $transaction->transaction_id,
+                'amount'         => $result['amount'],
+                'qrcode'         => $result['qrcode'],
+                'fee'            => $result['fee'],
+                'expires_at'     => now()->addMinutes(30)->toIso8601String(),
+                'source'         => 'veopag',
             ],
-            'message' => 'Depósito solicitado com sucesso'
+            'message' => 'PIX gerado com sucesso! Aguarde o pagamento.',
         ]);
     }
 
     /**
-     * Confirm a deposit (simulated for now)
+     * Consulta status de um depósito pendente (polling do frontend)
+     */
+    public function depositStatus(Request $request, string $transactionId)
+    {
+        $transaction = Transaction::where('user_id', $request->user()->id)
+            ->where('transaction_id', $transactionId)
+            ->where('type', 'deposit')
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'transaction_id' => $transaction->transaction_id,
+                'status'         => $transaction->status,
+                'amount'         => $transaction->amount,
+                'balance'        => $transaction->status === 'completed'
+                    ? $request->user()->fresh()->balance
+                    : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Confirm a deposit — mantido para compatibilidade
      */
     public function confirmDeposit(Request $request)
     {
-        $validated = $request->validate([
-            'transaction_id' => 'required|exists:transactions,id'
-        ]);
-
-        $user = $request->user();
-        $transaction = Transaction::where('user_id', $user->id)
-            ->where('id', $validated['transaction_id'])
-            ->where('type', 'deposit')
-            ->where('status', 'pending')
-            ->firstOrFail();
-
-        try {
-            DB::beginTransaction();
-
-            $balanceBefore = $user->balance;
-            $user->increment('balance', $transaction->amount);
-            $user->increment('total_deposited', $transaction->amount);
-
-            $transaction->update([
-                'status' => 'completed',
-                'balance_before' => $balanceBefore,
-                'balance_after' => $user->fresh()->balance,
-                'processed_at' => now()
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'balance' => $user->fresh()->balance,
-                    'transaction' => $transaction->fresh()
-                ],
-                'message' => 'Depósito confirmado com sucesso!'
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao processar depósito'
-            ], 422);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Confirmação automática via webhook. Aguarde o processamento.',
+        ], 422);
     }
 
     /**

@@ -38,7 +38,10 @@ class GameMatch extends Model
         'metadata',
         'featured',
         'total_bets_amount',
-        'total_bets_count'
+        'total_bets_count',
+        'live_betting_open',
+        'live_betting_opened_at',
+        'live_betting_closed_at',
     ];
 
     protected $casts = [
@@ -53,6 +56,9 @@ class GameMatch extends Model
         'metadata' => 'array',
         'featured' => 'boolean',
         'total_bets_amount' => 'decimal:2',
+        'live_betting_open' => 'boolean',
+        'live_betting_opened_at' => 'datetime',
+        'live_betting_closed_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -145,8 +151,21 @@ class GameMatch extends Model
      */
     public function isBettingOpen(): bool
     {
-        return in_array($this->status, ['scheduled', 'live']) && 
-               $this->betting_deadline > now();
+        if (in_array($this->status, ['finished', 'cancelled'])) {
+            return false;
+        }
+
+        // Pré-jogo: dentro do prazo normal
+        if ($this->status === 'scheduled' && $this->betting_deadline > now()) {
+            return true;
+        }
+
+        // Apostas ao vivo: abertas manualmente pelo admin durante o jogo
+        if ($this->status === 'live' && $this->live_betting_open) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -350,14 +350,28 @@ const App = {
     },
 
     /**
-     * Update balance display
+     * Update balance display — busca da API e atualiza localStorage
      */
-    updateBalance() {
-        const balance = Storage.getBalance();
+    async updateBalance() {
+        // Exibe imediatamente o valor em cache enquanto busca o real
+        const cached = Storage.getBalance();
         const balanceElement = document.getElementById('userBalance');
         if (balanceElement) {
-            balanceElement.textContent = Utils.formatCurrency(balance);
+            balanceElement.textContent = Utils.formatCurrency(cached);
         }
+
+        if (!Storage.isLoggedIn()) return;
+
+        try {
+            const res = await API.getBalance();
+            if (res && res.success && res.data) {
+                const fresh = parseFloat(res.data.balance) || 0;
+                Storage.setBalance(fresh);
+                if (balanceElement) {
+                    balanceElement.textContent = Utils.formatCurrency(fresh);
+                }
+            }
+        } catch (_) {}
     },
 
     /**

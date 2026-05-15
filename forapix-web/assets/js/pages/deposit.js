@@ -1,12 +1,14 @@
 /**
  * ForaPix - Página de Depósito
- * Formulário funcional para depósito via PIX
+ * Integração real com VeoPag (PIX)
  */
 
 const DepositPage = {
     selectedAmount: null,
-    pixKey: 'forapix@pix.com.br',
-    qrCode: '00020126580014br.gov.bcb.pix0136forapix@pix.com.br5204000053039865405100.005802BR5925ForaPix Apostas Online6009Sao Paulo62070503***6304E8A2',
+    currentTransaction: null,   // { transaction_id, qrcode, amount, expires_at }
+    pollingTimer: null,
+    pollingCount: 0,
+    MAX_POLLS: 120,             // 10 min (5s cada)
 
     render() {
         const balance = Storage.getBalance();
@@ -38,7 +40,7 @@ const DepositPage = {
                         <label class="input-label">Outro valor</label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">R$</span>
-                            <input type="number" id="customAmount" class="input-field pl-12" placeholder="0,00" min="1" step="0.01" oninput="DepositPage.onCustomAmountInput()">
+                            <input type="number" id="customAmount" class="input-field pl-12" placeholder="0,00" min="10" step="0.01" oninput="DepositPage.onCustomAmountInput()">
                         </div>
                     </div>
 
@@ -56,59 +58,8 @@ const DepositPage = {
                     </button>
                 </div>
 
-                <!-- Informações PIX -->
-                <div id="pixDetails" class="bg-card-bg rounded-2xl p-5 border border-white/5 hidden">
-                    <h3 class="text-lg font-bold text-white mb-4">Escaneie o QR Code</h3>
-                    
-                    <!-- QR Code -->
-                    <div class="bg-white rounded-2xl p-6 mb-4 flex items-center justify-center">
-                        <div class="w-48 h-48 bg-gray-100 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-qrcode text-8xl text-gray-300"></i>
-                        </div>
-                    </div>
-
-                    <!-- Chave PIX -->
-                    <div class="mb-4">
-                        <label class="input-label">Chave PIX</label>
-                        <div class="flex gap-2">
-                            <input type="text" class="input-field flex-1" value="${this.pixKey}" readonly>
-                            <button class="btn btn-secondary" onclick="DepositPage.copyPixKey()">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Código PIX -->
-                    <div class="mb-4">
-                        <label class="input-label">Código PIX (copiar e colar)</label>
-                        <div class="flex gap-2">
-                            <input type="text" class="input-field flex-1 text-xs" value="${this.qrCode}" readonly>
-                            <button class="btn btn-secondary" onclick="DepositPage.copyPixCode()">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Informações -->
-                    <div class="bg-secondary rounded-xl p-4 mb-4">
-                        <h4 class="text-sm font-bold text-white mb-2">Instruções:</h4>
-                        <ul class="text-xs text-gray-400 space-y-2">
-                            <li>1. Abra o app do seu banco</li>
-                            <li>2. Escolha a opção PIX</li>
-                            <li>3. Escaneie o QR Code ou copie a chave</li>
-                            <li>4. Confirme o valor e faça o pagamento</li>
-                            <li>5. O saldo será creditado automaticamente</li>
-                        </ul>
-                    </div>
-
-                    <!-- Botão confirmar -->
-                    <button class="btn btn-success w-full mb-3" onclick="DepositPage.confirmDeposit()">
-                        <i class="fas fa-check"></i> Já fiz o pagamento
-                    </button>
-                    <button class="btn btn-secondary w-full" onclick="DepositPage.cancelDeposit()">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
-                </div>
+                <!-- PIX gerado (preenchido dinamicamente) -->
+                <div id="pixDetails" class="hidden"></div>
 
                 <!-- Depósitos recentes -->
                 <div class="mb-6">
@@ -148,7 +99,7 @@ const DepositPage = {
         const customInput = document.getElementById('customAmount');
         const value = parseFloat(customInput.value) || 0;
         
-        if (value > 0) {
+        if (value >= 10) {
             this.selectedAmount = value;
             document.querySelectorAll('.quick-amount-btn').forEach(btn => {
                 btn.classList.remove('selected');
@@ -177,79 +128,201 @@ const DepositPage = {
         }
     },
 
-    showPixDetails() {
+    async showPixDetails() {
         if (!this.selectedAmount || this.selectedAmount <= 0) {
             Components.showToast('Selecione um valor válido', 'warning');
             return;
         }
 
+        if (!Storage.isLoggedIn()) {
+            Components.showToast('Faça login para depositar.', 'warning');
+            App.navigateTo('menu');
+            return;
+        }
+
+        const btn = document.getElementById('continueBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PIX...';
+
+        try {
+            const result = await API.deposit(this.selectedAmount);
+
+            if (!result.success) {
+                Components.showToast(result.message || 'Erro ao gerar PIX', 'error');
+                return;
+            }
+
+            this.currentTransaction = result.data;
+            this.pollingCount = 0;
+            this._renderPixPanel(result.data);
+            this._startPolling(result.data.transaction_id);
+
+        } catch (e) {
+            Components.showToast(e.message || 'Erro ao gerar PIX', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-arrow-right"></i> Continuar';
+        }
+    },
+
+    _renderPixPanel(data) {
         const pixDetails = document.getElementById('pixDetails');
-        if (pixDetails) {
-            pixDetails.classList.remove('hidden');
-            pixDetails.scrollIntoView({ behavior: 'smooth' });
-        }
+        const amount = Utils.formatCurrency(data.amount, true);
+        const expires = new Date(data.expires_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        pixDetails.className = 'bg-card-bg rounded-2xl p-5 border border-white/5 mb-6';
+        pixDetails.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold">Pague via PIX</h3>
+                <span class="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full">
+                    <i class="fas fa-clock"></i> Expira às ${expires}
+                </span>
+            </div>
+
+            <!-- QR Code -->
+            <div class="bg-white rounded-2xl p-4 mb-4 flex items-center justify-center">
+                <div id="qrCodeCanvas" class="w-48 h-48 flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Valor -->
+            <div class="bg-success/10 border border-success/20 rounded-xl p-3 mb-4 text-center">
+                <p class="text-xs text-gray-400 mb-1">Valor a pagar</p>
+                <p class="text-2xl font-bold text-success">${amount}</p>
+                ${data.fee > 0 ? `<p class="text-xs text-gray-500">+ R$ ${data.fee.toFixed(2)} de taxa</p>` : ''}
+            </div>
+
+            <!-- Copia e Cola -->
+            <div class="mb-4">
+                <label class="input-label">PIX Copia e Cola</label>
+                <div class="flex gap-2">
+                    <input type="text" id="pixCodeInput" class="input-field flex-1 text-xs" value="${data.qrcode}" readonly>
+                    <button class="btn btn-secondary" onclick="DepositPage.copyPixCode()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status do pagamento -->
+            <div id="paymentStatus" class="bg-secondary rounded-xl p-4 mb-4 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-spinner fa-spin text-yellow-400 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-yellow-300">Aguardando pagamento...</p>
+                    <p class="text-xs text-gray-400">Confirmaremos automaticamente em segundos.</p>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary w-full" onclick="DepositPage.cancelDeposit()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+        `;
+
+        pixDetails.scrollIntoView({ behavior: 'smooth' });
+        this._generateQrCode(data.qrcode);
     },
 
-    async copyPixKey() {
-        const success = await Utils.copyToClipboard(this.pixKey);
-        if (success) {
-            Components.showToast('Chave PIX copiada!', 'success');
+    _generateQrCode(emv) {
+        const container = document.getElementById('qrCodeCanvas');
+        if (!container) return;
+
+        if (typeof QRCode !== 'undefined') {
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: emv,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M,
+            });
         } else {
-            Components.showToast('Erro ao copiar chave', 'error');
+            container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(emv)}" alt="QR Code PIX" class="w-44 h-44 rounded">`;
         }
     },
 
-    async copyPixCode() {
-        const success = await Utils.copyToClipboard(this.qrCode);
-        if (success) {
-            Components.showToast('Código PIX copiado!', 'success');
-        } else {
-            Components.showToast('Erro ao copiar código', 'error');
+    _startPolling(transactionId) {
+        this._stopPolling();
+        this.pollingTimer = setInterval(() => this._pollStatus(transactionId), 5000);
+    },
+
+    _stopPolling() {
+        if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
         }
     },
 
-    async confirmDeposit() {
-        if (!this.selectedAmount || this.selectedAmount <= 0) {
-            Components.showToast('Valor inválido', 'error');
+    async _pollStatus(transactionId) {
+        this.pollingCount++;
+
+        if (this.pollingCount > this.MAX_POLLS) {
+            this._stopPolling();
+            this._updatePaymentStatus('expired');
             return;
         }
 
         try {
-            Components.showLoading(true);
-
-            // Simular processamento
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Registrar depósito
-            const result = await API.deposit(this.selectedAmount);
-
-            if (result.success) {
-                Components.showLoading(false);
-                Components.showToast('Depósito confirmado com sucesso!', 'success');
-                App.updateBalance();
-                
-                // Mostrar confirmação
-                this.showDepositConfirmation();
-            } else {
-                Components.showLoading(false);
-                Components.showToast(result.error || 'Erro ao processar depósito', 'error');
+            const res = await API.getDepositStatus(transactionId);
+            if (res.success && res.data.status === 'completed') {
+                this._stopPolling();
+                Storage.setBalance(res.data.balance);
+                App.updateAuthUI();
+                this._updatePaymentStatus('completed', res.data.balance);
             }
-        } catch (error) {
-            Components.showLoading(false);
-            Components.showToast('Erro ao processar depósito', 'error');
+        } catch (_) {}
+    },
+
+    _updatePaymentStatus(status, newBalance = null) {
+        const el = document.getElementById('paymentStatus');
+        if (!el) return;
+
+        if (status === 'completed') {
+            el.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check text-success text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-success">Pagamento confirmado!</p>
+                    <p class="text-xs text-gray-400">Novo saldo: ${newBalance !== null ? Utils.formatCurrency(newBalance, true) : '...'}</p>
+                </div>
+            `;
+            setTimeout(() => this.showDepositConfirmation(), 1500);
+
+        } else if (status === 'expired') {
+            el.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-red-400/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-times text-red-400 text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-red-400">PIX expirado.</p>
+                    <p class="text-xs text-gray-400">Gere um novo QR Code para tentar novamente.</p>
+                </div>
+            `;
         }
     },
 
+    async copyPixCode() {
+        const input = document.getElementById('pixCodeInput');
+        const code  = input ? input.value : (this.currentTransaction?.qrcode ?? '');
+        const ok    = await Utils.copyToClipboard(code);
+        Components.showToast(ok ? '✅ Código PIX copiado!' : 'Erro ao copiar', ok ? 'success' : 'error');
+    },
+
     showDepositConfirmation() {
+        this._stopPolling();
+        const amount = this.currentTransaction?.amount ?? this.selectedAmount;
         Components.showModal(`
             <div class="text-center">
                 <div class="w-20 h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-check text-4xl text-success"></i>
+                    <i class="fas fa-check-circle text-4xl text-success"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Depósito confirmado!</h3>
-                <p class="text-gray-400 mb-4">Valor depositado: ${Utils.formatCurrency(this.selectedAmount, true)}</p>
-                <p class="text-sm text-gray-500 mb-6">O saldo já está disponível na sua conta.</p>
-                <button class="btn btn-primary w-full" onclick="closeModal(); App.navigateTo('wallet');">
+                <p class="text-gray-400 mb-4">Valor: ${Utils.formatCurrency(amount, true)}</p>
+                <p class="text-xs text-gray-500 mb-6">Um e-mail de confirmação foi enviado para você.</p>
+                <button class="btn btn-primary w-full" onclick="Components.closeModal(); App.navigateTo('wallet');">
                     <i class="fas fa-wallet"></i> Ver carteira
                 </button>
             </div>
@@ -257,21 +330,16 @@ const DepositPage = {
     },
 
     cancelDeposit() {
-        this.selectedAmount = null;
-        const pixDetails = document.getElementById('pixDetails');
-        if (pixDetails) {
-            pixDetails.classList.add('hidden');
-        }
-        
-        document.querySelectorAll('.quick-amount-btn').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        
-        const customInput = document.getElementById('customAmount');
-        if (customInput) {
-            customInput.value = '';
-        }
+        this._stopPolling();
+        this.currentTransaction = null;
+        this.selectedAmount     = null;
 
+        const pixDetails = document.getElementById('pixDetails');
+        if (pixDetails) pixDetails.className = 'hidden';
+
+        document.querySelectorAll('.quick-amount-btn').forEach(b => b.classList.remove('selected'));
+        const ci = document.getElementById('customAmount');
+        if (ci) ci.value = '';
         this.updateSelectedAmountDisplay();
     },
 
