@@ -1,5 +1,5 @@
 /**
- * ForaPix - Página de Jogos
+ * ApostaCasada - Página de Jogos
  * Listagem de jogos disponíveis com filtros por esporte
  */
 

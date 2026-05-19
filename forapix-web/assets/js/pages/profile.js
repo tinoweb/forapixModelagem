@@ -1,5 +1,5 @@
 /**
- * ForaPix - Página de Perfil e Configurações
+ * ApostaCasada - Página de Perfil e Configurações
  * Gerenciamento de perfil do usuário e configurações do app
  */
 
@@ -105,7 +105,7 @@ const ProfilePage = {
                 <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-leaf text-3xl text-accent"></i>
                 </div>
-                <h2 class="text-2xl font-bold">ForaPix</h2>
+                <h2 class="text-2xl font-bold">ApostaCasada</h2>
                 <p class="text-gray-400 text-sm">Apostas esportivas ao vivo</p>
             </div>
 
@@ -119,18 +119,26 @@ const ProfilePage = {
             </div>
 
             <div id="authFormContent">
-                ${this.authTab === 'login' ? this.renderLoginForm() : this.renderRegisterForm()}
+                ${this._renderAuthFormContent()}
             </div>
         </div>`;
+    },
+
+    _renderAuthFormContent() {
+        if (this.authTab === 'forgot')   return this.renderForgotForm();
+        if (this.authTab === 'reset')    return this.renderResetForm();
+        if (this.authTab === 'register') return this.renderRegisterForm();
+        return this.renderLoginForm();
     },
 
     switchAuthTab(tab) {
         this.authTab = tab;
         const el = document.getElementById('authFormContent');
-        if (el) el.innerHTML = tab === 'login' ? this.renderLoginForm() : this.renderRegisterForm();
+        if (el) el.innerHTML = this._renderAuthFormContent();
         const tl = document.getElementById('authTabLogin');
         const tr = document.getElementById('authTabRegister');
-        if (tl) { tl.className = `flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab==='login'?'bg-accent text-black':'bg-white/5 text-gray-400'}`; }
+        const isLoginLike = tab === 'login' || tab === 'forgot' || tab === 'reset';
+        if (tl) { tl.className = `flex-1 py-2 rounded-xl text-sm font-semibold transition ${isLoginLike?'bg-accent text-black':'bg-white/5 text-gray-400'}`; }
         if (tr) { tr.className = `flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab==='register'?'bg-accent text-black':'bg-white/5 text-gray-400'}`; }
     },
 
@@ -149,6 +157,68 @@ const ProfilePage = {
                 <i class="fas fa-sign-in-alt"></i> Entrar
             </button>
             <p id="loginError" class="text-red-400 text-sm text-center hidden"></p>
+            <p class="text-center text-sm">
+                <a href="#" onclick="event.preventDefault(); ProfilePage.switchAuthTab('forgot')" class="text-accent hover:underline">
+                    Esqueci minha senha
+                </a>
+            </p>
+        </div>`;
+    },
+
+    renderForgotForm() {
+        return `
+        <div class="space-y-4">
+            <div class="text-center mb-2">
+                <div class="w-14 h-14 rounded-full bg-accent/15 flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-key text-2xl text-accent"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Recuperar senha</h3>
+                <p class="text-sm text-gray-400 mt-1">Informe seu e-mail e enviaremos um link para criar uma nova senha.</p>
+            </div>
+            <div>
+                <label class="input-label">Email</label>
+                <input type="email" id="forgotEmail" class="input-field" placeholder="seu@email.com" autocomplete="email">
+            </div>
+            <button onclick="ProfilePage.doForgotPassword()" class="btn btn-primary w-full" id="forgotBtn">
+                <i class="fas fa-paper-plane"></i> Enviar link
+            </button>
+            <p id="forgotMsg" class="text-sm text-center hidden"></p>
+            <p class="text-center text-sm">
+                <a href="#" onclick="event.preventDefault(); ProfilePage.switchAuthTab('login')" class="text-accent hover:underline">
+                    <i class="fas fa-arrow-left text-xs"></i> Voltar para o login
+                </a>
+            </p>
+        </div>`;
+    },
+
+    renderResetForm() {
+        const email = this.resetEmail || '';
+        return `
+        <div class="space-y-4">
+            <div class="text-center mb-2">
+                <div class="w-14 h-14 rounded-full bg-accent/15 flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-lock text-2xl text-accent"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Criar nova senha</h3>
+                <p class="text-sm text-gray-400 mt-1">${email ? `Para <strong class="text-white">${email}</strong>` : 'Defina sua nova senha abaixo.'}</p>
+            </div>
+            <div>
+                <label class="input-label">Nova senha</label>
+                <input type="password" id="resetPassword" class="input-field" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+            </div>
+            <div>
+                <label class="input-label">Confirmar nova senha</label>
+                <input type="password" id="resetPasswordConfirm" class="input-field" placeholder="Repita a senha" autocomplete="new-password">
+            </div>
+            <button onclick="ProfilePage.doResetPassword()" class="btn btn-primary w-full" id="resetBtn">
+                <i class="fas fa-check"></i> Redefinir senha
+            </button>
+            <p id="resetMsg" class="text-sm text-center hidden"></p>
+            <p class="text-center text-sm">
+                <a href="#" onclick="event.preventDefault(); ProfilePage.switchAuthTab('login')" class="text-accent hover:underline">
+                    <i class="fas fa-arrow-left text-xs"></i> Voltar para o login
+                </a>
+            </p>
         </div>`;
     },
 
@@ -217,6 +287,107 @@ const ProfilePage = {
         } finally {
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar conta';
         }
+    },
+
+    async doForgotPassword() {
+        const email = document.getElementById('forgotEmail')?.value?.trim();
+        const msgEl = document.getElementById('forgotMsg');
+        const btn   = document.getElementById('forgotBtn');
+        if (!email) {
+            this._showAuthMessage(msgEl, 'Informe seu e-mail.', 'error');
+            return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        try {
+            const res = await API.forgotPassword(email);
+            if (res && res.success) {
+                this._showAuthMessage(
+                    msgEl,
+                    'Se o e-mail estiver cadastrado, você receberá um link em instantes. Verifique sua caixa de entrada e spam.',
+                    'success'
+                );
+            } else {
+                this._showAuthMessage(msgEl, res?.message || 'Não foi possível enviar o e-mail.', 'error');
+            }
+        } catch (e) {
+            this._showAuthMessage(msgEl, e.message || 'Erro ao conectar', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar link';
+        }
+    },
+
+    async doResetPassword() {
+        const password         = document.getElementById('resetPassword')?.value;
+        const passwordConfirm  = document.getElementById('resetPasswordConfirm')?.value;
+        const msgEl = document.getElementById('resetMsg');
+        const btn   = document.getElementById('resetBtn');
+
+        if (!password || !passwordConfirm) {
+            this._showAuthMessage(msgEl, 'Preencha os dois campos de senha.', 'error');
+            return;
+        }
+        if (password.length < 8) {
+            this._showAuthMessage(msgEl, 'A senha deve ter pelo menos 8 caracteres.', 'error');
+            return;
+        }
+        if (password !== passwordConfirm) {
+            this._showAuthMessage(msgEl, 'As senhas não coincidem.', 'error');
+            return;
+        }
+        if (!this.resetToken || !this.resetEmail) {
+            this._showAuthMessage(msgEl, 'Token inválido. Solicite uma nova recuperação.', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redefinindo...';
+        try {
+            const res = await API.resetPassword({
+                email: this.resetEmail,
+                token: this.resetToken,
+                password,
+                password_confirmation: passwordConfirm
+            });
+            if (res && res.success) {
+                this._showAuthMessage(msgEl, 'Senha redefinida com sucesso! Redirecionando...', 'success');
+                // Limpa estado e URL
+                this.resetToken = null;
+                this.resetEmail = null;
+                ProfilePage._clearResetParamsFromUrl();
+                Components.showToast('Senha redefinida com sucesso! Faça login.', 'success');
+                setTimeout(() => this.switchAuthTab('login'), 1500);
+            } else {
+                this._showAuthMessage(msgEl, res?.message || 'Não foi possível redefinir a senha.', 'error');
+            }
+        } catch (e) {
+            this._showAuthMessage(msgEl, e.message || 'Erro ao conectar', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Redefinir senha';
+        }
+    },
+
+    _showAuthMessage(el, msg, type = 'info') {
+        if (!el) return;
+        const colorMap = {
+            success: 'text-green-400',
+            error:   'text-red-400',
+            info:    'text-gray-300'
+        };
+        el.className = `text-sm text-center ${colorMap[type] || colorMap.info}`;
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    },
+
+    _clearResetParamsFromUrl() {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('reset-token');
+            url.searchParams.delete('email');
+            window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + url.hash);
+        } catch (_) {}
     },
 
     _showAuthError(el, msg) {

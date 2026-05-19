@@ -1,5 +1,5 @@
 /**
- * ForaPix - Home Page
+ * ApostaCasada - Home Page
  * Página inicial baseada na interface de referência
  */
 
@@ -53,14 +53,23 @@ const HomePage = {
                     ${this.renderServices()}
                 </div>
 
-                <!-- Recent Matches -->
+                <!-- Partidas ao vivo -->
+                <div class="mb-4" id="liveMatchesSection" style="display:none">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="section-title" style="color:#22c55e"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 1.5s infinite"></span>AO VIVO AGORA</p>
+                        <button class="text-accent text-sm font-semibold" onclick="App.navigateTo('matches', { status: 'live' })">Ver todas</button>
+                    </div>
+                    <div id="liveMatchesList"></div>
+                </div>
+
+                <!-- Partidas agendadas -->
                 <div class="mb-6">
                     <div class="flex items-center justify-between mb-3">
-                        <p class="section-title">PARTIDAS EM DESTAQUE</p>
-                        <button class="text-accent text-sm font-semibold" onclick="App.navigateTo('matches')">Ver todas</button>
+                        <p class="section-title">PRÓXIMAS PARTIDAS</p>
+                        <button class="text-accent text-sm font-semibold" onclick="App.navigateTo('matches', { status: 'scheduled' })">Ver todas</button>
                     </div>
                     <div id="featuredMatches">
-                        ${this.renderFeaturedMatches()}
+                        <div class="matches-skeleton">${Array.from({length:2}).map(()=>'<div class="skeleton-row" style="height:80px;border-radius:12px;margin-bottom:8px"></div>').join('')}</div>
                     </div>
                 </div>
             </div>
@@ -86,46 +95,10 @@ const HomePage = {
     },
 
     /**
-     * Render featured matches
-     */
-    renderFeaturedMatches() {
-        // Mock data for featured matches
-        const matches = [
-            {
-                id: 1,
-                sport: 'UFC',
-                fighter1: 'Jon Jones',
-                fighter2: 'Stipe Miocic',
-                odds1: '1.85',
-                odds2: '2.10',
-                date: new Date(Date.now() + 24 * 60 * 60 * 1000) // Tomorrow
-            },
-            {
-                id: 2,
-                sport: 'SINUCA',
-                fighter1: 'Maycon de Teixeira',
-                fighter2: 'Fábio Cabeludo',
-                odds1: '1.95',
-                odds2: '1.85',
-                date: new Date()
-            }
-        ];
-
-        if (matches.length === 0) {
-            return Components.renderEmptyState(
-                'fa-calendar',
-                'Nenhuma partida em destaque',
-                'Novas partidas serão exibidas aqui em breve.'
-            );
-        }
-
-        return matches.map(match => Components.renderMatchCard(match)).join('');
-    },
-
-    /**
      * Initialize home page
      */
     init() {
+        this.loadLiveMatches();
         this.loadFeaturedMatches();
         this._refreshUserCard();
     },
@@ -153,21 +126,48 @@ const HomePage = {
     },
 
     /**
-     * Load featured matches from API
+     * Carrega partidas ao vivo na seção "AO VIVO AGORA" da home
+     */
+    async loadLiveMatches() {
+        try {
+            const response = await API.getMatches({ status: 'live' });
+            const payload = Array.isArray(response.data?.data)
+                ? response.data.data
+                : (Array.isArray(response.data) ? response.data : []);
+
+            const section = document.getElementById('liveMatchesSection');
+            const list    = document.getElementById('liveMatchesList');
+            if (!section || !list) return;
+
+            if (payload.length > 0) {
+                section.style.display = '';
+                list.innerHTML = payload.slice(0, 3).map(m => Components.renderMatchCard(m)).join('');
+            } else {
+                section.style.display = 'none';
+            }
+        } catch (_) {}
+    },
+
+    /**
+     * Carrega próximas partidas agendadas na home
      */
     async loadFeaturedMatches() {
         try {
-            const response = await API.getUpcomingMatches();
-            if (response.success && response.data.length > 0) {
-                const container = document.getElementById('featuredMatches');
-                if (container) {
-                    container.innerHTML = response.data.slice(0, 3).map(match => 
-                        Components.renderMatchCard(match)
-                    ).join('');
-                }
+            const response = await API.getMatches({ status: 'scheduled' });
+            const payload = Array.isArray(response.data?.data)
+                ? response.data.data
+                : (Array.isArray(response.data) ? response.data : []);
+
+            const container = document.getElementById('featuredMatches');
+            if (!container) return;
+
+            if (payload.length > 0) {
+                container.innerHTML = payload.slice(0, 3).map(m => Components.renderMatchCard(m)).join('');
+            } else {
+                container.innerHTML = `<p class="text-center text-sm text-gray-500 py-6">Nenhuma partida agendada no momento.</p>`;
             }
         } catch (error) {
-            console.error('Error loading featured matches:', error);
+            console.error('Erro ao carregar partidas agendadas:', error);
         }
     },
 
@@ -185,13 +185,13 @@ const HomePage = {
      * Share invite link
      */
     async shareInvite() {
-        const inviteLink = 'https://forapix.com/invite/ABC123';
+        const inviteLink = 'https://apostacasada.com/invite/ABC123';
         
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'ForaPix - Apostas Online',
-                    text: 'Venha apostar comigo no ForaPix!',
+                    title: 'ApostaCasada - Apostas Online',
+                    text: 'Venha apostar comigo no ApostaCasada!',
                     url: inviteLink
                 });
                 Components.showToast('Link compartilhado!', 'success');
@@ -251,7 +251,7 @@ const HomePage = {
                         <i class="fas fa-envelope text-accent"></i>
                         <div>
                             <p class="font-semibold">Email</p>
-                            <p class="text-xs text-gray-400">suporte@forapix.com</p>
+                            <p class="text-xs text-gray-400">suporte@apostacasada.com</p>
                         </div>
                     </div>
                 </button>

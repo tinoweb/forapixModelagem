@@ -46,4 +46,8 @@ return [
         'email' => env('ADMIN_EMAIL', 'admin@apostacasada.net'),
     ],
 
+    'frontend' => [
+        'url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost:8000')),
+    ],
+
 ];

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\BetController;
@@ -23,6 +24,8 @@ use App\Http\Controllers\Api\DepositWebhookController;
 // Public routes
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // Games and Sports (public)
 Route::get('/sports', [GameController::class, 'sports']);

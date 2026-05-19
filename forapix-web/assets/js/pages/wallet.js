@@ -1,5 +1,5 @@
 /**
- * ForaPix - Página de Carteira
+ * ApostaCasada - Página de Carteira
  * Gerenciamento de saldo, transações, depósito e saque
  */
 

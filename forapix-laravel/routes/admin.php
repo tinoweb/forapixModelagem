@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\GameManagementController;
 use App\Http\Controllers\Admin\PlayerManagementController;
 use App\Http\Controllers\Admin\BetManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\AdminUsersController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/{match}/resolve-bets', [BetManagementController::class, 'resolveMatch'])->name('resolve-bets');
         Route::post('/{match}/cancel', [GameManagementController::class, 'cancelMatch'])->name('cancel');
         Route::post('/{match}/toggle-live-betting', [GameManagementController::class, 'toggleLiveBetting'])->name('toggle-live-betting');
+        Route::post('/{match}/update-score', [GameManagementController::class, 'updateScore'])->name('update-score');
     });
 
     // Bet Management
@@ -99,6 +101,18 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
     // Test email
     Route::post('/test-email', [GameManagementController::class, 'testEmail'])->name('test-email');
 
+    // Admin Users (Operadores do painel)
+    Route::prefix('admin-users')->name('admin-users.')->group(function () {
+        Route::get('/',                          [AdminUsersController::class, 'index'])->name('index');
+        Route::get('/create',                    [AdminUsersController::class, 'create'])->name('create');
+        Route::post('/',                         [AdminUsersController::class, 'store'])->name('store');
+        Route::get('/{adminUser}/edit',          [AdminUsersController::class, 'edit'])->name('edit');
+        Route::put('/{adminUser}',               [AdminUsersController::class, 'update'])->name('update');
+        Route::post('/{adminUser}/reset-password', [AdminUsersController::class, 'resetPassword'])->name('reset-password');
+        Route::post('/{adminUser}/toggle-status',  [AdminUsersController::class, 'toggleStatus'])->name('toggle-status');
+        Route::delete('/{adminUser}',            [AdminUsersController::class, 'destroy'])->name('destroy');
+    });
+
     // User Management
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
@@ -109,13 +123,6 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/{user}/suspend', [UserManagementController::class, 'suspend'])->name('suspend');
         Route::post('/{user}/activate', [UserManagementController::class, 'activate'])->name('activate');
         Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');
-    });
-
-    // Bet Management
-    Route::prefix('bets')->name('bets.')->group(function () {
-        Route::get('/', [BetManagementController::class, 'index'])->name('index');
-        Route::get('/{bet}', [BetManagementController::class, 'show'])->name('show');
-        Route::post('/{bet}/cancel', [BetManagementController::class, 'cancel'])->name('cancel');
     });
 
     /*

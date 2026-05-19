@@ -1,5 +1,5 @@
 /**
- * ForaPix - Página de partida (Sinuca / Jogos)
+ * ApostaCasada - Página de partida (Sinuca / Jogos)
  * Layout padronizado conforme site de referência
  */
 
@@ -36,6 +36,63 @@ const SinucaPage = {
             console.error('Erro ao carregar partida', error);
             container.innerHTML = this.renderError(error.message || 'Erro ao carregar partida.');
         }
+    },
+
+    buildBetOptions(match) {
+        const p1 = match.first_player || {};
+        const p2 = match.second_player || {};
+        const stats = match.bet_stats || {};
+        
+        // Calcular odds baseadas no pool de apostas
+        const fpTotal = stats.first_player?.total || 0;
+        const spTotal = stats.second_player?.total || 0;
+        const totalPool = fpTotal + spTotal;
+        
+        // Se não há apostas, odds iguais (1.0)
+        let fpOdds = 1.0, spOdds = 1.0;
+        if (totalPool > 0) {
+            fpOdds = totalPool / fpTotal;
+            spOdds = totalPool / spTotal;
+        }
+        
+        // Aplicar taxa da casa (10%)
+        fpOdds = fpOdds * 0.9;
+        spOdds = spOdds * 0.9;
+        
+        // Mínimo de 1.01
+        fpOdds = Math.max(1.01, fpOdds);
+        spOdds = Math.max(1.01, spOdds);
+        
+        return [
+            {
+                type: 'first_player',
+                label: p1.name || 'Jogador 1',
+                player: p1,
+                odds: fpOdds
+            },
+            {
+                type: 'second_player',
+                label: p2.name || 'Jogador 2',
+                player: p2,
+                odds: spOdds
+            }
+        ];
+    },
+
+    canBet(match) {
+        if (!match) return false;
+        // Se estiver ao vivo, verifica live_betting_open
+        if (match.status === 'live') {
+            return match.live_betting_open === true;
+        }
+        // Se estiver finalizada, não pode apostar
+        if (match.status === 'finished') return false;
+        // Verifica se ainda está dentro do prazo
+        if (match.betting_deadline) {
+            return new Date(match.betting_deadline) > new Date();
+        }
+        // Por padrão, permite apostar se não estiver finalizada
+        return match.status !== 'finished';
     },
 
     renderLoading() {

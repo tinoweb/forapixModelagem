@@ -1,5 +1,5 @@
 /**
- * ForaPix - API Service
+ * ApostaCasada - API Service
  * Serviço para comunicação com a API Laravel
  */
 
@@ -77,6 +77,20 @@ const API = {
 
     async getProfile() {
         return await this.request('/auth/profile');
+    },
+
+    async forgotPassword(email) {
+        return await this.request('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+    },
+
+    async resetPassword(payload) {
+        return await this.request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
     },
 
     /**

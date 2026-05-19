@@ -634,6 +634,60 @@ class GameManagementController extends Controller
     }
 
     /**
+     * Atualiza o placar de uma partida manualmente.
+     * Lógica automática:
+     *  - Muda status para 'live' se estava 'scheduled'
+     *  - Empate no placar → abre apostas ao vivo automaticamente
+     *  - Um jogador na frente → fecha apostas ao vivo
+     */
+    public function updateScore(Request $request, GameMatch $match)
+    {
+        $request->validate([
+            'first_player_score'  => 'required|integer|min:0|max:999',
+            'second_player_score' => 'required|integer|min:0|max:999',
+        ]);
+
+        if (in_array($match->status, ['finished', 'cancelled'])) {
+            return back()->with('error', 'Não é possível atualizar o placar de uma partida encerrada ou cancelada.');
+        }
+
+        $s1 = (int) $request->first_player_score;
+        $s2 = (int) $request->second_player_score;
+
+        $isTie             = ($s1 === $s2);
+        $liveBettingOpen   = $isTie && $match->status !== 'scheduled';
+        $newStatus         = $match->status === 'scheduled' ? 'live' : $match->status;
+
+        // Se o jogo acabou de começar (primeiro placar diferente de 0-0), coloca ao vivo
+        if ($match->status === 'scheduled' && ($s1 > 0 || $s2 > 0)) {
+            $newStatus = 'live';
+        }
+
+        // Ao vivo: empate abre apostas, vantagem fecha
+        if ($newStatus === 'live') {
+            $liveBettingOpen = $isTie;
+        }
+
+        $match->update([
+            'first_player_score'    => $s1,
+            'second_player_score'   => $s2,
+            'status'                => $newStatus,
+            'live_betting_open'     => $liveBettingOpen,
+            'live_betting_opened_at' => ($liveBettingOpen && !$match->live_betting_open) ? now() : $match->live_betting_opened_at,
+            'live_betting_closed_at' => (!$liveBettingOpen && $match->live_betting_open) ? now() : $match->live_betting_closed_at,
+        ]);
+
+        $msg = "Placar atualizado: {$s1} × {$s2}.";
+        if ($isTie && $newStatus === 'live') {
+            $msg .= ' Empate detectado — apostas ao vivo ABERTAS automaticamente.';
+        } elseif (!$isTie && $match->getOriginal('live_betting_open')) {
+            $msg .= ' Apostas ao vivo fechadas (jogador na frente).';
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
      * Bulk update matches
      */
     public function bulkUpdateMatches(Request $request)

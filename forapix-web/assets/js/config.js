@@ -1,5 +1,5 @@
 /**
- * ForaPix - Configuration
+ * ApostaCasada - Configuration
  * Configurações globais do sistema
  */
 
@@ -20,7 +20,7 @@ const Config = {
 
     // App Configuration
     APP: {
-        NAME: 'ForaPix',
+        NAME: 'ApostaCasada',
         VERSION: '1.0.0',
         THEME: 'dark',
         LANGUAGE: 'pt-BR',

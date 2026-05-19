@@ -1,5 +1,5 @@
 /**
- * ForaPix - UI Components
+ * ApostaCasada - UI Components
  * Componentes reutilizáveis da interface
  */
 

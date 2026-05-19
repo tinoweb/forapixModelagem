@@ -16,12 +16,38 @@ class MatchController extends Controller
     {
         $query = GameMatch::with(['game.sport', 'firstPlayer', 'secondPlayer']);
 
-        // Filter by status - se status específico, não usar scope active
+        // Filter by status com lógica de deadline expirado
         if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $status = $request->status;
+
+            if ($status === 'scheduled') {
+                // Agendadas: apenas com prazo de apostas ainda no futuro
+                $query->where('status', 'scheduled')
+                      ->where('betting_deadline', '>', now());
+
+            } elseif ($status === 'finished') {
+                // Encerradas: finalizadas + agendadas com prazo já expirado
+                $query->where(function ($q) {
+                    $q->where('status', 'finished')
+                      ->orWhere('status', 'cancelled')
+                      ->orWhere(function ($q2) {
+                          $q2->where('status', 'scheduled')
+                             ->where('betting_deadline', '<=', now());
+                      });
+                });
+
+            } else {
+                $query->where('status', $status);
+            }
         } elseif (!$request->has('status')) {
-            // Sem filtro de status: mostrar apenas ativas (scheduled + live) por padrão
-            $query->active();
+            // Sem filtro: ativas (live + scheduled com prazo futuro)
+            $query->where(function ($q) {
+                $q->where('status', 'live')
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'scheduled')
+                         ->where('betting_deadline', '>', now());
+                  });
+            });
         }
 
         // Filter by game
@@ -41,7 +67,21 @@ class MatchController extends Controller
             $query->where('featured', true);
         }
 
-        $matches = $query->orderBy('match_start', 'desc')->paginate(20);
+        // Ordenação: agendadas = mais próxima primeiro | live/finished = mais recente primeiro
+        $requestedStatus = $request->status ?? null;
+        if ($requestedStatus === 'scheduled') {
+            $query->orderBy('match_start', 'asc');
+        } else {
+            $query->orderBy('match_start', 'desc');
+        }
+
+        $matches = $query->paginate(20);
+
+        // Adiciona can_bet em cada partida para o frontend saber se pode apostar
+        $matches->getCollection()->transform(function ($match) {
+            $match->can_bet = $match->isBettingOpen();
+            return $match;
+        });
 
         return response()->json([
             'success' => true,

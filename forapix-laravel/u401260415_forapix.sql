@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Tempo de geração: 28/04/2026 às 04:22
+-- Tempo de geração: 15/05/2026 às 04:10
 -- Versão do servidor: 11.8.6-MariaDB-log
 -- Versão do PHP: 7.2.34
 
@@ -48,7 +48,9 @@ CREATE TABLE `admin_logs` (
 INSERT INTO `admin_logs` (`id`, `user_id`, `action`, `model`, `model_id`, `old_values`, `new_values`, `ip_address`, `user_agent`, `created_at`, `updated_at`) VALUES
 (1, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/146.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-04-13 23:11:32', '2026-04-13 23:11:32'),
 (2, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/147.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', '2026-04-17 20:32:28', '2026-04-17 20:32:28'),
-(3, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/147.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', '2026-04-27 21:26:55', '2026-04-27 21:26:55');
+(3, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/147.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', '2026-04-27 21:26:55', '2026-04-27 21:26:55'),
+(4, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/147.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', '2026-05-05 18:05:14', '2026-05-05 18:05:14'),
+(5, 1, 'admin_login', NULL, NULL, '{\"ip\":\"127.0.0.1\",\"user_agent\":\"Mozilla\\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\\/537.36 (KHTML, like Gecko) Chrome\\/147.0.0.0 Safari\\/537.36\"}', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', '2026-05-14 23:34:53', '2026-05-14 23:34:53');
 
 -- --------------------------------------------------------
 
@@ -63,6 +65,7 @@ CREATE TABLE `bets` (
   `match_id` bigint(20) UNSIGNED NOT NULL,
   `bet_type` enum('first_player','second_player','draw','par','impar') NOT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `matched_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `odds` decimal(5,2) NOT NULL,
   `potential_win` decimal(10,2) NOT NULL,
   `status` enum('pending','won','lost','cancelled','refunded') NOT NULL DEFAULT 'pending',
@@ -123,7 +126,6 @@ CREATE TABLE `games` (
 --
 
 INSERT INTO `games` (`id`, `sport_id`, `name`, `slug`, `type`, `image`, `description`, `min_bet`, `max_bet`, `house_edge`, `status`, `settings`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 1, 'UFC Head to Head', 'ufc-head-to-head', 'head_to_head', NULL, 'Apostas em confrontos diretos do UFC', 1.00, 10000.00, 0.0500, 'active', '{\"allow_draw\":false,\"live_betting\":true}', '2026-04-13 19:08:28', '2026-04-13 19:08:28', NULL, NULL),
 (2, 6, 'Sinuca Par ou Ímpar', 'sinuca-par-impar', 'par_impar', NULL, 'Aposte se o resultado será par ou ímpar', 1.00, 5000.00, 0.0300, 'active', '{\"auto_resolve\":true,\"max_duration\":30}', '2026-04-13 19:08:28', '2026-04-13 19:08:28', NULL, NULL),
 (3, 6, 'Sinuca Head to Head', 'sinuca-head-to-head', 'head_to_head', NULL, 'Apostas em confrontos diretos de sinuca', 1.00, 5000.00, 0.0400, 'active', '{\"allow_draw\":false,\"live_betting\":true}', '2026-04-13 19:08:28', '2026-04-13 19:08:28', NULL, NULL),
 (4, NULL, 'Cassino Online', 'cassino-online', 'casino', NULL, 'Jogos de cassino variados', 0.50, 50000.00, 0.0200, 'active', '{\"games\":[\"slots\",\"blackjack\",\"roulette\"],\"instant_play\":true}', '2026-04-13 19:08:28', '2026-04-13 19:08:28', NULL, NULL),
@@ -148,6 +150,9 @@ CREATE TABLE `matches` (
   `par_odds` decimal(5,2) DEFAULT NULL,
   `impar_odds` decimal(5,2) DEFAULT NULL,
   `betting_deadline` timestamp NOT NULL,
+  `live_betting_open` tinyint(1) NOT NULL DEFAULT 0,
+  `live_betting_opened_at` timestamp NULL DEFAULT NULL,
+  `live_betting_closed_at` timestamp NULL DEFAULT NULL,
   `match_start` timestamp NOT NULL,
   `match_end` timestamp NULL DEFAULT NULL,
   `status` enum('scheduled','live','finished','cancelled','postponed') NOT NULL DEFAULT 'scheduled',
@@ -171,28 +176,12 @@ CREATE TABLE `matches` (
 -- Despejando dados para a tabela `matches`
 --
 
-INSERT INTO `matches` (`id`, `game_id`, `title`, `description`, `first_player_id`, `second_player_id`, `first_player_odds`, `second_player_odds`, `draw_odds`, `par_odds`, `impar_odds`, `betting_deadline`, `match_start`, `match_end`, `status`, `result`, `winner_player_id`, `first_player_score`, `second_player_score`, `external_id`, `external_source`, `metadata`, `featured`, `total_bets_amount`, `total_bets_count`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
-(1, 3, 'sinuca', NULL, 2, 1, 1.80, 1.90, NULL, NULL, NULL, '2026-04-14 22:00:00', '2026-04-14 22:26:00', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"matches\\/banners\\/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png\"}', 0, 0.00, 0, '2026-04-14 01:27:34', '2026-04-14 01:27:34', NULL, NULL),
-(2, 3, 'Sinuca Head to Head', 'Confronto emocionante entre Igão Parceiro e Maycon de Teixeira!', 3, 4, 1.80, 1.90, 3.50, 1.85, 1.95, '2026-04-27 18:38:46', '2026-04-27 19:38:46', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/2\"}', 1, 0.00, 0, '2026-04-27 16:38:46', '2026-04-27 17:59:52', NULL, NULL),
-(3, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 16:08:46', '2026-04-27 15:38:46', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 16:38:46', '2026-04-27 17:59:52', NULL, NULL),
-(4, 3, 'Sinuca Head to Head', 'Carlos venceu com autoridade!', 7, 8, 1.65, 2.20, 3.80, 1.85, 1.95, '2026-04-26 15:38:46', '2026-04-26 16:38:46', '2026-04-26 18:38:46', 'finished', NULL, 7, 5, 3, NULL, NULL, '{\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\"}', 0, 1500.00, 12, '2026-04-27 16:38:46', '2026-04-27 17:59:52', NULL, NULL),
-(5, 1, 'UFC Head to Head', 'Jon Jones vs Stipe Miocic - O grande confronto!', 9, 10, 1.55, 2.40, NULL, NULL, NULL, '2026-04-29 15:38:46', '2026-04-29 16:38:46', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/7c3aed\\/ffffff?text=Sinuca+Head+to+Head\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/5\"}', 1, 0.00, 0, '2026-04-27 16:38:46', '2026-04-27 17:19:12', NULL, NULL),
-(6, 1, 'UFC Head to Head', 'Poatan nocauteou Adesanya no 2º round!', 11, 12, 1.70, 2.10, NULL, NULL, NULL, '2026-04-24 15:38:46', '2026-04-24 16:38:46', '2026-04-24 17:38:46', 'finished', NULL, 11, 2, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/6b7280\\/ffffff?text=Sinuca+Finished\"}', 0, 8500.00, 45, '2026-04-27 16:38:46', '2026-04-27 17:19:12', NULL, NULL),
-(7, 3, 'Sinuca Head to Head', 'Confronto emocionante entre Igão Parceiro e Maycon de Teixeira!', 3, 4, 1.80, 1.90, 3.50, 1.85, 1.95, '2026-04-27 18:58:06', '2026-04-27 19:58:06', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/example\",\"banner_image\":\"matches\\/banners\\/sinuca-match-1.jpg\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/2\"}', 1, 0.00, 0, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
-(8, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 16:28:06', '2026-04-27 15:58:06', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"matches\\/banners\\/sinuca-live.jpg\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
-(9, 3, 'Sinuca Head to Head', 'Carlos venceu com autoridade!', 7, 8, 1.65, 2.20, 3.80, 1.85, 1.95, '2026-04-26 15:58:06', '2026-04-26 16:58:06', '2026-04-26 18:58:06', 'finished', NULL, 7, 5, 3, NULL, NULL, '{\"banner_image\":\"matches\\/banners\\/sinuca-finished.jpg\"}', 0, 1500.00, 12, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
-(10, 1, 'UFC Head to Head', 'Jon Jones vs Stipe Miocic - O grande confronto!', 9, 10, 1.55, 2.40, NULL, NULL, NULL, '2026-04-29 15:58:06', '2026-04-29 16:58:06', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"matches\\/banners\\/ufc-scheduled.jpg\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/5\"}', 1, 0.00, 0, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
-(11, 1, 'UFC Head to Head', 'Poatan nocauteou Adesanya no 2º round!', 11, 12, 1.70, 2.10, NULL, NULL, NULL, '2026-04-24 15:58:06', '2026-04-24 16:58:06', '2026-04-24 17:58:06', 'finished', NULL, 11, 2, 0, NULL, NULL, '{\"banner_image\":\"matches\\/banners\\/ufc-finished.jpg\"}', 0, 8500.00, 45, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
-(12, 3, 'Sinuca Head to Head', 'Confronto emocionante entre Igão Parceiro e Maycon de Teixeira!', 3, 4, 1.80, 1.90, 3.50, 1.85, 1.95, '2026-04-27 19:45:44', '2026-04-27 20:45:44', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/example\",\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/7c3aed\\/ffffff?text=Sinuca+Head+to+Head\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/2\"}', 1, 0.00, 0, '2026-04-27 17:45:44', '2026-04-27 17:45:44', NULL, NULL),
-(13, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 17:15:44', '2026-04-27 16:45:44', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/22c55e\\/ffffff?text=Sinuca+Live\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 17:45:44', '2026-04-27 17:45:44', NULL, NULL),
-(14, 3, 'Sinuca Head to Head', 'Carlos venceu com autoridade!', 7, 8, 1.65, 2.20, 3.80, 1.85, 1.95, '2026-04-26 16:45:44', '2026-04-26 17:45:44', '2026-04-26 19:45:44', 'finished', NULL, 7, 5, 3, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/6b7280\\/ffffff?text=Sinuca+Finished\"}', 0, 1500.00, 12, '2026-04-27 17:45:44', '2026-04-27 17:45:44', NULL, NULL),
-(15, 1, 'UFC Head to Head', 'Jon Jones vs Stipe Miocic - O grande confronto!', 9, 10, 1.55, 2.40, NULL, NULL, NULL, '2026-04-29 16:45:44', '2026-04-29 17:45:44', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/dc2626\\/ffffff?text=UFC+Scheduled\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/5\"}', 1, 0.00, 0, '2026-04-27 17:45:44', '2026-04-27 17:45:44', NULL, NULL),
-(16, 1, 'UFC Head to Head', 'Poatan nocauteou Adesanya no 2º round!', 11, 12, 1.70, 2.10, NULL, NULL, NULL, '2026-04-24 16:45:44', '2026-04-24 17:45:44', '2026-04-24 18:45:44', 'finished', NULL, 11, 2, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/4b5563\\/ffffff?text=UFC+Finished\"}', 0, 8500.00, 45, '2026-04-27 17:45:44', '2026-04-27 17:45:44', NULL, NULL),
-(17, 3, 'Sinuca Head to Head', 'Confronto emocionante entre Igão Parceiro e Maycon de Teixeira!', 3, 4, 1.80, 1.90, 3.50, 1.85, 1.95, '2026-04-27 19:57:38', '2026-04-27 20:57:38', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/2\"}', 1, 0.00, 0, '2026-04-27 17:57:38', '2026-04-27 17:57:38', NULL, NULL),
-(18, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 17:27:38', '2026-04-27 16:57:38', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 17:57:38', '2026-04-27 17:57:38', NULL, NULL),
-(19, 3, 'Sinuca Head to Head', 'Carlos venceu com autoridade!', 7, 8, 1.65, 2.20, 3.80, 1.85, 1.95, '2026-04-26 16:57:38', '2026-04-26 17:57:38', '2026-04-26 19:57:38', 'finished', NULL, 7, 5, 3, NULL, NULL, '{\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\"}', 0, 1500.00, 12, '2026-04-27 17:57:38', '2026-04-27 17:57:38', NULL, NULL),
-(20, 1, 'UFC Head to Head', 'Jon Jones vs Stipe Miocic - O grande confronto!', 9, 10, 1.55, 2.40, NULL, NULL, NULL, '2026-04-29 16:57:38', '2026-04-29 17:57:38', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/dc2626\\/ffffff?text=UFC+Scheduled\",\"banner_button_label\":\"Apostar Agora\",\"banner_button_link\":\"\\/matches\\/5\"}', 1, 0.00, 0, '2026-04-27 17:57:38', '2026-04-27 17:57:38', NULL, NULL),
-(21, 1, 'UFC Head to Head', 'Poatan nocauteou Adesanya no 2º round!', 11, 12, 1.70, 2.10, NULL, NULL, NULL, '2026-04-24 16:57:38', '2026-04-24 17:57:38', '2026-04-24 18:57:38', 'finished', NULL, 11, 2, 0, NULL, NULL, '{\"banner_image\":\"https:\\/\\/placehold.co\\/600x300\\/4b5563\\/ffffff?text=UFC+Finished\"}', 0, 8500.00, 45, '2026-04-27 17:57:38', '2026-04-27 17:57:38', NULL, NULL);
+INSERT INTO `matches` (`id`, `game_id`, `title`, `description`, `first_player_id`, `second_player_id`, `first_player_odds`, `second_player_odds`, `draw_odds`, `par_odds`, `impar_odds`, `betting_deadline`, `live_betting_open`, `live_betting_opened_at`, `live_betting_closed_at`, `match_start`, `match_end`, `status`, `result`, `winner_player_id`, `first_player_score`, `second_player_score`, `external_id`, `external_source`, `metadata`, `featured`, `total_bets_amount`, `total_bets_count`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
+(1, 3, 'sinuca', NULL, 2, 1, 1.80, 1.90, NULL, NULL, NULL, '2026-04-14 22:00:00', 0, NULL, NULL, '2026-04-14 22:26:00', NULL, 'scheduled', NULL, NULL, 0, 0, NULL, NULL, '{\"banner_image\":\"matches\\/banners\\/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png\"}', 0, 0.00, 0, '2026-04-14 01:27:34', '2026-04-14 01:27:34', NULL, NULL),
+(3, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 16:08:46', 0, NULL, NULL, '2026-04-27 15:38:46', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 16:38:46', '2026-04-27 17:59:52', NULL, NULL),
+(8, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 16:28:06', 0, NULL, NULL, '2026-04-27 15:58:06', NULL, 'live', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"matches\\/banners\\/sinuca-live.jpg\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 16:58:06', '2026-04-27 16:58:06', NULL, NULL),
+(13, 2, 'Sinuca PTino', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-05-08 17:15:00', 0, NULL, NULL, '2026-05-05 16:45:00', NULL, 'finished', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"matches\\/banners\\/vhwG4Pra7M8pou6DP16UpjnNzyvH0UWfE3rFo6Eq.png\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 17:45:44', '2026-05-15 01:14:43', NULL, NULL),
+(18, 2, 'Sinuca Par ou Ímpar', 'Fábio Cabeludo vs Diego Sinuqueiro - Ao vivo!', 5, 6, 2.10, 1.75, 4.00, 1.90, 1.90, '2026-04-27 17:27:00', 0, NULL, NULL, '2026-04-27 16:57:00', NULL, 'finished', NULL, NULL, 3, 2, NULL, NULL, '{\"stream_url\":\"https:\\/\\/www.youtube.com\\/embed\\/live-example\",\"banner_image\":\"http:\\/\\/localhost:3000\\/assets\\/images\\/sinuca-game.png\",\"banner_button_label\":\"Assistir Agora\",\"banner_button_link\":\"https:\\/\\/youtube.com\"}', 1, 0.00, 0, '2026-04-27 17:57:38', '2026-05-15 01:15:25', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -224,7 +213,9 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (11, '2024_01_01_000007_add_balance_to_users_table', 1),
 (12, '2024_01_01_000008_create_admin_system_tables', 2),
 (13, '2024_01_01_000009_add_admin_fields_to_users', 3),
-(14, '2024_01_01_000010_add_winner_player_id_to_matches_table', 4);
+(14, '2024_01_01_000010_add_winner_player_id_to_matches_table', 4),
+(15, '2024_01_01_000011_add_matched_amount_to_bets_table', 5),
+(16, '2024_01_01_000012_add_live_betting_to_matches_table', 6);
 
 -- --------------------------------------------------------
 
@@ -256,6 +247,13 @@ CREATE TABLE `personal_access_tokens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Despejando dados para a tabela `personal_access_tokens`
+--
+
+INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
+(1, 'App\\Models\\User', 7, 'ForaPix Mobile', '4587bcacc31be9a493c1ebe98fd53050848f05bb3989fdab5dcfedf37ade79ff', '[\"*\"]', '2026-05-15 03:02:07', NULL, '2026-05-14 23:19:42', '2026-05-15 03:02:07');
 
 -- --------------------------------------------------------
 
@@ -290,16 +288,10 @@ CREATE TABLE `players` (
 INSERT INTO `players` (`id`, `name`, `slug`, `photo_url`, `sport_id`, `bio`, `birth_date`, `nationality`, `weight`, `height`, `stats`, `rating`, `status`, `created_at`, `updated_at`, `created_by`, `updated_by`) VALUES
 (1, 'mike moreno', 'mike-moreno-69dd93ed3f9ee', 'players/BlgYi7q9rhYaeFSVbmvDQHFit2u0mlmdHHNNxPLH.jpg', 6, 'bom jogador', '1999-12-12', 'BRA', NULL, NULL, NULL, 10.00, 'active', '2026-04-14 01:10:05', '2026-04-14 01:10:05', NULL, NULL),
 (2, 'batista', 'batista-69dd94190bf95', NULL, 6, 'bom jogador de bico', '1995-02-25', 'bra', NULL, NULL, NULL, 20.00, 'active', '2026-04-14 01:10:49', '2026-04-14 01:10:49', NULL, NULL),
-(3, 'Igão Parceiro', 'igao-parceiro', 'http://localhost:3000/assets/images/jogador1.png', 6, 'Jogador profissional de sinuca há 10 anos, especialista em jogadas de defesa.', NULL, 'BRA', 75.50, NULL, NULL, 4.50, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(4, 'Maycon de Teixeira', 'maycon-teixeira', 'http://localhost:3000/assets/images/jogador2.png', 6, 'Campeão brasileiro de sinuca 2023, estilo agressivo e preciso.', NULL, 'BRA', 72.00, NULL, NULL, 4.80, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(5, 'Fábio Cabeludo', 'fabio-cabeludo', 'http://localhost:3000/assets/images/jogador1.png', 6, 'Conhecido por sua técnica no jogo de par ou ímpar.', NULL, 'BRA', 78.00, NULL, NULL, 4.20, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(6, 'Diego Sinuqueiro', 'diego-sinuqueiro', 'http://localhost:3000/assets/images/jogador2.png', 6, 'Jogador versátil, competiu em campeonatos internacionais.', NULL, 'BRA', 76.00, NULL, NULL, 4.00, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(7, 'Carlos Taco de Ouro', 'carlos-taco-ouro', 'http://localhost:3000/assets/images/jogador1.png', 6, 'Apelidado de Taco de Ouro pela precisão de suas tacadas.', NULL, 'BRA', 74.50, NULL, NULL, 4.70, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(8, 'Rafael Bilhar Master', 'rafael-bilhar', 'http://localhost:3000/assets/images/jogador2.png', 6, 'Especialista em jogos de bilhar, transitando para sinuca.', NULL, 'BRA', 73.00, NULL, NULL, 4.30, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:43', NULL, NULL),
-(9, 'Jon Jones', 'jon-jones', 'http://localhost:3000/assets/images/jogador1.png', 1, 'Considerado um dos maiores lutadores da história do MMA.', NULL, 'USA', 120.20, NULL, NULL, 5.00, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:44', NULL, NULL),
-(10, 'Stipe Miocic', 'stipe-miocic', 'http://localhost:3000/assets/images/jogador2.png', 1, 'Ex-campeão peso-pesado do UFC com background em boxe.', NULL, 'USA', 110.50, NULL, NULL, 4.60, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:44', NULL, NULL),
-(11, 'Alex Poatan', 'alex-poatan', 'http://localhost:3000/assets/images/jogador1.png', 1, 'Campeão peso-pesado e meio-pesado do UFC, poderoso nocauteador.', NULL, 'BRA', 120.50, NULL, NULL, 4.90, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:44', NULL, NULL),
-(12, 'Israel Adesanya', 'israel-adesanya', 'http://localhost:3000/assets/images/jogador2.png', 1, 'Ex-campeão meio-pesado do UFC, estilo técnico e preciso.', NULL, 'NGA', 84.00, NULL, NULL, 4.70, 'active', '2026-04-27 16:38:46', '2026-04-27 17:45:44', NULL, NULL);
+(4, 'Maycon de Teixeira', 'maycon-teixeira', 'players/BfChvMJFFZHHER8XC5uFS9e9fW4ohI7EdLS8losy.jpg', 6, 'Campeão brasileiro de sinuca 2023, estilo agressivo e preciso.', NULL, 'BRA', 72.00, NULL, NULL, 4.80, 'active', '2026-04-27 16:38:46', '2026-05-05 18:45:05', NULL, NULL),
+(5, 'Fábio Cabeludo', 'fabio-cabeludo', 'players/HWZzpGacu1bfzViutgnsXoGnvNvi3v8BZYC57vXA.jpg', 6, 'Conhecido por sua técnica no jogo de par ou ímpar.', NULL, 'BRA', 78.00, NULL, NULL, 4.20, 'active', '2026-04-27 16:38:46', '2026-05-05 18:46:00', NULL, NULL),
+(6, 'Diego Sinuqueiro', 'diego-sinuqueiro', 'players/vkL42xv2XMwxnlurfqoRNyuR7k4XompgHAwXtsFO.jpg', 6, 'Jogador versátil, competiu em campeonatos internacionais.', NULL, 'BRA', 76.00, NULL, NULL, 4.00, 'active', '2026-04-27 16:38:46', '2026-05-05 18:46:30', NULL, NULL),
+(13, 'Beto silva', 'beto-silva-69fa3a9548883', 'players/GKWLryvCouWvgCGPs5ydrKDipzQnQX9DynYna7dX.png', 6, 'bom de sinuca', '2000-10-20', 'BRA', NULL, NULL, NULL, 1000.00, 'active', '2026-05-05 18:44:37', '2026-05-05 18:44:37', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -455,12 +447,13 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `birth_date`, `document`, `pix_key`, `is_admin`, `status`, `last_login_at`, `last_login_ip`, `metadata`, `email_verified_at`, `password`, `balance`, `total_deposited`, `total_withdrawn`, `total_bet`, `total_won`, `remember_token`, `two_factor_secret`, `two_factor_enabled`, `created_at`, `updated_at`) VALUES
-(1, 'Administrador', 'admin@forapix.com', '+55 11 99999-9999', NULL, NULL, NULL, 1, 'active', '2026-04-27 21:26:55', '127.0.0.1', '{\"created_by\":\"system\",\"role\":\"super_admin\"}', '2026-04-13 19:08:28', '$2y$12$2IEf0ev7wKoaz2UobQrvb.Nbsv0VpC16cELBEFzumZcBD3D4yy6A.', 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:28', '2026-04-27 21:26:55'),
-(2, 'Carlos Silva', 'carlos@demo.com', '+55 11 98888-8888', NULL, NULL, 'carlos@demo.com', 0, 'active', NULL, NULL, '{\"created_by\":\"system\",\"demo_account\":true}', '2026-04-13 19:08:29', '$2y$12$sC33S2.ddEdklOzqMK51K.efNtj7l9O2QD4KwYMDXJ29QbZBXKT.i', 100.00, 100.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:29', '2026-04-13 19:08:29'),
+(1, 'Administrador', 'admin@forapix.com', '+55 11 99999-9999', NULL, NULL, NULL, 1, 'active', '2026-05-14 23:34:53', '127.0.0.1', '{\"created_by\":\"system\",\"role\":\"super_admin\"}', '2026-04-13 19:08:28', '$2y$12$2IEf0ev7wKoaz2UobQrvb.Nbsv0VpC16cELBEFzumZcBD3D4yy6A.', 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:28', '2026-05-14 23:34:53'),
+(2, 'Carlos Silva', 'carlos@demo.com', '+55 11 98888-8888', NULL, NULL, 'carlos@demo.com', 0, 'suspended', NULL, NULL, '{\"created_by\":\"system\",\"demo_account\":true}', '2026-04-13 19:08:29', '$2y$12$sC33S2.ddEdklOzqMK51K.efNtj7l9O2QD4KwYMDXJ29QbZBXKT.i', 100.00, 100.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:29', '2026-05-14 23:40:49'),
 (3, 'Maria Santos', 'maria@test.com', '+55 11 98711-1927', NULL, NULL, 'maria@test.com', 0, 'active', NULL, NULL, '{\"created_by\":\"system\",\"test_account\":true}', '2026-04-13 19:08:29', '$2y$12$qD0KEl4jHD.giv3NRKzwDOdDNCSqFbQLHLcuYfOAEfTs589z3UxO.', 50.00, 50.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:29', '2026-04-13 19:08:29'),
 (4, 'João Oliveira', 'joao@test.com', '+55 11 98336-3084', NULL, NULL, 'joao@test.com', 0, 'active', NULL, NULL, '{\"created_by\":\"system\",\"test_account\":true}', '2026-04-13 19:08:29', '$2y$12$EyC.cyTF5Rivhe7jG9bsGexTc17plfCzFnGiZftG9PqA.TeToQXBy', 200.00, 200.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:29', '2026-04-13 19:08:29'),
-(5, 'Ana Costa', 'ana@test.com', '+55 11 98612-6617', NULL, NULL, 'ana@test.com', 0, 'active', NULL, NULL, '{\"created_by\":\"system\",\"test_account\":true}', '2026-04-13 19:08:30', '$2y$12$3UqpKJsgx1in2W0428HzpukovbLVhcxlwKgz2ufoGhoRX.g5c1pni', 75.00, 75.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:30', '2026-04-13 19:08:30'),
-(6, 'Usuário Demo', 'demo@forapix.com', NULL, NULL, NULL, NULL, 0, 'active', NULL, NULL, NULL, NULL, '$2y$12$CCylAHsF19NKxEpNheK10eISDQ6uW6zJ6F4pL5Q4CnN3iEUOGVndi', 500.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-27 16:38:47', '2026-04-27 16:38:47');
+(5, 'Ana Costa', 'ana@test.com', '+55 11 98612-6617', NULL, NULL, 'ana@test.com', 0, 'suspended', NULL, NULL, '{\"created_by\":\"system\",\"test_account\":true}', '2026-04-13 19:08:30', '$2y$12$3UqpKJsgx1in2W0428HzpukovbLVhcxlwKgz2ufoGhoRX.g5c1pni', 75.00, 75.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-13 19:08:30', '2026-05-14 23:40:35'),
+(6, 'Usuário Demo', 'demo@forapix.com', NULL, NULL, NULL, NULL, 0, 'active', NULL, NULL, NULL, NULL, '$2y$12$CCylAHsF19NKxEpNheK10eISDQ6uW6zJ6F4pL5Q4CnN3iEUOGVndi', 500.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-04-27 16:38:47', '2026-04-27 16:38:47'),
+(7, 'TinoWeb', 'tinowebfoco@gmail.com', NULL, NULL, NULL, NULL, 0, 'active', '2026-05-14 23:19:42', '127.0.0.1', NULL, NULL, '$2y$12$k9PAJykuzFT0qzt8a/tnLObsFrMWihEDr0c/xUM3GNxUQbnTD4xDq', 1000.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 0, '2026-05-14 23:19:42', '2026-05-14 23:41:17');
 
 --
 -- Índices para tabelas despejadas
@@ -606,7 +599,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de tabela `admin_logs`
 --
 ALTER TABLE `admin_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `bets`
@@ -636,19 +629,19 @@ ALTER TABLE `matches`
 -- AUTO_INCREMENT de tabela `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de tabela `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de tabela `players`
 --
 ALTER TABLE `players`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de tabela `promotional_banners`
@@ -684,7 +677,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT de tabela `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restrições para tabelas despejadas

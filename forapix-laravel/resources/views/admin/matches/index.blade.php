@@ -107,18 +107,45 @@
                                 @endif
                             </div>
                             <div class="flex items-center justify-between gap-4 mt-3">
+                                @php
+                                    $s1 = $match->first_player_score ?? 0;
+                                    $s2 = $match->second_player_score ?? 0;
+                                    $p1Leading = $s1 > $s2;
+                                    $p2Leading = $s2 > $s1;
+                                    $tied = $s1 === $s2;
+                                @endphp
                                 <div class="text-left">
                                     <p class="text-sm text-gray-400">Jogador 1</p>
-                                    <p class="text-lg font-semibold">{{ explode(' ', $match->firstPlayer->name ?? 'Jog. 1')[0] }}</p>
+                                    <p class="text-lg font-semibold {{ $p1Leading ? 'text-success' : '' }}">{{ explode(' ', $match->firstPlayer->name ?? 'Jog. 1')[0] }}</p>
                                     <p class="text-accent-light font-semibold">{{ number_format($match->first_player_odds, 2) }}x</p>
                                     <p class="text-xs text-gray-500 mt-1">{{ $player1Percent }}% das apostas</p>
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-gray-500 font-bold text-sm">VS</span>
+                                <div class="text-center flex flex-col items-center gap-1">
+                                    @if(in_array($match->status, ['live', 'finished']))
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-3xl font-black {{ $p1Leading ? 'text-white' : 'text-gray-400' }}">{{ $s1 }}</span>
+                                            <span class="text-gray-600 font-bold text-lg">×</span>
+                                            <span class="text-3xl font-black {{ $p2Leading ? 'text-white' : 'text-gray-400' }}">{{ $s2 }}</span>
+                                        </div>
+                                        @if($match->status === 'live')
+                                            @if($tied)
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 uppercase tracking-wider">Empate</span>
+                                            @elseif($p1Leading)
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 uppercase tracking-wider">J1 liderando</span>
+                                            @else
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 uppercase tracking-wider">J2 liderando</span>
+                                            @endif
+                                            @if($match->live_betting_open)
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/20 text-accent-light uppercase tracking-wider animate-pulse">Apostas abertas</span>
+                                            @endif
+                                        @endif
+                                    @else
+                                        <span class="text-gray-500 font-bold text-sm">VS</span>
+                                    @endif
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm text-gray-400">Jogador 2</p>
-                                    <p class="text-lg font-semibold">{{ explode(' ', $match->secondPlayer->name ?? 'Jog. 2')[0] }}</p>
+                                    <p class="text-lg font-semibold {{ $p2Leading ? 'text-success' : '' }}">{{ explode(' ', $match->secondPlayer->name ?? 'Jog. 2')[0] }}</p>
                                     <p class="text-accent-light font-semibold">{{ number_format($match->second_player_odds, 2) }}x</p>
                                     <p class="text-xs text-gray-500 mt-1">{{ $player2Percent }}% das apostas</p>
                                 </div>
@@ -146,6 +173,12 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 lg:flex-col lg:items-stretch">
+                            @if(!in_array($match->status, ['finished','cancelled']))
+                            <button onclick="openScoreModal({{ $match->id }}, '{{ addslashes($match->firstPlayer->name ?? 'Jogador 1') }}', '{{ addslashes($match->secondPlayer->name ?? 'Jogador 2') }}', {{ $match->first_player_score ?? 0 }}, {{ $match->second_player_score ?? 0 }})"
+                                    class="admin-btn-primary" title="Editar placar">
+                                <i class="fas fa-hashtag"></i> Placar
+                            </button>
+                            @endif
                             <a href="{{ route('admin.matches.edit', $match) }}" class="admin-btn-ghost" title="Editar">
                                 <i class="fas fa-pen"></i> Editar
                             </a>
@@ -179,6 +212,63 @@
             </div>
         </div>
     </div>
+<!-- Modal Editar Placar -->
+<div id="scoreModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+    <div class="bg-[#10152b] border border-accent/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-hashtag text-accent-light"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-lg">Atualizar Placar</h3>
+                <p class="text-sm text-gray-400" id="scoreMatchTitle"></p>
+            </div>
+        </div>
+
+        <div class="bg-accent/10 border border-accent/20 rounded-xl p-3 mb-5 text-xs text-accent-light">
+            <i class="fas fa-circle-info mr-1"></i>
+            <strong>Automático:</strong> Empate → abre apostas ao vivo. Jogador na frente → fecha apostas.
+        </div>
+
+        <form id="scoreForm" method="POST" action="">
+            @csrf
+            <div class="flex items-center gap-4">
+                <div class="flex-1">
+                    <label class="block text-xs text-gray-400 mb-2 uppercase tracking-wider" id="scoreLabel1">Jogador 1</label>
+                    <input type="number" name="first_player_score" id="scoreInput1"
+                        min="0" max="999" value="0"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-center text-3xl font-black text-white focus:outline-none focus:border-accent-light transition">
+                </div>
+                <div class="text-center">
+                    <span class="text-2xl font-black text-gray-600">×</span>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs text-gray-400 mb-2 uppercase tracking-wider text-right" id="scoreLabel2">Jogador 2</label>
+                    <input type="number" name="second_player_score" id="scoreInput2"
+                        min="0" max="999" value="0"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-center text-3xl font-black text-white focus:outline-none focus:border-accent-light transition">
+                </div>
+            </div>
+
+            <div id="scoreTieAlert" class="hidden mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-xs text-yellow-300">
+                <i class="fas fa-unlock mr-1"></i> Placar empatado — apostas ao vivo serão <strong>abertas</strong> automaticamente.
+            </div>
+            <div id="scoreLeadAlert" class="hidden mt-4 bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300">
+                <i class="fas fa-lock mr-1"></i> Jogador na frente — apostas ao vivo serão <strong>fechadas</strong>.
+            </div>
+
+            <div class="flex gap-3 mt-5">
+                <button type="button" onclick="closeScoreModal()" class="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-300 text-sm font-semibold hover:bg-white/5 transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-accent hover:bg-accent-light text-white text-sm font-bold transition flex items-center justify-center gap-2">
+                    <i class="fas fa-check"></i> Salvar Placar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Cancelar Partida -->
 <div id="cancelMatchModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm px-4">
     <div class="bg-[#10152b] border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
@@ -215,6 +305,41 @@
 </div>
 
 <script>
+let _scoreMatchId = null;
+
+function openScoreModal(matchId, p1Name, p2Name, s1, s2) {
+    _scoreMatchId = matchId;
+    document.getElementById('scoreMatchTitle').textContent = p1Name + ' vs ' + p2Name;
+    document.getElementById('scoreLabel1').textContent = p1Name;
+    document.getElementById('scoreLabel2').textContent = p2Name;
+    document.getElementById('scoreInput1').value = s1;
+    document.getElementById('scoreInput2').value = s2;
+    document.getElementById('scoreForm').action = '/admin/matches/' + matchId + '/update-score';
+    updateScoreAlerts();
+    const modal = document.getElementById('scoreModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeScoreModal() {
+    const modal = document.getElementById('scoreModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function updateScoreAlerts() {
+    const s1 = parseInt(document.getElementById('scoreInput1').value) || 0;
+    const s2 = parseInt(document.getElementById('scoreInput2').value) || 0;
+    const tied = s1 === s2;
+    document.getElementById('scoreTieAlert').classList.toggle('hidden', !tied);
+    document.getElementById('scoreLeadAlert').classList.toggle('hidden', tied);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('scoreInput1').addEventListener('input', updateScoreAlerts);
+    document.getElementById('scoreInput2').addEventListener('input', updateScoreAlerts);
+});
+
 let _cancelMatchId = null;
 
 function openCancelModal(matchId, title) {

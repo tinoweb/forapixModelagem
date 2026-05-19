@@ -1,17 +1,16 @@
 /**
- * ForaPix - Main Application
+ * ApostaCasada - Main Application
  * Controlador principal da aplicação
  */
 
 const App = {
     currentPage: 'home',
-    history: [],
     
     /**
      * Initialize application
      */
     init() {
-        console.log('🚀 ForaPix App iniciando...');
+        console.log('🚀 ApostaCasada App iniciando...');
         
         // Initialize storage
         Storage.init();
@@ -25,8 +24,24 @@ const App = {
         // Setup profile button
         this.setupProfileButton();
         
-        // Load initial page
-        this.navigateTo('home');
+        // Escuta botão voltar/avançar do browser
+        this.setupPopState();
+
+        // Detecta link de redefinição de senha (?reset-token=...&email=...)
+        const handledReset = this._handlePasswordResetLink();
+
+        // Determina página inicial pelo hash da URL (deep link / refresh)
+        if (!handledReset) {
+            const { page: initialPage, params: initialParams } = this._parseHash();
+            // Garante que o estado inicial está registrado no histórico do browser
+            window.history.replaceState(
+                { page: initialPage, params: initialParams },
+                '',
+                this._buildHash(initialPage, initialParams)
+            );
+            this.currentPage = initialPage;
+            this.renderPage(initialPage, initialParams);
+        }
         
         // Update auth UI (logged in or not)
         this.updateAuthUI();
@@ -34,7 +49,30 @@ const App = {
         // Test API connection
         this.testApiConnection();
         
-        console.log('✅ ForaPix App iniciado com sucesso!');
+        console.log('✅ ApostaCasada App iniciado com sucesso!');
+    },
+
+    /**
+     * Se a URL contém parâmetros de reset de senha, abre a tela de
+     * redefinição automaticamente. Retorna true se foi tratado.
+     */
+    _handlePasswordResetLink() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const token  = params.get('reset-token');
+            const email  = params.get('email');
+            if (!token || !email) return false;
+
+            if (typeof ProfilePage !== 'undefined') {
+                ProfilePage.resetToken = token;
+                ProfilePage.resetEmail = email;
+                ProfilePage.authTab = 'reset';
+            }
+            this.navigateTo('menu');
+            return true;
+        } catch (_) {
+            return false;
+        }
     },
 
     /**
@@ -78,35 +116,91 @@ const App = {
     },
 
     /**
-     * Navigate to page
+     * Navigate to page — registra no histórico do browser
      */
     navigateTo(page, params = {}) {
         console.log(`📍 Navegando para: ${page}`, params);
-        
-        // Add to history
-        if (this.currentPage !== page) {
-            this.history.push(this.currentPage);
-        }
-        
+
+        const hash = this._buildHash(page, params);
+        window.history.pushState({ page, params }, '', hash);
+
         this.currentPage = page;
-        
-        // Update navigation
         this.updateNavigation(page);
-        
-        // Render page
         this.renderPage(page, params);
     },
 
     /**
-     * Go back
+     * Volta para a página anterior usando o histórico do browser
      */
     goBack() {
-        if (this.history.length > 0) {
-            const previousPage = this.history.pop();
-            this.navigateTo(previousPage);
+        if (window.history.length > 1) {
+            window.history.back();
         } else {
             this.navigateTo('home');
         }
+    },
+
+    /**
+     * Escuta eventos popstate (botão voltar/avançar do browser)
+     */
+    setupPopState() {
+        window.addEventListener('popstate', (event) => {
+            let page, params;
+            if (event.state && event.state.page) {
+                page   = event.state.page;
+                params = event.state.params || {};
+            } else {
+                // Fallback: lê o hash atual
+                ({ page, params } = this._parseHash());
+            }
+            this.currentPage = page;
+            this.updateNavigation(page);
+            this.updateShellVisibility(page);
+            this.renderPage(page, params);
+        });
+    },
+
+    /**
+     * Constrói o hash da URL a partir da página e parâmetros.
+     * Ex: page='sinuca', params={matchId:5} → '#sinuca?id=5'
+     */
+    _buildHash(page, params = {}) {
+        const base = `#${page}`;
+        const normalized = { ...params };
+        if (normalized.matchId) {
+            normalized.id = normalized.matchId;
+            delete normalized.matchId;
+        }
+        const query = Object.entries(normalized)
+            .filter(([, v]) => v !== null && v !== undefined && v !== '')
+            .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+            .join('&');
+        return query ? `${base}?${query}` : base;
+    },
+
+    /**
+     * Lê e decodifica o hash atual da URL.
+     * Ex: '#sinuca?id=5' → { page:'sinuca', params:{id:'5', matchId:'5'} }
+     */
+    _parseHash() {
+        const raw = window.location.hash || '#home';
+        const withoutHash = raw.slice(1);
+        const [pagePart, queryPart] = withoutHash.split('?');
+        const page = pagePart || 'home';
+        const params = {};
+        if (queryPart) {
+            queryPart.split('&').forEach(part => {
+                const eqIdx = part.indexOf('=');
+                if (eqIdx === -1) return;
+                const k = decodeURIComponent(part.slice(0, eqIdx));
+                const v = decodeURIComponent(part.slice(eqIdx + 1));
+                params[k] = v;
+            });
+        }
+        if (params.id && page === 'sinuca') {
+            params.matchId = params.id;
+        }
+        return { page, params };
     },
 
     /**
@@ -168,7 +262,7 @@ const App = {
         } else {
             brand.innerHTML = `
                 <span class="logo-icon"><i class="fas fa-leaf"></i></span>
-                <span class="logo-text">FORAPIX</span>
+                <span class="logo-text">APOSTACASADA</span>
             `;
         }
     },
@@ -353,14 +447,18 @@ const App = {
      * Update balance display — busca da API e atualiza localStorage
      */
     async updateBalance() {
+        const balanceElement = document.getElementById('userBalance');
+
+        if (!Storage.isLoggedIn()) {
+            if (balanceElement) balanceElement.textContent = '0,00';
+            return;
+        }
+
         // Exibe imediatamente o valor em cache enquanto busca o real
         const cached = Storage.getBalance();
-        const balanceElement = document.getElementById('userBalance');
         if (balanceElement) {
             balanceElement.textContent = Utils.formatCurrency(cached);
         }
-
-        if (!Storage.isLoggedIn()) return;
 
         try {
             const res = await API.getBalance();
@@ -386,14 +484,6 @@ const App = {
         }
     },
 
-    /**
-     * Logout user
-     */
-    logout() {
-        Storage.logout();
-        Components.showToast('Logout realizado com sucesso!', 'success');
-        this.navigateTo('home');
-    }
 };
 
 // Initialize app when DOM is loaded

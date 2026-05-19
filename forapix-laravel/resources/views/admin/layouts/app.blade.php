@@ -77,6 +77,15 @@
                     <i class="fas fa-ticket"></i>
                     Apostas
                 </a>
+                @if(auth('admin')->user()?->isSuperAdmin())
+                <div class="pt-3 mt-3 border-t border-white/5">
+                    <p class="text-[11px] uppercase text-gray-500 tracking-[0.25em] mb-3">Administração</p>
+                    <a href="{{ route('admin.admin-users.index') }}" class="nav-link {{ request()->routeIs('admin.admin-users.*') ? 'active' : '' }}">
+                        <i class="fas fa-user-shield"></i>
+                        Operadores
+                    </a>
+                </div>
+                @endif
             </nav>
             <div class="px-6 py-6 border-t border-white/5 text-xs text-gray-500">
                 <p class="text-gray-300 font-semibold">{{ auth('admin')->user()->name ?? 'Admin' }}</p>

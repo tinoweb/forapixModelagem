@@ -1,5 +1,5 @@
 /**
- * ForaPix - Storage Service
+ * ApostaCasada - Storage Service
  * Gerenciamento de dados no localStorage
  */
 

@@ -1,5 +1,5 @@
 /**
- * ForaPix - Matches Page
+ * ApostaCasada - Matches Page
  * Lista de partidas replicando o layout do app de referência
  */
 
@@ -229,13 +229,20 @@ const MatchesPage = {
     },
 
     isBettingOpen(match) {
-        if (typeof match.can_bet !== 'undefined') {
-            return !!match.can_bet;
+        if (match.status === 'finished' || match.status === 'cancelled') return false;
+        // Prazo expirado = apostas encerradas independente do status
+        if (match.betting_deadline && new Date(match.betting_deadline) <= new Date()) {
+            // Exceto se ao vivo com live_betting_open
+            if (match.status === 'live') return !!(match.live_betting_open ?? match.liveBettingOpen);
+            return false;
         }
+        // can_bet vem da API com a lógica completa (inclui live_betting_open)
+        if (typeof match.can_bet !== 'undefined') return !!match.can_bet;
+        // Fallback: partida ao vivo com apostas abertas
+        if (match.status === 'live') return !!(match.live_betting_open ?? match.liveBettingOpen);
+        // Fallback: pré-jogo dentro do prazo
         if (!match.betting_deadline) return false;
-        const deadline = new Date(match.betting_deadline);
-        const now = new Date();
-        return match.status !== 'finished' && deadline > now;
+        return new Date(match.betting_deadline) > new Date();
     },
 
     formatDate(date, mode = 'datetime') {

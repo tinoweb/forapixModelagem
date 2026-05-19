@@ -31,6 +31,7 @@ class User extends Authenticatable
         'total_bet',
         'total_won',
         'is_admin',
+        'admin_permissions',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'total_bet' => 'decimal:2',
         'total_won' => 'decimal:2',
         'is_admin' => 'boolean',
+        'admin_permissions' => 'array',
         'two_factor_enabled' => 'boolean',
         'last_login_at' => 'datetime',
         'metadata' => 'array'
@@ -151,11 +153,56 @@ class User extends Authenticatable
     }
 
     /**
+     * Permissões disponíveis no sistema admin.
+     */
+    public static array $availablePermissions = [
+        'manage_games'   => 'Gerenciar Jogos',
+        'manage_matches' => 'Gerenciar Partidas',
+        'manage_players' => 'Gerenciar Jogadores',
+        'manage_bets'    => 'Gerenciar Apostas',
+        'manage_users'   => 'Gerenciar Usuários',
+        'view_reports'   => 'Ver Relatórios / Dashboard',
+    ];
+
+    /**
      * Check if user is admin
      */
     public function isAdmin(): bool
     {
-        return $this->is_admin;
+        return (bool) $this->is_admin;
+    }
+
+    /**
+     * Verifica se o usuário admin tem uma permissão específica.
+     * Super admins (admin_permissions = null ou []) têm acesso total.
+     */
+    public function hasAdminPermission(string $permission): bool
+    {
+        if (!$this->is_admin) {
+            return false;
+        }
+        $perms = $this->admin_permissions ?? [];
+        // Super admin: sem restrições configuradas
+        if (empty($perms)) {
+            return true;
+        }
+        return in_array($permission, $perms, true);
+    }
+
+    /**
+     * Retorna true se for super admin (sem restrições de permissão).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->is_admin && empty($this->admin_permissions ?? []);
+    }
+
+    /**
+     * Retorna true se for operador (admin com permissões restritas).
+     */
+    public function isOperator(): bool
+    {
+        return $this->is_admin && !empty($this->admin_permissions ?? []);
     }
 
     /**

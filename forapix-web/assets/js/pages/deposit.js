@@ -1,5 +1,5 @@
 /**
- * ForaPix - Página de Depósito
+ * ApostaCasada - Página de Depósito
  * Integração real com VeoPag (PIX)
  */
 

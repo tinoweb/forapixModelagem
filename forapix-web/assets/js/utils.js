@@ -1,5 +1,5 @@
 /**
- * ForaPix - Utility Functions
+ * ApostaCasada - Utility Functions
  * Funções utilitárias do sistema
  */
 
