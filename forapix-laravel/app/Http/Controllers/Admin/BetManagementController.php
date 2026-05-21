@@ -137,7 +137,7 @@ class BetManagementController extends Controller
         }
 
         $reason = $request->input('reason', 'Cancelada pelo administrador');
-        $balanceBefore = $bet->user->balance;
+        $balanceBefore = (float) $bet->user->balance;
 
         $bet->update([
             'status'              => 'cancelled',
@@ -146,6 +146,16 @@ class BetManagementController extends Controller
         ]);
 
         $bet->user->increment('balance', $bet->amount);
+
+        // Restaurar withdrawable_balance pela quantia consumida ao apostar
+        $betTx = Transaction::where('reference_id', $bet->id)
+            ->where('reference_type', 'bet')
+            ->where('type', 'bet')
+            ->first();
+        $withdrawableConsumed = (float) ($betTx?->metadata['withdrawable_consumed'] ?? 0);
+        if ($withdrawableConsumed > 0) {
+            $bet->user->increment('withdrawable_balance', $withdrawableConsumed);
+        }
 
         Transaction::create([
             'user_id'        => $bet->user_id,

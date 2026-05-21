@@ -234,6 +234,16 @@ class Bet extends Model
         // Refund user
         $this->user->increment('balance', $this->amount);
 
+        // Restaurar withdrawable_balance pela quantia consumida ao apostar
+        $betTx = Transaction::where('reference_id', $this->id)
+            ->where('reference_type', 'bet')
+            ->where('type', 'bet')
+            ->first();
+        $withdrawableConsumed = (float) ($betTx?->metadata['withdrawable_consumed'] ?? 0);
+        if ($withdrawableConsumed > 0) {
+            $this->user->increment('withdrawable_balance', $withdrawableConsumed);
+        }
+
         // Create refund transaction
         Transaction::create([
             'user_id' => $this->user_id,

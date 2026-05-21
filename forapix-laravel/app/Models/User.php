@@ -346,9 +346,16 @@ class User extends Authenticatable
         $potentialWin = 0;
 
         // Deduct balance
-        $balanceBefore = $this->balance;
+        $balanceBefore        = (float) $this->balance;
+        $withdrawableBefore   = (float) $this->withdrawable_balance;
+        $withdrawableConsumed = min($amount, $withdrawableBefore);
+
         $this->decrement('balance', $amount);
         $this->increment('total_bet', $amount);
+
+        if ($withdrawableConsumed > 0) {
+            $this->decrement('withdrawable_balance', $withdrawableConsumed);
+        }
 
         // Create bet
         $bet = Bet::create([
@@ -364,17 +371,18 @@ class User extends Authenticatable
 
         // Create transaction
         Transaction::create([
-            'user_id' => $this->id,
-            'type' => 'bet',
-            'amount' => $amount,
-            'net_amount' => $amount,
-            'description' => "Aposta {$bet->bet_id}",
-            'reference_id' => $bet->id,
+            'user_id'        => $this->id,
+            'type'           => 'bet',
+            'amount'         => $amount,
+            'net_amount'     => $amount,
+            'description'    => "Aposta {$bet->bet_id}",
+            'reference_id'   => $bet->id,
             'reference_type' => 'bet',
-            'status' => 'completed',
+            'status'         => 'completed',
             'balance_before' => $balanceBefore,
-            'balance_after' => $this->fresh()->balance,
-            'processed_at' => now()
+            'balance_after'  => $balanceBefore - $amount,
+            'processed_at'   => now(),
+            'metadata'       => ['withdrawable_consumed' => $withdrawableConsumed],
         ]);
 
         // Update match statistics

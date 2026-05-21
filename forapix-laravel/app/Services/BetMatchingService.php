@@ -413,6 +413,16 @@ class BetMatchingService
 
         $bet->user->increment('balance', $amount);
 
+        // Restaurar withdrawable_balance pela quantia consumida ao apostar
+        $betTx = Transaction::where('reference_id', $bet->id)
+            ->where('reference_type', 'bet')
+            ->where('type', 'bet')
+            ->first();
+        $withdrawableConsumed = (float) ($betTx?->metadata['withdrawable_consumed'] ?? 0);
+        if ($withdrawableConsumed > 0) {
+            $bet->user->increment('withdrawable_balance', $withdrawableConsumed);
+        }
+
         $bet->update([
             'status'               => 'cancelled',
             'cancellation_reason'  => $reason,
