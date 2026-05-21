@@ -648,7 +648,11 @@ class GameManagementController extends Controller
         ]);
 
         if (in_array($match->status, ['finished', 'cancelled'])) {
-            return back()->with('error', 'Não é possível atualizar o placar de uma partida encerrada ou cancelada.');
+            $errorMsg = 'Não é possível atualizar o placar de uma partida encerrada ou cancelada.';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
+            return back()->with('error', $errorMsg);
         }
 
         $s1 = (int) $request->first_player_score;
@@ -682,6 +686,19 @@ class GameManagementController extends Controller
             $msg .= ' Empate detectado — apostas ao vivo ABERTAS automaticamente.';
         } elseif (!$isTie && $match->getOriginal('live_betting_open')) {
             $msg .= ' Apostas ao vivo fechadas (jogador na frente).';
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'match'   => [
+                    'status'              => $match->status,
+                    'live_betting_open'   => $match->live_betting_open,
+                    'first_player_score'  => $s1,
+                    'second_player_score' => $s2,
+                ],
+            ]);
         }
 
         return back()->with('success', $msg);

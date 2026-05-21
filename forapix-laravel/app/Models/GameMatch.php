@@ -147,7 +147,27 @@ class GameMatch extends Model
     }
 
     /**
-     * Check if betting is still open
+     * Determina se novas apostas podem ser registradas nesta partida.
+     *
+     * É a Única fonte de verdade sobre abertura de apostas no sistema.
+     * Consultada por: BetController (ao apostar), Bet::canBeCancelled() (ao cancelar),
+     * API MatchController (campo can_bet na listagem) e frontend JS.
+     *
+     * REGRAS:
+     *
+     *  PRÉ-JOGO (status = scheduled):
+     *   → Aberto enquanto: agora < betting_deadline
+     *   → Fechado quando: deadline passou OU jogo começou
+     *
+     *  AO VIVO (status = live):
+     *   → Aberto quando: live_betting_open = true (placar empatado)
+     *   → Fechado quando: live_betting_open = false (alguém na frente)
+     *   O toggle é automático ao atualizar o placar no painel admin.
+     *
+     *  ENCERRADA / CANCELADA:
+     *   → Sempre fechado, sem exceções.
+     *
+     * @return bool  true = aceita apostas | false = apostas bloqueadas
      */
     public function isBettingOpen(): bool
     {
@@ -160,7 +180,7 @@ class GameMatch extends Model
             return true;
         }
 
-        // Apostas ao vivo: abertas manualmente pelo admin durante o jogo
+        // Apostas ao vivo: abertas automaticamente quando placar empatado
         if ($this->status === 'live' && $this->live_betting_open) {
             return true;
         }
@@ -229,7 +249,15 @@ class GameMatch extends Model
     }
 
     /**
-     * Resolve match and process bets
+     * Encerra a partida e processa todas as apostas pendentes.
+     *
+     * ATENÇÃO: Este método usa Bet::resolve() que é o método legado simples.
+     * Para o sistema de pool casado (aposta casada), deve-se usar
+     * BetMatchingService::resolveMatch() diretamente, que calcula pagamentos
+     * proporcionais ao matched_amount de cada apostador.
+     *
+     * @param  string  $result  Tipo vencedor: 'first_player' ou 'second_player'.
+     * @param  array   $scores  Placar final: ['first_player' => int, 'second_player' => int]
      */
     public function resolveMatch(string $result, array $scores = []): void
     {

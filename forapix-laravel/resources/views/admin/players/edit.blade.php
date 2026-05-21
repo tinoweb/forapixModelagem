@@ -56,7 +56,10 @@
                     <label class="text-sm text-gray-300">Foto / Avatar</label>
                     <input type="file" name="photo" accept="image/*" class="mt-1 w-full text-sm text-gray-400">
                     @if($player->photo_url)
-                        <p class="text-xs text-gray-500 mt-1">Atual: <a href="{{ Storage::disk('public')->url($player->photo_url) }}" class="text-accent" target="_blank">ver foto</a></p>
+                        <div class="mt-2 flex items-center gap-3">
+                            <img src="{{ $player->photo }}" alt="{{ $player->name }}" class="w-14 h-14 rounded-xl object-cover border border-white/10">
+                            <a href="{{ $player->photo }}" class="text-xs text-accent" target="_blank">ver foto atual</a>
+                        </div>
                     @endif
                 </div>
 

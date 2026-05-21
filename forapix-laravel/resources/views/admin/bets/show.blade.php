@@ -155,11 +155,13 @@
 
 @push('scripts')
 <script>
+const ADMIN_BETS_BASE = '{{ rtrim(url('/admin/bets'), '/') }}';
+
 async function cancelBet(id, betId) {
     if (!confirm(`Cancelar aposta ${betId}?`)) return;
     const reason = document.getElementById('cancelReason')?.value || 'Cancelada pelo administrador';
 
-    const res = await fetch(`/admin/bets/${id}/cancel`, {
+    const res = await fetch(`${ADMIN_BETS_BASE}/${id}/cancel`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

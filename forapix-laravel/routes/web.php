@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FileServeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Serve arquivos de upload sem depender de storage:link
+Route::get('/uploads/{path}', [FileServeController::class, 'serve'])
+    ->where('path', '.+')
+    ->name('uploads.serve');

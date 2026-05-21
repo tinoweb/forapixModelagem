@@ -34,9 +34,10 @@ class PlayerManagementController extends Controller
     {
         $data = $this->validatePlayer($request);
         $data['slug'] = Str::slug($request->name . '-' . uniqid());
+        unset($data['photo']);
 
         if ($request->hasFile('photo')) {
-            $data['photo_url'] = $request->file('photo')->store('players', 'public');
+            $data['photo_url'] = $this->uploadPhoto($request);
         }
 
         Player::create($data);
@@ -54,9 +55,10 @@ class PlayerManagementController extends Controller
     public function update(Request $request, Player $player)
     {
         $data = $this->validatePlayer($request, $player->id);
+        unset($data['photo']);
 
         if ($request->hasFile('photo')) {
-            $data['photo_url'] = $request->file('photo')->store('players', 'public');
+            $data['photo_url'] = $this->uploadPhoto($request);
         }
 
         $player->update($data);
@@ -92,13 +94,33 @@ class PlayerManagementController extends Controller
     private function validatePlayer(Request $request, ?int $playerId = null): array
     {
         return $request->validate([
-            'name' => 'required|string|max:255',
-            'sport_id' => 'required|exists:sports,id',
-            'bio' => 'nullable|string',
-            'photo' => 'nullable|image|max:2048',
-            'birth_date' => 'nullable|date',
+            'name'        => 'required|string|max:255',
+            'sport_id'    => 'required|exists:sports,id',
+            'bio'         => 'nullable|string',
+            'photo'       => 'nullable|image|max:5120',
+            'birth_date'  => 'nullable|date',
             'nationality' => 'nullable|string|size:3',
-            'rating' => 'nullable|numeric|min:0'
+            'rating'      => 'nullable|numeric|min:0'
         ]);
+    }
+
+    /**
+     * Faz upload da foto do jogador em storage/app/uploads/players/.
+     * Servido via rota /uploads/{path} — funciona em qualquer hospedagem
+     * sem depender de storage:link ou public_path.
+     */
+    private function uploadPhoto(Request $request): string
+    {
+        $ext      = $request->file('photo')->getClientOriginalExtension();
+        $filename = 'player_' . uniqid() . '.' . $ext;
+        $dir      = storage_path('app/uploads/players');
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $request->file('photo')->move($dir, $filename);
+
+        return 'uploads/players/' . $filename;
     }
 }

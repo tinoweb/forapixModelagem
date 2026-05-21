@@ -108,7 +108,7 @@ class BetManagementController extends Controller
         if ($request->filled('winner_player_id')) {
             $updates['winner_player_id'] = $request->winner_player_id;
         }
-        $updates['result'] = ['winning_bet_type' => $request->result];
+        $updates['result'] = $request->result;
         $match->update($updates);
 
         $winnerLabel = $request->result === 'first_player'
@@ -119,8 +119,8 @@ class BetManagementController extends Controller
             'success' => true,
             'message' => "Partida encerrada! Vencedor: {$winnerLabel}. "
                 . "{$stats['processed']} apostas processadas. "
-                . "Pool casado: R$ " . number_format($stats['winner_pool'] + $stats['house_cut'], 2, ',', '.') . " "
-                . "(casa: R$ " . number_format($stats['house_cut'], 2, ',', '.') . ").",
+                . "Pool casado: R$ " . number_format(($stats['winner_pool'] ?? 0) + ($stats['house_cut'] ?? 0), 2, ',', '.') . " "
+                . "(casa: R$ " . number_format($stats['house_cut'] ?? 0, 2, ',', '.') . ").",
         ]);
     }
 

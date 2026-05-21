@@ -138,9 +138,11 @@
 
 @push('scripts')
 <script>
+const ADMIN_USERS_BASE = '{{ rtrim(url('/admin/users'), '/') }}';
+
 async function suspendUser(id, name) {
     if (!confirm(`Suspender o usuário "${name}"?`)) return;
-    const res = await fetch(`/admin/users/${id}/suspend`, {
+    const res = await fetch(`${ADMIN_USERS_BASE}/${id}/suspend`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
@@ -151,7 +153,7 @@ async function suspendUser(id, name) {
 
 async function activateUser(id, name) {
     if (!confirm(`Ativar o usuário "${name}"?`)) return;
-    const res = await fetch(`/admin/users/${id}/activate`, {
+    const res = await fetch(`${ADMIN_USERS_BASE}/${id}/activate`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });

@@ -57,9 +57,23 @@
 
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-gray-400">Saldo atual</span>
+                        <span class="text-gray-400">Saldo total</span>
                         <span class="font-bold text-green-400">R$ {{ number_format($user->balance, 2, ',', '.') }}</span>
                     </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Saldo sacável</span>
+                        <div class="text-right">
+                            <span class="font-bold {{ (float)$user->withdrawable_balance >= 10 ? 'text-blue-400' : 'text-gray-500' }}">
+                                R$ {{ number_format($user->withdrawable_balance, 2, ',', '.') }}
+                            </span>
+                            @if((float)$user->withdrawable_balance >= 10)
+                                <span class="block text-xs text-green-500">Liberado</span>
+                            @else
+                                <span class="block text-xs text-gray-600">Bloqueado</span>
+                            @endif
+                        </div>
+                    </div>
+                    <hr class="border-white/10">
                     <div class="flex justify-between">
                         <span class="text-gray-400">Total apostado</span>
                         <span class="text-white">R$ {{ number_format($totalBet, 2, ',', '.') }}</span>
@@ -172,9 +186,11 @@
 
 @push('scripts')
 <script>
+const ADMIN_USERS_BASE = '{{ rtrim(url('/admin/users'), '/') }}';
+
 async function suspendUser(id, name) {
     if (!confirm(`Suspender "${name}"?`)) return;
-    const res = await fetch(`/admin/users/${id}/suspend`, {
+    const res = await fetch(`${ADMIN_USERS_BASE}/${id}/suspend`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
@@ -183,7 +199,7 @@ async function suspendUser(id, name) {
     if (data.success) location.reload();
 }
 async function activateUser(id) {
-    const res = await fetch(`/admin/users/${id}/activate`, {
+    const res = await fetch(`${ADMIN_USERS_BASE}/${id}/activate`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
@@ -193,7 +209,7 @@ async function activateUser(id) {
 }
 async function resetPassword(id) {
     if (!confirm('Resetar a senha deste usuário?')) return;
-    const res = await fetch(`/admin/users/${id}/reset-password`, {
+    const res = await fetch(`${ADMIN_USERS_BASE}/${id}/reset-password`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });

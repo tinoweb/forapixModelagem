@@ -5,21 +5,37 @@ namespace App\Services;
 use App\Models\Bet;
 use App\Models\GameMatch;
 use App\Models\Transaction;
+use App\Services\ResendService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * BetMatchingService — Aposta Casada
+ * BetMatchingService — Motor de Apostas Casadas (Peer-to-Peer)
  *
- * Regras:
- *  - Apostas no mesmo lado ficam PENDENTES até serem casadas com o lado oposto.
- *  - Ao receber nova aposta, casa automaticamente com o lado oposto (FIFO).
- *  - Ao encerrar: vencedores recebem 90% do pool casado (proporcionalmente).
- *  - Valor não casado é devolvido ao apostador independente do resultado.
- *  - Ao cancelar: devolução total de 100% para todos.
+ * Responsável por toda a lógica financeira do sistema:
+ *
+ * ┌─────────────────────────────────────────────────────────────────┐
+ * │  CASAMENTO (matchBet)                                           │
+ * │  Nova aposta chega → busca opostos pendentes (FIFO) → casa      │
+ * │  proporcionalmente até zerar o valor ou esgotar opostos.        │
+ * ├─────────────────────────────────────────────────────────────────┤
+ * │  RESOLUÇÃO (resolveMatch)                                       │
+ * │  Pool casado total → Casa retém 10% → 90% vai para vencedores  │
+ * │  proporcionalmente ao matched_amount de cada um.                │
+ * │  Parte não casada (amount - matched_amount) é sempre devolvida. │
+ * ├─────────────────────────────────────────────────────────────────┤
+ * │  CANCELAMENTO DE PARTIDA (cancelMatch)                          │
+ * │  Admin cancela partida → 100% devolvido a todos, casados ou não.│
+ * └─────────────────────────────────────────────────────────────────┘
+ *
+ * @see BETTING_RULES.md para documentação completa das regras de negócio.
  */
 class BetMatchingService
 {
+    /**
+     * Taxa retida pela casa sobre o pool casado ao encerrar a partida.
+     * 0.10 = 10%
+     */
     const HOUSE_CUT_PCT = 0.10;
 
     private const OPPOSING = [
@@ -31,7 +47,26 @@ class BetMatchingService
 
     /**
      * Tenta casar a nova aposta com apostas pendentes do lado oposto.
-     * Retorna a aposta atualizada com matched_amount preenchido.
+     *
+     * ALGORITMO FIFO (First In, First Out):
+     *  1. Determina o tipo oposto (first_player ↔ second_player).
+     *  2. Busca apostas opostas com saldo não casado (matched_amount < amount),
+     *     ordenadas pela mais antiga (placed_at ASC).
+     *  3. Itera e casa proporcionalmente até esgotar o valor da nova aposta
+     *     ou não haver mais opostas disponíveis.
+     *
+     * CASAMENTO PARCIAL:
+     *  - Uma aposta pode ser casada em múltiplas rodadas com diferentes apostadores.
+     *  - matched_amount cresce gradualmente; amount permanece fixo.
+     *  - Parte não casada (amount − matched_amount) é devolvida no encerramento.
+     *
+     * EXEMPLO:
+     *  João: R$100 no J1 (matched=0) → Pedro: R$50 no J2
+     *  → João fica matched=50, pendente=50
+     *  → Pedro fica matched=50, pendente=0 (100% casado)
+     *
+     * @param  Bet  $newBet  Aposta recém-criada para tentar casar.
+     * @return Bet           Aposta com matched_amount atualizado.
      */
     public function matchBet(Bet $newBet): Bet
     {
@@ -42,7 +77,9 @@ class BetMatchingService
             return $newBet;
         }
 
-        DB::transaction(function () use ($newBet, $opposingType) {
+        $matchedOpposingIds = [];
+
+        DB::transaction(function () use ($newBet, $opposingType, &$matchedOpposingIds) {
             $remainingToMatch = (float) $newBet->amount;
 
             // Pega apostas opostas com saldo não casado (mais antigas primeiro)
@@ -62,6 +99,9 @@ class BetMatchingService
 
                 $opposing->increment('matched_amount', $canMatch);
                 $remainingToMatch -= $canMatch;
+
+                // Registra para notificar depois da transação
+                $matchedOpposingIds[] = $opposing->id;
             }
 
             // Atualiza matched_amount da nova aposta
@@ -70,20 +110,51 @@ class BetMatchingService
             $newBet->save();
         });
 
-        return $newBet->fresh();
+        $freshBet = $newBet->fresh();
+
+        // Notifica os apostadores opostos que tiveram suas apostas (parcialmente) casadas
+        if (!empty($matchedOpposingIds)) {
+            $this->notifyMatchedBettors($matchedOpposingIds);
+        }
+
+        // Notifica o próprio apostador sobre o resultado do casamento da nova aposta
+        $this->notifyNewBettor($freshBet);
+
+        return $freshBet;
     }
 
     // ─── RESOLUÇÃO ────────────────────────────────────────────────────────────
 
     /**
-     * Encerra uma partida: paga vencedores (pool casado ×90%), devolve não casados.
+     * Encerra uma partida e distribui os valores.
+     *
+     * FÓRMULA DE PAGAMENTO:
+     *  pool_total    = SUM(matched_amount) de todos os apostadores
+     *  taxa_casa     = pool_total × 10%
+     *  pool_ganhos   = pool_total × 90%
+     *
+     *  Para cada VENCEDOR:
+     *    payout = (matched_amount_individual / total_matched_lado_vencedor) × pool_ganhos
+     *    + devolução da parcela não casada (amount − matched_amount)
+     *
+     *  Para cada PERDEDOR:
+     *    → matched_amount vai para o pool (perdido)
+     *    → amount − matched_amount é devolvido (nunca estava em risco)
+     *
+     * CASO EXTREMO — sem casamentos:
+     *  Se nenhuma aposta foi casada (totalMatchedPool = 0),
+     *  100% é devolvido a todos sem cobrar taxa.
+     *
+     * @param  GameMatch  $match          Partida a encerrar.
+     * @param  string     $winningBetType Tipo vencedor: 'first_player' ou 'second_player'.
+     * @return array  ['processed', 'refunded', 'house_cut', 'winner_pool']
      */
     public function resolveMatch(GameMatch $match, string $winningBetType): array
     {
         $bets = $match->bets()->where('status', 'pending')->with('user')->get();
 
         if ($bets->isEmpty()) {
-            return ['processed' => 0, 'refunded' => 0, 'house_cut' => 0];
+            return ['processed' => 0, 'refunded' => 0, 'house_cut' => 0, 'winner_pool' => 0];
         }
 
         // Pool total casado = soma dos matched_amount dos DOIS lados
@@ -96,7 +167,7 @@ class BetMatchingService
                     $this->refundFull($bet, 'Partida encerrada sem apostas casadas');
                 }
             });
-            return ['processed' => 0, 'refunded' => $bets->count(), 'house_cut' => 0];
+            return ['processed' => 0, 'refunded' => $bets->count(), 'house_cut' => 0, 'winner_pool' => 0];
         }
 
         $houseCut    = round($totalMatchedPool * self::HOUSE_CUT_PCT, 2);
@@ -159,7 +230,18 @@ class BetMatchingService
     // ─── CANCELAMENTO ─────────────────────────────────────────────────────────
 
     /**
-     * Cancela partida: devolve 100% para todos os apostadores (casados e não casados).
+     * Cancela uma partida inteira e reembolsa 100% de TODOS os apostadores.
+     *
+     * Diferente do encerramento normal, o cancelamento ignora o casamento:
+     *  - Apostadores com matched_amount > 0 recebem o amount completo de volta.
+     *  - Nenhuma taxa é cobrada.
+     *  - Todas as apostas pendentes passam para status 'cancelled'.
+     *
+     * Este método é exclusivo para uso administrativo.
+     *
+     * @param  GameMatch  $match   Partida a cancelar.
+     * @param  string     $reason  Motivo do cancelamento (gravado em cada aposta).
+     * @return int                 Quantidade de apostas reembolsadas.
      */
     public function cancelMatch(GameMatch $match, string $reason = 'Partida cancelada'): int
     {
@@ -176,6 +258,85 @@ class BetMatchingService
         return $bets->count();
     }
 
+    // ─── NOTIFICAÇÕES DE CASAMENTO ────────────────────────────────────────────
+
+    /**
+     * Envia email para apostadores opostos que tiveram matched_amount atualizado.
+     * Chamado após a transação de casamento ser confirmada.
+     */
+    private function notifyMatchedBettors(array $betIds): void
+    {
+        $bets = Bet::whereIn('id', $betIds)
+            ->with(['user', 'match.game', 'match.firstPlayer', 'match.secondPlayer'])
+            ->get();
+
+        foreach ($bets as $bet) {
+            try {
+                $this->sendMatchedEmail($bet);
+            } catch (\Throwable $e) {
+                Log::error("BetMatchingService: falha ao enviar email de casamento para aposta #{$bet->id}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Notifica o apostador que acabou de colocar a aposta sobre o resultado do casamento.
+     * Só envia se algum valor foi casado (matched_amount > 0).
+     */
+    private function notifyNewBettor(Bet $bet): void
+    {
+        if ((float) $bet->matched_amount <= 0) return;
+
+        try {
+            $bet->load(['user', 'match.game', 'match.firstPlayer', 'match.secondPlayer']);
+            $this->sendMatchedEmail($bet);
+        } catch (\Throwable $e) {
+            Log::error("BetMatchingService: falha ao notificar novo apostador #{$bet->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Monta e envia o email de casamento para um apostador.
+     */
+    private function sendMatchedEmail(Bet $bet): void
+    {
+        $user  = $bet->user;
+        $match = $bet->match;
+
+        if (!$user || !$match) return;
+
+        $total    = (float) $bet->amount;
+        $matched  = (float) $bet->matched_amount;
+        $unmatched = $total - $matched;
+
+        $betLabels = [
+            'first_player'  => $match->firstPlayer?->name ?? 'Jogador 1',
+            'second_player' => $match->secondPlayer?->name ?? 'Jogador 2',
+        ];
+
+        $html = view('emails.bet_matched', [
+            'userName'        => $user->name,
+            'player1'         => explode(' ', $match->firstPlayer?->name ?? 'Jogador 1')[0],
+            'player2'         => explode(' ', $match->secondPlayer?->name ?? 'Jogador 2')[0],
+            'betLabel'        => $betLabels[$bet->bet_type] ?? $bet->bet_type,
+            'betCode'         => $bet->bet_id ?? '#' . $bet->id,
+            'totalAmount'     => number_format($total,   2, ',', '.'),
+            'matchedAmount'   => number_format($matched,   2, ',', '.'),
+            'unmatchedAmount' => number_format($unmatched, 2, ',', '.'),
+            'isFullyMatched'  => $matched >= $total && $total > 0,
+            'appUrl'          => config('app.url', 'https://apostacasada.net'),
+        ])->render();
+
+        (new ResendService())->send(
+            $user->email,
+            $user->name,
+            $matched >= $total
+                ? '🎉 Aposta confirmada — ApostaCasada'
+                : '✅ Aposta parcialmente casada — ApostaCasada',
+            $html
+        );
+    }
+
     // ─── HELPERS PRIVADOS ─────────────────────────────────────────────────────
 
     private function payWinner(Bet $bet, float $payout, float $unmatched): void
@@ -185,6 +346,8 @@ class BetMatchingService
 
         $bet->user->increment('balance', $totalCredit);
         $bet->user->increment('total_won', $payout);
+        // Todo o valor do prêmio (incluindo stake retornado) fica disponível para saque
+        $bet->user->increment('withdrawable_balance', $payout);
 
         $bet->update([
             'status'        => 'won',
@@ -275,7 +438,20 @@ class BetMatchingService
     // ─── UTILIDADE PÚBLICA ────────────────────────────────────────────────────
 
     /**
-     * Retorna estatísticas do pool da partida para exibição no frontend/admin.
+     * Retorna estatísticas em tempo real do pool da partida.
+     *
+     * Usado pelo frontend e pelo painel admin para exibir:
+     *  - Quantas apostas e quanto dinheiro há em cada lado
+     *  - Quanto já está efetivamente casado (em disputa)
+     *  - Quanto ainda está pendente (não casado)
+     *  - Estimativa da taxa da casa e do pool de ganhos
+     *
+     * @param  GameMatch  $match
+     * @return array  {
+     *   first_player:  { count, total, matched, unmatched }
+     *   second_player: { count, total, matched, unmatched }
+     *   total_matched_pool, house_cut, winner_pool
+     * }
      */
     public function getMatchStats(GameMatch $match): array
     {

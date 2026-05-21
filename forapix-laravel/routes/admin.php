@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PlayerManagementController;
 use App\Http\Controllers\Admin\BetManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminUsersController;
+use App\Http\Controllers\Admin\FinancialController;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +101,14 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
 
     // Test email
     Route::post('/test-email', [GameManagementController::class, 'testEmail'])->name('test-email');
+
+    // Financial Management
+    Route::prefix('financial')->name('financial.')->group(function () {
+        Route::get('/',                                    [FinancialController::class, 'index'])->name('index');
+        Route::post('/withdrawals/{transaction}/approve', [FinancialController::class, 'approveWithdrawal'])->name('withdrawals.approve');
+        Route::post('/withdrawals/{transaction}/reject',  [FinancialController::class, 'rejectWithdrawal'])->name('withdrawals.reject');
+        Route::post('/deposits/{transaction}/approve',    [FinancialController::class, 'approveDeposit'])->name('deposits.approve');
+    });
 
     // Admin Users (Operadores do painel)
     Route::prefix('admin-users')->name('admin-users.')->group(function () {

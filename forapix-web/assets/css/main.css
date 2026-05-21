@@ -2894,6 +2894,8 @@ header.hidden,
 .mbi-won       { background: rgba(34,197,94,0.12);   color: #22c55e; border: 1px solid rgba(34,197,94,0.25);  }
 .mbi-lost      { background: rgba(239,68,68,0.12);   color: #ef4444; border: 1px solid rgba(239,68,68,0.25);  }
 .mbi-cancelled { background: rgba(107,114,128,0.12); color: #9ca3af; border: 1px solid rgba(107,114,128,0.25); }
+.mbi-confirmed { background: rgba(34,197,94,0.15);   color: #22c55e; border: 1px solid rgba(34,197,94,0.35);  }
+.mbi-partial   { background: rgba(99,102,241,0.15);  color: #818cf8; border: 1px solid rgba(99,102,241,0.35); }
 .mbi-details {
     display: flex;
     flex-wrap: wrap;
@@ -2902,6 +2904,8 @@ header.hidden,
     color: #9ca3af;
 }
 .mbi-details strong { color: #e5e7eb; }
+.mbi-matched   { color: #22c55e; }
+.mbi-unmatched { color: #fbbf24; }
 .mbi-code {
     font-size: 10px;
     color: #4b5563;

@@ -152,16 +152,23 @@ class Bet extends Model
 
     /**
      * Check if bet can be cancelled
-     * Regra: só permite cancelamento pelo usuário enquanto a partida
-     * ainda está agendada (pré-jogo). Uma vez que o jogo começa (live),
-     * o apostador não pode mais cancelar — apenas o admin pode.
+     * Regras:
+     *  1. Aposta deve estar pendente.
+     *  2. Assim que qualquer valor for casado (matched_amount > 0),
+     *     o cancelamento é BLOQUEADO para o apostador — mesmo antes do jogo começar.
+     *  3. Partida já iniciada (live, finished, cancelled) → não pode cancelar.
+     *  4. Só cancela pré-jogo enquanto o prazo de apostas não expirou.
+     * Cancelamento administrativo não passa por este método.
      */
     public function canBeCancelled(): bool
     {
         if (!$this->isPending()) return false;
         if (!$this->match) return false;
 
-        // Partida já iniciada (live, finished, cancelled) → não pode cancelar
+        // Já foi casada (mesmo que parcialmente) → bloqueado
+        if ((float) $this->matched_amount > 0) return false;
+
+        // Partida já iniciada → bloqueado
         if ($this->match->status !== 'scheduled') return false;
 
         // Pré-jogo: só pode cancelar enquanto o prazo de apostas não expirou

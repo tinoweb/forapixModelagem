@@ -228,6 +228,10 @@ const Utils = {
         if (path.startsWith('/')) {
             return `${Config.MEDIA.BASE_URL}${path}`;
         }
+        // Arquivos servidos via rota Laravel /api/uploads/{path}
+        if (path.startsWith('uploads/')) {
+            return `${Config.API.BASE_URL}/${path}`;
+        }
         return `${Config.MEDIA.STORAGE_URL}/${path}`;
     },
 

@@ -53,7 +53,7 @@
                 @forelse($players as $player)
                     <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 flex gap-4 hover:border-white/10 transition">
                         <div class="w-16 h-16 rounded-2xl overflow-hidden border border-white/10 flex-shrink-0">
-                            <img src="{{ $player->photo_url ? Storage::disk('public')->url($player->photo_url) : 'https://i.pravatar.cc/150?u=' . $player->id }}" alt="{{ $player->name }}" class="w-full h-full object-cover">
+                            <img src="{{ $player->photo }}" alt="{{ $player->name }}" class="w-full h-full object-cover">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">

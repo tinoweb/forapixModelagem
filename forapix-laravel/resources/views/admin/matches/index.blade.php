@@ -172,28 +172,33 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 lg:flex-col lg:items-stretch">
+                        <!-- Botões: grid 2 colunas no mobile, coluna no desktop -->
+                        <div class="grid grid-cols-2 gap-2 mt-1 lg:mt-0 lg:flex lg:flex-col lg:items-stretch lg:min-w-[130px]">
                             @if(!in_array($match->status, ['finished','cancelled']))
                             <button onclick="openScoreModal({{ $match->id }}, '{{ addslashes($match->firstPlayer->name ?? 'Jogador 1') }}', '{{ addslashes($match->secondPlayer->name ?? 'Jogador 2') }}', {{ $match->first_player_score ?? 0 }}, {{ $match->second_player_score ?? 0 }})"
-                                    class="admin-btn-primary" title="Editar placar">
+                                    class="admin-btn-primary col-span-2 justify-center">
                                 <i class="fas fa-hashtag"></i> Placar
                             </button>
                             @endif
-                            <a href="{{ route('admin.matches.edit', $match) }}" class="admin-btn-ghost" title="Editar">
+                            <a href="{{ route('admin.matches.edit', $match) }}" class="admin-btn-ghost justify-center">
                                 <i class="fas fa-pen"></i> Editar
                             </a>
-                            <a href="{{ route('admin.bets.index', ['match_id' => $match->id]) }}" class="admin-btn-ghost" title="Apostas">
+                            <a href="{{ route('admin.bets.index', ['match_id' => $match->id]) }}" class="admin-btn-ghost justify-center">
                                 <i class="fas fa-ticket"></i> Apostas
                             </a>
                             @if(!in_array($match->status, ['finished','cancelled']))
                             <button onclick="openCancelModal({{ $match->id }}, '{{ addslashes($match->title ?? ($match->firstPlayer->name ?? '') . ' vs ' . ($match->secondPlayer->name ?? '')) }}')"
-                                    class="admin-btn-warning" title="Cancelar partida">
+                                    class="admin-btn-warning justify-center">
                                 <i class="fas fa-ban"></i> Cancelar
                             </button>
-                            @endif
-                            <a href="{{ route('admin.matches.delete', $match) }}" class="admin-btn-danger" title="Excluir">
+                            <a href="{{ route('admin.matches.delete', $match) }}" class="admin-btn-danger justify-center">
                                 <i class="fas fa-trash"></i> Excluir
                             </a>
+                            @else
+                            <a href="{{ route('admin.matches.delete', $match) }}" class="admin-btn-danger col-span-2 justify-center">
+                                <i class="fas fa-trash"></i> Excluir
+                            </a>
+                            @endif
                         </div>
                     </div>
                 @empty
@@ -261,7 +266,7 @@
                 <button type="button" onclick="closeScoreModal()" class="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-300 text-sm font-semibold hover:bg-white/5 transition">
                     Cancelar
                 </button>
-                <button type="submit" class="flex-1 px-4 py-3 rounded-xl bg-accent hover:bg-accent-light text-white text-sm font-bold transition flex items-center justify-center gap-2">
+                <button type="button" id="scoreSaveBtn" onclick="submitScore()" class="flex-1 px-4 py-3 rounded-xl bg-accent hover:bg-accent-light text-white text-sm font-bold transition flex items-center justify-center gap-2">
                     <i class="fas fa-check"></i> Salvar Placar
                 </button>
             </div>
@@ -305,6 +310,8 @@
 </div>
 
 <script>
+const ADMIN_MATCHES_BASE = '{{ rtrim(url('/admin/matches'), '/') }}';
+
 let _scoreMatchId = null;
 
 function openScoreModal(matchId, p1Name, p2Name, s1, s2) {
@@ -314,7 +321,6 @@ function openScoreModal(matchId, p1Name, p2Name, s1, s2) {
     document.getElementById('scoreLabel2').textContent = p2Name;
     document.getElementById('scoreInput1').value = s1;
     document.getElementById('scoreInput2').value = s2;
-    document.getElementById('scoreForm').action = '/admin/matches/' + matchId + '/update-score';
     updateScoreAlerts();
     const modal = document.getElementById('scoreModal');
     modal.classList.remove('hidden');
@@ -333,6 +339,47 @@ function updateScoreAlerts() {
     const tied = s1 === s2;
     document.getElementById('scoreTieAlert').classList.toggle('hidden', !tied);
     document.getElementById('scoreLeadAlert').classList.toggle('hidden', tied);
+}
+
+async function submitScore() {
+    if (!_scoreMatchId) return;
+
+    const s1  = parseInt(document.getElementById('scoreInput1').value) || 0;
+    const s2  = parseInt(document.getElementById('scoreInput2').value) || 0;
+    const btn = document.getElementById('scoreSaveBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
+
+    try {
+        const res = await fetch(`${ADMIN_MATCHES_BASE}/${_scoreMatchId}/update-score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                first_player_score:  s1,
+                second_player_score: s2
+            })
+        });
+
+        const data = await res.json();
+        closeScoreModal();
+
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 1200);
+        } else {
+            showAdminToast(data.message || 'Erro ao salvar placar.', 'error');
+        }
+    } catch (e) {
+        showAdminToast('Erro de conexão ao salvar placar.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check mr-2"></i> Salvar Placar';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -366,7 +413,7 @@ async function confirmCancelMatch() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
 
     try {
-        const res = await fetch(`/admin/matches/${_cancelMatchId}/cancel`, {
+        const res = await fetch(`${ADMIN_MATCHES_BASE}/${_cancelMatchId}/cancel`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -332,6 +332,8 @@
 
 @push('scripts')
 <script>
+const ADMIN_MATCHES_BASE = '{{ rtrim(url('/admin/matches'), '/') }}';
+
 async function toggleLiveBetting(matchId) {
     const btn = document.getElementById('toggleLiveBettingBtn');
     const isOpen = btn.textContent.trim().includes('Fechar');
@@ -342,7 +344,7 @@ async function toggleLiveBetting(matchId) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aguarde...';
 
-    const res = await fetch(`/admin/matches/${matchId}/toggle-live-betting`, {
+    const res = await fetch(`${ADMIN_MATCHES_BASE}/${matchId}/toggle-live-betting`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -369,7 +371,7 @@ async function resolveMatch(matchId) {
         second_player_score: parseInt(document.getElementById('resolveScore2').value) || 0,
     };
 
-    const res = await fetch(`/admin/matches/${matchId}/resolve-bets`, {
+    const res = await fetch(`${ADMIN_MATCHES_BASE}/${matchId}/resolve-bets`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

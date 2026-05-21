@@ -30,6 +30,7 @@ class User extends Authenticatable
         'total_withdrawn',
         'total_bet',
         'total_won',
+        'withdrawable_balance',
         'is_admin',
         'admin_permissions',
         'status',
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'total_withdrawn' => 'decimal:2',
         'total_bet' => 'decimal:2',
         'total_won' => 'decimal:2',
+        'withdrawable_balance' => 'decimal:2',
         'is_admin' => 'boolean',
         'admin_permissions' => 'array',
         'two_factor_enabled' => 'boolean',
@@ -222,11 +224,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user can withdraw
+     * Check if user can withdraw.
+     * Só pode sacar o saldo proveniente de ganhos (withdrawable_balance >= 10).
      */
     public function canWithdraw(): bool
     {
-        return $this->isActive() && $this->balance > 0 && $this->pix_key;
+        return $this->isActive() && (float) $this->withdrawable_balance >= 10;
+    }
+
+    /**
+     * Valor máximo que o usuário pode sacar.
+     */
+    public function maxWithdrawable(): float
+    {
+        return (float) $this->withdrawable_balance;
     }
 
     /**

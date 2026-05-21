@@ -120,6 +120,64 @@ class VeoPagService
     }
 
     /**
+     * Cria um saque PIX na VeoPag.
+     *
+     * @param float  $amount      Valor em BRL
+     * @param string $pixKey      Chave PIX do destinatário
+     * @param string $externalId  ID único do seu sistema (idempotência)
+     * @param array  $recipient   ['name', 'document']
+     * @param string $callbackUrl URL do webhook de confirmação
+     *
+     * @return array ['transactionId', 'status', 'amount', 'fee']
+     */
+    public function createWithdrawal(float $amount, string $pixKey, string $externalId, array $recipient, string $callbackUrl = ''): array
+    {
+        $token = $this->getToken();
+
+        $payload = [
+            'amount'      => $amount,
+            'external_id' => $externalId,
+            'pix_key'     => $pixKey,
+            'recipient'   => [
+                'name'     => $recipient['name'],
+                'document' => preg_replace('/\D/', '', $recipient['document'] ?? '00000000000'),
+            ],
+        ];
+
+        if (!empty($callbackUrl)) {
+            $payload['clientCallbackUrl'] = $callbackUrl;
+        }
+
+        $resp = Http::withToken($token)
+            ->post("{$this->baseUrl}/api/payments/withdrawal", $payload);
+
+        if ($resp->status() === 401) {
+            Cache::forget('veopag_token');
+            $token = $this->getToken();
+            $resp  = Http::withToken($token)
+                ->post("{$this->baseUrl}/api/payments/withdrawal", $payload);
+        }
+
+        if (!$resp->successful()) {
+            Log::error('VeoPag: erro ao criar saque', [
+                'status'      => $resp->status(),
+                'body'        => $resp->body(),
+                'external_id' => $externalId,
+            ]);
+            throw new \RuntimeException($resp->json('message') ?? 'Erro ao processar saque PIX');
+        }
+
+        $body = $resp->json();
+
+        return [
+            'transactionId' => $body['transaction_id'] ?? $body['transactionId'] ?? $externalId,
+            'status'        => $body['status'] ?? 'pending',
+            'amount'        => (float) ($body['amount'] ?? $amount),
+            'fee'           => (float) ($body['fee'] ?? 0),
+        ];
+    }
+
+    /**
      * Verifica se as credenciais estão configuradas.
      */
     public function isConfigured(): bool

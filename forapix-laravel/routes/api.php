@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FileServeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\BetController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\DepositWebhookController;
+use App\Http\Controllers\Api\WithdrawWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +22,11 @@ use App\Http\Controllers\Api\DepositWebhookController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Serve arquivos de upload (sem auth) — acessível em /api/uploads/{path}
+Route::get('/uploads/{path}', [FileServeController::class, 'serve'])
+    ->where('path', '.+')
+    ->name('api.uploads.serve');
 
 // Public routes
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -70,6 +77,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Webhook VeoPag (sem autenticação — chamado pela plataforma)
 Route::post('/webhooks/deposit', [DepositWebhookController::class, 'handle'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+Route::post('/webhooks/withdraw', [WithdrawWebhookController::class, 'handle'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Test route

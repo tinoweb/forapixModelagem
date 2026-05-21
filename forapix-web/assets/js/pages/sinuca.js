@@ -369,39 +369,55 @@ const SinucaPage = {
     },
 
     renderBetItem(bet) {
-        const statusMap = {
-            pending:   { label: 'Pendente',   cls: 'mbi-pending'  },
-            won:       { label: 'Ganhou',      cls: 'mbi-won'      },
-            lost:      { label: 'Perdeu',      cls: 'mbi-lost'     },
-            cancelled: { label: 'Cancelada',   cls: 'mbi-cancelled'},
-            refunded:  { label: 'Reembolsada', cls: 'mbi-cancelled'},
-        };
-        const st = statusMap[bet.status] || { label: bet.status, cls: 'mbi-pending' };
-        // Resolver nomes usando currentMatch (já carregado) ou dados do próprio bet
         const m  = this.currentMatch || bet.match || {};
         const p1 = (m.first_player?.name || m.firstPlayer?.name || bet.match?.first_player?.name || 'Jogador 1').split(' ')[0];
         const p2 = (m.second_player?.name || m.secondPlayer?.name || bet.match?.second_player?.name || 'Jogador 2').split(' ')[0];
-        const typeLabels = {
-            first_player:  p1,
-            second_player: p2,
-            draw: 'Empate', par: 'Par', impar: 'Ímpar'
-        };
+        const typeLabels = { first_player: p1, second_player: p2, draw: 'Empate', par: 'Par', impar: 'Ímpar' };
+
         const betType = bet.bet_type || bet.option || '';
-        const label  = typeLabels[betType] || betType || '--';
-        const amount = Utils.formatCurrency(bet.amount ?? bet.betAmount ?? 0);
-        const odds   = parseFloat(bet.odds || 1).toFixed(2);
-        const potWin = Utils.formatCurrency(bet.potential_win ?? bet.potentialWin ?? 0);
-        const code   = bet.bet_id || bet.id || '--';
+        const label   = typeLabels[betType] || betType || '--';
+        const code    = bet.bet_id || bet.id || '--';
+
+        const total    = parseFloat(bet.amount ?? bet.betAmount ?? 0);
+        const matched  = parseFloat(bet.matched_amount ?? 0);
+        const pending  = total - matched;
+
+        // Badge e breakdown por situação
+        let badgeHtml, breakdownHtml = '';
+
+        if (bet.status === 'won') {
+            const resultAmt = Utils.formatCurrency(bet.result_amount ?? 0);
+            badgeHtml = `<span class="mbi-badge mbi-won">Ganhou</span>`;
+            breakdownHtml = `<span class="mbi-matched">Ganho: <strong>R$ ${resultAmt}</strong></span>`;
+        } else if (bet.status === 'lost') {
+            badgeHtml = `<span class="mbi-badge mbi-lost">Perdeu</span>`;
+        } else if (bet.status === 'cancelled' || bet.status === 'refunded') {
+            badgeHtml = `<span class="mbi-badge mbi-cancelled">Cancelada</span>`;
+        } else {
+            // pending — mostra breakdown casado/pendente
+            if (matched >= total && total > 0) {
+                badgeHtml = `<span class="mbi-badge mbi-confirmed">✓ Confirmada</span>`;
+                breakdownHtml = `<span class="mbi-matched">Casado: <strong>R$ ${Utils.formatCurrency(matched)}</strong></span>`;
+            } else if (matched > 0) {
+                badgeHtml = `<span class="mbi-badge mbi-partial">Parcial</span>`;
+                breakdownHtml = `
+                    <span class="mbi-matched">✓ Casado: <strong>R$ ${Utils.formatCurrency(matched)}</strong></span>
+                    <span class="mbi-unmatched">⏳ Pendente: <strong>R$ ${Utils.formatCurrency(pending)}</strong></span>`;
+            } else {
+                badgeHtml = `<span class="mbi-badge mbi-pending">Pendente</span>`;
+                breakdownHtml = `<span class="mbi-unmatched">⏳ Aguardando casamento</span>`;
+            }
+        }
+
         return `
         <div class="mbi-row">
             <div class="mbi-top">
                 <span class="mbi-label">${label}</span>
-                <span class="mbi-badge ${st.cls}">${st.label}</span>
+                ${badgeHtml}
             </div>
             <div class="mbi-details">
-                <span>Valor: <strong>R$ ${amount}</strong></span>
-                <span>Odds: <strong>${odds}x</strong></span>
-                <span>Ganho pot.: <strong>R$ ${potWin}</strong></span>
+                <span>Total: <strong>R$ ${Utils.formatCurrency(total)}</strong></span>
+                ${breakdownHtml}
             </div>
             <div class="mbi-code">Cód: ${code}</div>
         </div>`;

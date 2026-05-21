@@ -55,8 +55,10 @@ const WalletPage = {
         try {
             const res = await API.getBalance();
             if (res && res.success && res.data) {
-                const fresh = parseFloat(res.data.balance) || 0;
+                const fresh        = parseFloat(res.data.balance) || 0;
+                const withdrawable = parseFloat(res.data.withdrawable_balance) || 0;
                 Storage.setBalance(fresh);
+                Storage.setItem('forapix_withdrawable', withdrawable);
                 const el = document.querySelector('.wallet-balance-value');
                 if (el) el.textContent = Utils.formatCurrency(fresh, true);
             }
@@ -255,29 +257,56 @@ const WalletPage = {
     },
 
     showWithdrawModal() {
-        const balance = parseFloat(Storage.getBalance()) || 0;
+        const balance      = parseFloat(Storage.getBalance()) || 0;
+        const withdrawable = parseFloat(Storage.getItem('forapix_withdrawable')) || 0;
+        const canWithdraw  = withdrawable >= 10;
 
         Components.showModal(`
             <div class="modal-header">
                 <h3>Sacar saldo</h3>
-                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+                <button class="modal-close" onclick="Components.closeModal()"><i class="fas fa-times"></i></button>
             </div>
-            <div class="bg-secondary rounded-xl p-3 mb-4 flex justify-between text-sm">
-                <span class="text-gray-400">Saldo disponível</span>
-                <span class="text-white font-semibold">${Utils.formatCurrency(balance, true)}</span>
+
+            <div class="rounded-xl overflow-hidden mb-4" style="border:1px solid rgba(255,255,255,0.08)">
+                <div class="flex justify-between items-center p-3" style="background:rgba(255,255,255,0.04)">
+                    <span style="font-size:12px;color:#9ca3af">Saldo total</span>
+                    <span style="font-weight:700">${Utils.formatCurrency(balance, true)}</span>
+                </div>
+                <div class="flex justify-between items-center p-3">
+                    <div>
+                        <span style="font-size:12px;color:#9ca3af">Saldo sacável</span>
+                        <span style="display:block;font-size:10px;color:#6b7280">Apenas ganhos de apostas</span>
+                    </div>
+                    <span style="font-weight:700;color:${canWithdraw ? '#22c55e' : '#fbbf24'}">
+                        ${Utils.formatCurrency(withdrawable, true)}
+                    </span>
+                </div>
             </div>
+
+            ${!canWithdraw ? `
+            <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24;line-height:1.6">
+                <strong>⚠️ Saque não disponível</strong><br>
+                Deposite, faça apostas e ganhe para liberar o saque.
+                Mínimo de R$ 10,00 em ganhos necessário.
+            </div>
+            <button class="btn btn-secondary w-full" onclick="Components.closeModal()">Fechar</button>
+            ` : `
             <div class="input-group mb-4">
-                <label class="input-label">Valor do saque</label>
-                <input type="number" id="withdrawAmount" class="input-field" placeholder="50,00" min="10" step="0.01">
+                <label class="input-label">Valor do saque <span style="color:#6b7280;font-size:11px">(mín. R$ 10 · máx. ${Utils.formatCurrency(withdrawable, true)})</span></label>
+                <input type="number" id="withdrawAmount" class="input-field" placeholder="10,00"
+                    min="10" max="${withdrawable.toFixed(2)}" step="0.01">
             </div>
             <div class="input-group mb-6">
                 <label class="input-label">Chave PIX</label>
                 <input type="text" id="withdrawPixKey" class="input-field" placeholder="CPF, email, telefone ou chave aleatória">
             </div>
             <div class="flex gap-3">
-                <button class="btn btn-secondary flex-1" onclick="closeModal()">Cancelar</button>
-                <button class="btn btn-primary flex-1" onclick="WalletPage.processWithdraw()">Confirmar saque</button>
+                <button class="btn btn-secondary flex-1" onclick="Components.closeModal()">Cancelar</button>
+                <button class="btn btn-primary flex-1" onclick="WalletPage.processWithdraw()">
+                    <i class="fas fa-paper-plane mr-2"></i>Confirmar saque
+                </button>
             </div>
+            `}
         `);
     },
 
