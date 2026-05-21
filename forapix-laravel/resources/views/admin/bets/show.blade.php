@@ -158,7 +158,13 @@
 const ADMIN_BETS_BASE = '{{ rtrim(url('/admin/bets'), '/') }}';
 
 async function cancelBet(id, betId) {
-    if (!confirm(`Cancelar aposta ${betId}?`)) return;
+    const ok = await AdminConfirm.show({
+        title:       'Cancelar aposta',
+        message:     `Cancelar a aposta <strong>#${betId}</strong> e reembolsar o valor ao usuário? Esta ação não pode ser desfeita.`,
+        confirmText: 'Cancelar aposta',
+        variant:     'danger',
+    });
+    if (!ok) return;
     const reason = document.getElementById('cancelReason')?.value || 'Cancelada pelo administrador';
 
     const res = await fetch(`${ADMIN_BETS_BASE}/${id}/cancel`, {
@@ -170,8 +176,12 @@ async function cancelBet(id, betId) {
         body: JSON.stringify({ reason }),
     });
     const data = await res.json();
-    alert(data.message);
-    if (data.success) window.location.href = '{{ route("admin.bets.index") }}';
+    if (data.success) {
+        await AdminConfirm.show({ title: 'Aposta cancelada', message: data.message, confirmText: 'OK', cancelText: '', variant: 'success' });
+        window.location.href = '{{ route("admin.bets.index") }}';
+    } else {
+        await AdminConfirm.show({ title: 'Erro', message: data.message, confirmText: 'Fechar', cancelText: '', variant: 'danger' });
+    }
 }
 </script>
 @endpush

@@ -339,7 +339,13 @@ async function toggleLiveBetting(matchId) {
     const isOpen = btn.textContent.trim().includes('Fechar');
     const action = isOpen ? 'fechar' : 'abrir';
 
-    if (!confirm(`Confirmar: ${action} apostas ao vivo agora?`)) return;
+    const ok = await AdminConfirm.show({
+        title:       `${action === 'abrir' ? 'Abrir' : 'Fechar'} apostas ao vivo`,
+        message:     `Confirmar: <strong>${action}</strong> as apostas ao vivo desta partida agora?`,
+        confirmText: action === 'abrir' ? 'Abrir apostas' : 'Fechar apostas',
+        variant:     action === 'abrir' ? 'success' : 'warning',
+    });
+    if (!ok) return;
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aguarde...';
@@ -353,16 +359,24 @@ async function toggleLiveBetting(matchId) {
     });
 
     const data = await res.json();
-    alert(data.message);
     if (data.success) location.reload();
-    else btn.disabled = false;
+    else { btn.disabled = false; await AdminConfirm.show({ title: 'Erro', message: data.message, confirmText: 'Fechar', cancelText: '', variant: 'danger' }); }
 }
 
 async function resolveMatch(matchId) {
     const result = document.getElementById('resolveResult').value;
-    if (!result) { alert('Selecione o resultado da partida antes de encerrar.'); return; }
+    if (!result) {
+        await AdminConfirm.show({ title: 'Campo obrigatório', message: 'Selecione o resultado da partida antes de encerrar.', confirmText: 'Entendi', cancelText: '', variant: 'warning' });
+        return;
+    }
 
-    if (!confirm('Encerrar partida e processar todas as apostas pendentes? Esta ação não pode ser desfeita.')) return;
+    const ok = await AdminConfirm.show({
+        title:       'Encerrar partida',
+        message:     'Processar todas as apostas pendentes desta partida? <strong>Esta ação não pode ser desfeita.</strong>',
+        confirmText: 'Encerrar e processar',
+        variant:     'danger',
+    });
+    if (!ok) return;
 
     const payload = {
         result,
@@ -381,8 +395,12 @@ async function resolveMatch(matchId) {
     });
 
     const data = await res.json();
-    alert(data.message);
-    if (data.success) location.reload();
+    if (data.success) {
+        await AdminConfirm.show({ title: 'Partida encerrada!', message: data.message, confirmText: 'OK', cancelText: '', variant: 'success' });
+        location.reload();
+    } else {
+        await AdminConfirm.show({ title: 'Erro ao encerrar', message: data.message, confirmText: 'Fechar', cancelText: '', variant: 'danger' });
+    }
 }
 </script>
 @endpush

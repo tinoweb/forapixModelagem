@@ -189,33 +189,69 @@
 const ADMIN_USERS_BASE = '{{ rtrim(url('/admin/users'), '/') }}';
 
 async function suspendUser(id, name) {
-    if (!confirm(`Suspender "${name}"?`)) return;
+    const ok = await AdminConfirm.show({
+        title:       `Suspender usuário`,
+        message:     `Deseja suspender <strong>${name}</strong>? O acesso será bloqueado imediatamente.`,
+        confirmText: 'Suspender',
+        variant:     'danger',
+    });
+    if (!ok) return;
     const res = await fetch(`${ADMIN_USERS_BASE}/${id}/suspend`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
     const data = await res.json();
-    alert(data.message);
+    showAdminToast(data.message, data.success ? 'success' : 'error');
     if (data.success) location.reload();
 }
 async function activateUser(id) {
+    const ok = await AdminConfirm.show({
+        title:       'Ativar usuário',
+        message:     'Reativar o acesso deste usuário à plataforma?',
+        confirmText: 'Ativar',
+        variant:     'success',
+    });
+    if (!ok) return;
     const res = await fetch(`${ADMIN_USERS_BASE}/${id}/activate`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
     const data = await res.json();
-    alert(data.message);
+    showAdminToast(data.message, data.success ? 'success' : 'error');
     if (data.success) location.reload();
 }
 async function resetPassword(id) {
-    if (!confirm('Resetar a senha deste usuário?')) return;
+    const ok = await AdminConfirm.show({
+        title:       'Resetar senha',
+        message:     'Uma nova senha aleatória será gerada. O usuário precisará receber a nova senha.',
+        confirmText: 'Resetar senha',
+        variant:     'warning',
+    });
+    if (!ok) return;
     const res = await fetch(`${ADMIN_USERS_BASE}/${id}/reset-password`, {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
     });
     const data = await res.json();
-    if (data.success) alert(`Nova senha: ${data.password}\n\nGuarde esta senha e envie ao usuário.`);
-    else alert(data.message);
+    if (data.success) {
+        await AdminConfirm.show({
+            title:       'Nova senha gerada',
+            message:     `Nova senha: <code style="background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:6px;font-family:monospace;font-size:1rem;color:#a78bfa">${data.password}</code><br><small style="color:#6b7280;margin-top:6px;display:block">Copie e envie ao usuário.</small>`,
+            confirmText: 'Fechar',
+            cancelText:  '',
+            variant:     'info',
+        });
+    } else {
+        showAdminToast(data.message, 'error');
+    }
+}
+function showAdminToast(msg, type = 'success') {
+    const colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b' };
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;background:#1e2540;border:1px solid ${colors[type]||'#7c3aed'};color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4)`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
 }
 </script>
 @endpush

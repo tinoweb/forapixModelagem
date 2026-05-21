@@ -263,7 +263,13 @@ const BASE = '{{ url("/admin/financial") }}';
 const CSRF = '{{ csrf_token() }}';
 
 async function approveWithdrawal(id) {
-    if (!confirm('Confirmar aprovação deste saque? Isso marca como pago manualmente.')) return;
+    const ok = await AdminConfirm.show({
+        title:       'Aprovar saque',
+        message:     'Confirmar pagamento deste saque? O status será marcado como <strong>pago manualmente</strong>.',
+        confirmText: 'Aprovar pagamento',
+        variant:     'success',
+    });
+    if (!ok) return;
     const r = await fetch(`${BASE}/withdrawals/${id}/approve`, {
         method: 'POST',
         headers: {'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json'},
@@ -279,8 +285,15 @@ async function approveWithdrawal(id) {
 }
 
 async function rejectWithdrawal(id) {
-    const note = prompt('Motivo da rejeição (opcional):') ?? '';
-    if (note === null) return;
+    const note = await AdminConfirm.show({
+        title:            'Rejeitar saque',
+        message:          'O saldo será devolvido ao usuário. Informe o motivo da rejeição (opcional):',
+        confirmText:      'Rejeitar e estornar',
+        variant:          'danger',
+        withInput:        true,
+        inputPlaceholder: 'Ex: Chave PIX inválida...',
+    });
+    if (note === false) return;
     const r = await fetch(`${BASE}/withdrawals/${id}/reject`, {
         method: 'POST',
         headers: {'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json'},
@@ -297,7 +310,13 @@ async function rejectWithdrawal(id) {
 }
 
 async function approveDeposit(id) {
-    if (!confirm('Confirmar este depósito manualmente?')) return;
+    const ok = await AdminConfirm.show({
+        title:       'Confirmar depósito',
+        message:     'Creditar este depósito manualmente na conta do usuário?',
+        confirmText: 'Confirmar depósito',
+        variant:     'info',
+    });
+    if (!ok) return;
     const r = await fetch(`${BASE}/deposits/${id}/approve`, {
         method: 'POST',
         headers: {'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json'},

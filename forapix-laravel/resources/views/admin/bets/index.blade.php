@@ -197,10 +197,16 @@
 const ADMIN_BETS_BASE = '{{ rtrim(url('/admin/bets'), '/') }}';
 
 async function cancelBet(id, betId) {
-    if (!confirm(`Cancelar aposta ${betId} e reembolsar o usuário?`)) return;
-
-    const reason = prompt('Motivo do cancelamento (opcional):', 'Cancelada pelo administrador');
-    if (reason === null) return;
+    const reason = await AdminConfirm.show({
+        title:            `Cancelar aposta`,
+        message:          `Cancelar a aposta <strong>#${betId}</strong> e reembolsar o valor ao usuário?`,
+        confirmText:      'Cancelar aposta',
+        variant:          'danger',
+        withInput:        true,
+        inputPlaceholder: 'Motivo do cancelamento...',
+        inputValue:       'Cancelada pelo administrador',
+    });
+    if (reason === false) return;
 
     const res = await fetch(`${ADMIN_BETS_BASE}/${id}/cancel`, {
         method: 'POST',
@@ -208,11 +214,20 @@ async function cancelBet(id, betId) {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
         },
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ reason: reason || 'Cancelada pelo administrador' }),
     });
     const data = await res.json();
-    alert(data.message);
+    showAdminToast(data.message, data.success ? 'success' : 'error');
     if (data.success) location.reload();
+}
+
+function showAdminToast(msg, type = 'success') {
+    const colors = { success: '#22c55e', error: '#ef4444', warning: '#f59e0b' };
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;background:#1e2540;border:1px solid ${colors[type]||'#7c3aed'};color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4)`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
 }
 
 async function testEmail() {

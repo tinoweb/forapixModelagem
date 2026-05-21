@@ -532,6 +532,132 @@
         }
     </style>
 
+    {{-- ══ MODAL DE CONFIRMAÇÃO GLOBAL ══ --}}
+    <div id="adminConfirmOverlay"
+         style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(3,7,18,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem;">
+        <div id="adminConfirmBox"
+             style="width:100%;max-width:420px;background:linear-gradient(135deg,#0f1629 0%,#111827 100%);border:1px solid rgba(255,255,255,0.08);border-radius:1.25rem;box-shadow:0 32px 80px rgba(0,0,0,0.7);overflow:hidden;transform:scale(0.92);opacity:0;transition:transform 0.2s ease,opacity 0.2s ease;">
+            {{-- Stripe de cor --}}
+            <div id="adminConfirmStripe" style="height:4px;width:100%;"></div>
+            <div style="padding:1.75rem 1.75rem 1.5rem;">
+                {{-- Ícone + Título --}}
+                <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem;">
+                    <div id="adminConfirmIconWrap"
+                         style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">
+                        <i id="adminConfirmIcon"></i>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <h3 id="adminConfirmTitle" style="font-size:1rem;font-weight:700;color:#f1f5f9;line-height:1.4;margin:0 0 0.35rem;"></h3>
+                        <p id="adminConfirmMessage" style="font-size:0.875rem;color:#94a3b8;line-height:1.55;margin:0;"></p>
+                    </div>
+                </div>
+                {{-- Input opcional (prompt) --}}
+                <div id="adminConfirmInputWrap" style="display:none;margin-bottom:1rem;">
+                    <input id="adminConfirmInput" type="text"
+                           style="width:100%;padding:0.65rem 0.9rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;color:#fff;font-size:0.875rem;outline:none;box-sizing:border-box;"
+                           onfocus="this.style.borderColor='rgba(124,58,237,0.6)'"
+                           onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                </div>
+                {{-- Botões --}}
+                <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem;">
+                    <button id="adminConfirmCancel"
+                            style="padding:0.6rem 1.2rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;color:#94a3b8;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.09)';this.style.color='#fff'"
+                            onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#94a3b8'">
+                        Cancelar
+                    </button>
+                    <button id="adminConfirmOk"
+                            style="padding:0.6rem 1.4rem;border:none;border-radius:0.75rem;color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ── AdminConfirm — modal de confirmação global ──────────────────────────
+    const AdminConfirm = (() => {
+        const overlay  = document.getElementById('adminConfirmOverlay');
+        const box      = document.getElementById('adminConfirmBox');
+        const stripe   = document.getElementById('adminConfirmStripe');
+        const iconWrap = document.getElementById('adminConfirmIconWrap');
+        const icon     = document.getElementById('adminConfirmIcon');
+        const title    = document.getElementById('adminConfirmTitle');
+        const message  = document.getElementById('adminConfirmMessage');
+        const inputWrap= document.getElementById('adminConfirmInputWrap');
+        const input    = document.getElementById('adminConfirmInput');
+        const btnOk    = document.getElementById('adminConfirmOk');
+        const btnCancel= document.getElementById('adminConfirmCancel');
+
+        const variants = {
+            danger:  { stripe:'#ef4444', icon:'fa-triangle-exclamation', iconBg:'rgba(239,68,68,0.15)',  iconColor:'#f87171', btnBg:'linear-gradient(135deg,#dc2626,#ef4444)', btnShadow:'rgba(239,68,68,0.35)' },
+            warning: { stripe:'#f59e0b', icon:'fa-circle-exclamation',   iconBg:'rgba(245,158,11,0.15)', iconColor:'#fbbf24', btnBg:'linear-gradient(135deg,#d97706,#f59e0b)', btnShadow:'rgba(245,158,11,0.35)' },
+            success: { stripe:'#22c55e', icon:'fa-circle-check',          iconBg:'rgba(34,197,94,0.15)',  iconColor:'#4ade80', btnBg:'linear-gradient(135deg,#16a34a,#22c55e)', btnShadow:'rgba(34,197,94,0.35)'  },
+            info:    { stripe:'#7c3aed', icon:'fa-circle-question',        iconBg:'rgba(124,58,237,0.15)', iconColor:'#a78bfa', btnBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', btnShadow:'rgba(124,58,237,0.35)' },
+        };
+
+        let _resolve = null;
+
+        function close(value) {
+            box.style.transform = 'scale(0.92)';
+            box.style.opacity   = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 180);
+            if (_resolve) { _resolve(value); _resolve = null; }
+        }
+
+        btnCancel.addEventListener('click', () => close(false));
+        btnOk.addEventListener('click', () => {
+            const hasInput = inputWrap.style.display !== 'none';
+            close(hasInput ? (input.value || '') : true);
+        });
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+        document.addEventListener('keydown', e => {
+            if (overlay.style.display === 'flex') {
+                if (e.key === 'Escape') close(false);
+                if (e.key === 'Enter' && document.activeElement !== input) btnOk.click();
+            }
+        });
+
+        return {
+            /**
+             * @param {object} opts - { title, message, confirmText, cancelText, variant, withInput, inputPlaceholder, inputValue }
+             * @returns {Promise<boolean|string>}
+             */
+            show(opts = {}) {
+                const v = variants[opts.variant || 'info'];
+
+                stripe.style.background    = v.stripe;
+                iconWrap.style.background  = v.iconBg;
+                iconWrap.style.color       = v.iconColor;
+                icon.className             = `fas ${v.icon}`;
+                title.textContent          = opts.title    || 'Confirmar ação';
+                message.innerHTML          = opts.message  || '';
+                btnOk.textContent          = opts.confirmText || 'Confirmar';
+                btnOk.style.background     = v.btnBg;
+                btnOk.style.boxShadow      = `0 4px 14px ${v.btnShadow}`;
+                btnCancel.textContent      = opts.cancelText || 'Cancelar';
+
+                if (opts.withInput) {
+                    inputWrap.style.display = 'block';
+                    input.placeholder       = opts.inputPlaceholder || '';
+                    input.value             = opts.inputValue || '';
+                    setTimeout(() => input.focus(), 220);
+                } else {
+                    inputWrap.style.display = 'none';
+                }
+
+                overlay.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    box.style.transform = 'scale(1)';
+                    box.style.opacity   = '1';
+                });
+
+                return new Promise(resolve => { _resolve = resolve; });
+            }
+        };
+    })();
+    </script>
+
     @stack('scripts')
 </body>
 </html>
