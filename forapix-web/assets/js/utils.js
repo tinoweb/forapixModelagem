@@ -250,8 +250,8 @@ const Utils = {
      */
     getPlayerPhoto(player, fallbackColor = '#7c3aed') {
         if (!player) return this.buildAvatar('?', fallbackColor);
-        if (player.photo_url) {
-            return this.resolveImage(player.photo_url);
+        if (player.photo) {
+            return this.resolveImage(player.photo);
         }
         const initials = this.getInitials(player.name || 'J');
         return this.buildAvatar(initials, fallbackColor);

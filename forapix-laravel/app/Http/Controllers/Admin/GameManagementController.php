@@ -306,12 +306,8 @@ class GameManagementController extends Controller
         if ($request->hasFile('banner_image')) {
             $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
         } elseif (empty($metadata['banner_image'])) {
-            $game = Game::with('sport')->find($request->game_id);
-            $sportSlug = strtolower($game?->sport?->slug ?? '');
-            $sportName = strtolower($game?->sport?->name ?? '');
-            if (str_contains($sportSlug, 'sinuca') || str_contains($sportName, 'sinuca')) {
-                $metadata['banner_image'] = 'matches/banners/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png';
-            }
+            // Imagem padrão para todas as partidas
+            $metadata['banner_image'] = 'matches/banners/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png';
         }
         if ($request->filled('banner_button_label')) {
             $metadata['banner_button_label'] = $request->input('banner_button_label');

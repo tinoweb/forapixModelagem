@@ -33,6 +33,8 @@ class Player extends Model
         'stats' => 'array'
     ];
 
+    protected $appends = ['photo'];
+
     /**
      * Get the sport that owns this player
      */
