@@ -218,7 +218,27 @@ const HomePage = {
     /**
      * Open support
      */
-    openSupport() {
+    async openSupport() {
+        const settings = await this._getSettings();
+        const whatsappNumber = settings.whatsapp_number || '';
+        const whatsappEnabled = settings.whatsapp_enabled !== false;
+        const supportEmail = settings.support_email || 'suporte@apostacasada.com';
+
+        let whatsappButton = '';
+        if (whatsappEnabled && whatsappNumber) {
+            whatsappButton = `
+                <button onclick="window.open('https://wa.me/${whatsappNumber}', '_blank')" class="w-full bg-green-600/20 hover:bg-green-600/30 border border-green-600/30 p-4 rounded-xl text-left transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fab fa-whatsapp text-green-500 text-xl"></i>
+                        <div>
+                            <p class="font-semibold text-green-400">WhatsApp</p>
+                            <p class="text-xs text-gray-400">Fale conosco agora</p>
+                        </div>
+                    </div>
+                </button>
+            `;
+        }
+
         Components.showModal(`
             <div class="modal-header">
                 <h3>Suporte</h3>
@@ -236,26 +256,18 @@ const HomePage = {
             </div>
 
             <div class="space-y-3 mb-6">
-                <button class="w-full bg-secondary hover:bg-card-hover p-4 rounded-xl text-left transition">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-comments text-accent"></i>
-                        <div>
-                            <p class="font-semibold">Chat ao Vivo</p>
-                            <p class="text-xs text-gray-400">Fale conosco agora</p>
-                        </div>
-                    </div>
-                </button>
-                
+                ${whatsappButton}
+
                 <button class="w-full bg-secondary hover:bg-card-hover p-4 rounded-xl text-left transition">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-envelope text-accent"></i>
                         <div>
                             <p class="font-semibold">Email</p>
-                            <p class="text-xs text-gray-400">suporte@apostacasada.com</p>
+                            <p class="text-xs text-gray-400">${supportEmail}</p>
                         </div>
                     </div>
                 </button>
-                
+
                 <button class="w-full bg-secondary hover:bg-card-hover p-4 rounded-xl text-left transition">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-question-circle text-accent"></i>
@@ -271,6 +283,19 @@ const HomePage = {
                 <i class="fas fa-check"></i> OK
             </button>
         `);
+    },
+
+    /**
+     * Get system settings
+     */
+    async _getSettings() {
+        try {
+            const res = await API.request('/settings');
+            return res?.data || {};
+        } catch (e) {
+            console.error('Erro ao buscar configurações:', e);
+            return {};
+        }
     },
 
     /**

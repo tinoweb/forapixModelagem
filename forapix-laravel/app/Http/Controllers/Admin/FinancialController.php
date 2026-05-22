@@ -180,4 +180,81 @@ class FinancialController extends Controller
             return response()->json(['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Reconcilia depósitos pendentes consultando a VeoPag diretamente.
+     * Executável pelo navegador via painel admin.
+     */
+    public function reconcileDeposits(Request $request)
+    {
+        $veopag = app(VeoPagService::class);
+
+        if (!$veopag->isConfigured()) {
+            return response()->json(['success' => false, 'message' => 'VeoPag não configurada.'], 422);
+        }
+
+        $pending = Transaction::where('type', 'deposit')
+            ->where('status', 'pending')
+            ->whereNotNull('external_transaction_id')
+            ->with('user')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return response()->json(['success' => true, 'message' => 'Nenhum depósito pendente encontrado.', 'confirmed' => 0]);
+        }
+
+        $confirmed = 0;
+        $errors    = [];
+        $paidStatuses = ['COMPLETED', 'PAID', 'APPROVED', 'CONFIRMED', 'SUCCESS'];
+
+        foreach ($pending as $transaction) {
+            try {
+                $result = $veopag->getDepositStatus($transaction->external_transaction_id);
+
+                if (!in_array($result['status'], $paidStatuses)) {
+                    continue;
+                }
+
+                $user          = $transaction->user;
+                $balanceBefore = (float) $user->balance;
+                $amount        = (float) $transaction->amount;
+
+                DB::transaction(function () use ($user, $transaction, $amount, $balanceBefore, $result) {
+                    $user->increment('balance', $amount);
+                    $user->increment('total_deposited', $amount);
+
+                    $transaction->update([
+                        'status'         => 'completed',
+                        'balance_before' => $balanceBefore,
+                        'balance_after'  => $balanceBefore + $amount,
+                        'processed_at'   => now(),
+                        'metadata'       => array_merge($transaction->metadata ?? [], [
+                            'confirmed_via' => 'admin_reconcile',
+                            'confirmed_at'  => now()->toIso8601String(),
+                            'veopag_status' => $result['status'],
+                        ]),
+                    ]);
+                });
+
+                Log::info("Admin reconcile: depósito {$transaction->transaction_id} confirmado", [
+                    'user_id' => $user->id,
+                    'amount'  => $amount,
+                ]);
+
+                $confirmed++;
+
+            } catch (\Throwable $e) {
+                $errors[] = "{$transaction->transaction_id}: {$e->getMessage()}";
+                Log::error("Admin reconcile erro em {$transaction->transaction_id}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success'   => true,
+            'message'   => "{$confirmed} depósito(s) confirmado(s) de {$pending->count()} pendente(s).",
+            'confirmed' => $confirmed,
+            'total'     => $pending->count(),
+            'errors'    => $errors,
+        ]);
+    }
 }

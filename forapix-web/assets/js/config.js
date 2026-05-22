@@ -51,9 +51,9 @@ const Config = {
 
     // Betting Configuration
     BETTING: {
-        MIN_BET: 1.00,
+        MIN_BET: 10.00,
         MAX_BET: 10000.00,
-        QUICK_VALUES: [5, 10, 20, 50, 100, 200],
+        QUICK_VALUES: [10, 20, 50, 100, 200, 500],
         COMMISSION: 0.05
     },
 

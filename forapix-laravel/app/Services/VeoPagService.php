@@ -178,6 +178,50 @@ class VeoPagService
     }
 
     /**
+     * Consulta o status de um depósito na VeoPag pelo external_id (nosso ID).
+     * Endpoint: GET /api/transactions/deposit?external_id={id}
+     *
+     * @return array ['status', 'amount', 'paid_at']
+     */
+    public function getDepositStatus(string $externalId): array
+    {
+        $token = $this->getToken();
+
+        $resp = Http::withToken($token)
+            ->get("{$this->baseUrl}/api/transactions/deposit", [
+                'external_id' => $externalId,
+            ]);
+
+        if ($resp->status() === 401) {
+            Cache::forget('veopag_token');
+            $token = $this->getToken();
+            $resp  = Http::withToken($token)
+                ->get("{$this->baseUrl}/api/transactions/deposit", [
+                    'external_id' => $externalId,
+                ]);
+        }
+
+        if (!$resp->successful()) {
+            Log::warning('VeoPag: erro ao consultar depósito', [
+                'external_id' => $externalId,
+                'status'      => $resp->status(),
+                'body'        => $resp->body(),
+            ]);
+            throw new \RuntimeException('Erro ao consultar status do depósito');
+        }
+
+        $body    = $resp->json();
+        $deposit = $body['deposit'] ?? $body;
+
+        return [
+            'status'  => strtoupper($deposit['status'] ?? ''),
+            'amount'  => (float) ($deposit['amount'] ?? 0),
+            'paid_at' => $deposit['updated_at'] ?? null,
+            'raw'     => $deposit,
+        ];
+    }
+
+    /**
      * Verifica se as credenciais estão configuradas.
      */
     public function isConfigured(): bool

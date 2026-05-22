@@ -104,11 +104,20 @@
             <a href="{{ route('admin.games.index') }}" class="nav-link {{ request()->routeIs('admin.games.*') ? 'active' : '' }}">
                 <i class="fas fa-gamepad"></i> Jogos
             </a>
+            <div class="pt-3 mt-2 border-t border-white/5">
+                <p class="text-[10px] uppercase text-gray-500 tracking-[0.25em] mb-3 px-2">Conta</p>
+                <a href="{{ route('admin.profile') }}" class="nav-link {{ request()->routeIs('admin.profile*') ? 'active' : '' }}">
+                    <i class="fas fa-user-circle"></i> Meu Perfil
+                </a>
+            </div>
             @if(auth('admin')->user()?->isSuperAdmin())
             <div class="pt-3 mt-2 border-t border-white/5">
                 <p class="text-[10px] uppercase text-gray-500 tracking-[0.25em] mb-3 px-2">Administração</p>
                 <a href="{{ route('admin.admin-users.index') }}" class="nav-link {{ request()->routeIs('admin.admin-users.*') ? 'active' : '' }}">
                     <i class="fas fa-user-shield"></i> Operadores
+                </a>
+                <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                    <i class="fas fa-cog"></i> Configurações
                 </a>
             </div>
             @endif

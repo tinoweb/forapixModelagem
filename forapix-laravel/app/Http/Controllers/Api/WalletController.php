@@ -161,7 +161,8 @@ class WalletController extends Controller
     }
 
     /**
-     * Consulta status de um depósito pendente (polling do frontend)
+     * Consulta status de um depósito pendente (polling do frontend).
+     * Se ainda pendente, consulta a VeoPag diretamente e confirma se pago.
      */
     public function depositStatus(Request $request, string $transactionId)
     {
@@ -170,15 +171,86 @@ class WalletController extends Controller
             ->where('type', 'deposit')
             ->firstOrFail();
 
+        // Já confirmado — retorna direto
+        if ($transaction->status === 'completed') {
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'transaction_id' => $transaction->transaction_id,
+                    'status'         => 'completed',
+                    'amount'         => $transaction->amount,
+                    'balance'        => $request->user()->fresh()->balance,
+                ],
+            ]);
+        }
+
+        // Ainda pendente — consulta VeoPag pelo nosso external_id para verificar se foi pago
+        $externalId = $transaction->external_transaction_id ?? null;
+
+        if ($externalId) {
+            $veopagTxId = $externalId; // alias para compatibilidade
+            try {
+                $veopag = app(VeoPagService::class);
+                $result = $veopag->getDepositStatus($veopagTxId);
+
+                $paidStatuses = ['COMPLETED', 'PAID', 'APPROVED', 'CONFIRMED', 'SUCCESS'];
+
+                if (in_array($result['status'], $paidStatuses)) {
+                    // Confirmar automaticamente
+                    $user          = $request->user()->fresh();
+                    $balanceBefore = (float) $user->balance;
+                    $amount        = (float) $transaction->amount;
+
+                    DB::beginTransaction();
+                    try {
+                        $user->increment('balance', $amount);
+                        $user->increment('total_deposited', $amount);
+
+                        $transaction->update([
+                            'status'         => 'completed',
+                            'balance_before' => $balanceBefore,
+                            'balance_after'  => $balanceBefore + $amount,
+                            'processed_at'   => now(),
+                            'metadata'       => array_merge($transaction->metadata ?? [], [
+                                'confirmed_via' => 'polling',
+                                'confirmed_at'  => now()->toIso8601String(),
+                                'veopag_status' => $result['status'],
+                            ]),
+                        ]);
+
+                        DB::commit();
+
+                        Log::info("Depósito confirmado via polling — user {$user->id}", [
+                            'transaction_id' => $transactionId,
+                            'amount'         => $amount,
+                        ]);
+                    } catch (\Throwable $e) {
+                        DB::rollBack();
+                        Log::error('Erro ao confirmar depósito via polling: ' . $e->getMessage());
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'data'    => [
+                            'transaction_id' => $transaction->transaction_id,
+                            'status'         => 'completed',
+                            'amount'         => $amount,
+                            'balance'        => $user->fresh()->balance,
+                        ],
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Polling VeoPag falhou: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data'    => [
                 'transaction_id' => $transaction->transaction_id,
-                'status'         => $transaction->status,
+                'status'         => 'pending',
                 'amount'         => $transaction->amount,
-                'balance'        => $transaction->status === 'completed'
-                    ? $request->user()->fresh()->balance
-                    : null,
+                'balance'        => null,
             ],
         ]);
     }

@@ -99,7 +99,7 @@ const DepositPage = {
         const customInput = document.getElementById('customAmount');
         const value = parseFloat(customInput.value) || 0;
         
-        if (value >= 10) {
+        if (value >= 1) {
             this.selectedAmount = value;
             document.querySelectorAll('.quick-amount-btn').forEach(btn => {
                 btn.classList.remove('selected');

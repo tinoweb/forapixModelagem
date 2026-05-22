@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\BetController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\DepositWebhookController;
 use App\Http\Controllers\Api\WithdrawWebhookController;
+use App\Http\Controllers\Api\WebhookDebugController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet/deposit/{transactionId}/status', [WalletController::class, 'depositStatus']);
     Route::post('/wallet/deposit/confirm', [WalletController::class, 'confirmDeposit']);
     Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+
+    // System Settings (público para frontend)
+    Route::get('/settings', function () {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'whatsapp_number' => \App\Models\SystemSetting::get('whatsapp_number', ''),
+                'whatsapp_enabled' => \App\Models\SystemSetting::get('whatsapp_enabled', false),
+                'support_email' => \App\Models\SystemSetting::get('support_email', 'suporte@apostacasada.com'),
+                'min_deposit_amount' => \App\Models\SystemSetting::get('min_deposit_amount', 10),
+                'min_withdraw_amount' => \App\Models\SystemSetting::get('min_withdraw_amount', 10),
+            ]
+        ]);
+    });
 });
 
 // Webhook VeoPag (sem autenticação — chamado pela plataforma)
@@ -80,6 +95,10 @@ Route::post('/webhooks/deposit', [DepositWebhookController::class, 'handle'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 Route::post('/webhooks/withdraw', [WithdrawWebhookController::class, 'handle'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+// Webhook debug temporário — REMOVER após diagnóstico
+Route::post('/webhooks/debug', [WebhookDebugController::class, 'capture'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // Test route

@@ -265,7 +265,7 @@ class GameManagementController extends Controller
             'game_id' => 'required|exists:games,id',
             'first_player_id' => 'required|exists:players,id',
             'second_player_id' => 'required|exists:players,id|different:first_player_id',
-            'match_start' => 'required|date|after:now',
+            'match_start' => 'required|date',
             'match_end' => 'nullable|date|after:match_start',
             'betting_deadline' => 'required|date|before:match_start',
             'first_player_odds' => 'nullable|numeric|min:1.01',

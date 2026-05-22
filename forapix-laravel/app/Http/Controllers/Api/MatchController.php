@@ -21,9 +21,8 @@ class MatchController extends Controller
             $status = $request->status;
 
             if ($status === 'scheduled') {
-                // Agendadas: apenas com prazo de apostas ainda no futuro
-                $query->where('status', 'scheduled')
-                      ->where('betting_deadline', '>', now());
+                // Agendadas: todas com status scheduled
+                $query->where('status', 'scheduled');
 
             } elseif ($status === 'finished') {
                 // Encerradas: finalizadas + agendadas com prazo já expirado

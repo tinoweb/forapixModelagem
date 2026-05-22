@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BetManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\FinancialController;
+use App\Http\Controllers\Admin\SettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +109,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/withdrawals/{transaction}/approve', [FinancialController::class, 'approveWithdrawal'])->name('withdrawals.approve');
         Route::post('/withdrawals/{transaction}/reject',  [FinancialController::class, 'rejectWithdrawal'])->name('withdrawals.reject');
         Route::post('/deposits/{transaction}/approve',    [FinancialController::class, 'approveDeposit'])->name('deposits.approve');
+        Route::post('/deposits/reconcile',                [FinancialController::class, 'reconcileDeposits'])->name('deposits.reconcile');
     });
 
     // Admin Users (Operadores do painel)
@@ -132,6 +134,12 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/{user}/suspend', [UserManagementController::class, 'suspend'])->name('suspend');
         Route::post('/{user}/activate', [UserManagementController::class, 'activate'])->name('activate');
         Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // System Settings
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::put('/', [SettingsController::class, 'update'])->name('update');
     });
 
     /*

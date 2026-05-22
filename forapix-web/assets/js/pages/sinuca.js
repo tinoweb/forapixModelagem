@@ -445,6 +445,11 @@ const SinucaPage = {
                 const id = u.pathname.replace('/shorts/', '');
                 return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
             }
+            // youtube.com/live/ID
+            if (u.pathname.startsWith('/live/')) {
+                const id = u.pathname.replace('/live/', '').split('?')[0];
+                return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+            }
             // já é embed ou outra plataforma — usa direto
             return url;
         } catch (e) {

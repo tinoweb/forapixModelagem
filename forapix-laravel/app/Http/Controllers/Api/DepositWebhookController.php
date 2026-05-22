@@ -22,34 +22,66 @@ class DepositWebhookController extends Controller
     {
         $payload = $request->all();
 
+        // Validar X-Webhook-Signature (se configurado no .env)
+        $secret = config('services.veopag.webhook_signature', '');
+        if (!empty($secret)) {
+            $received = $request->header('X-Webhook-Signature', '');
+            if (!hash_equals($secret, $received)) {
+                Log::warning('VeoPag webhook: assinatura inválida', ['ip' => $request->ip()]);
+                return response()->json(['message' => 'unauthorized'], 401);
+            }
+        }
+
         Log::info('VeoPag webhook recebido', $payload);
 
-        $type   = $payload['type']   ?? null;
-        $status = $payload['status'] ?? null;
+        $type   = strtolower($payload['type']   ?? $payload['event'] ?? '');
+        $status = strtoupper($payload['status'] ?? $payload['state']  ?? '');
 
-        if ($type !== 'Deposit' || $status !== 'COMPLETED') {
+        // Aceita: type deposit/pix/payment + status completed/paid/approved
+        $isDeposit  = in_array($type,   ['deposit', 'pix', 'payment', 'credit', '']);
+        $isComplete = in_array($status, ['COMPLETED', 'PAID', 'APPROVED', 'CONFIRMED', 'SUCCESS']);
+
+        if (!$isComplete) {
+            Log::info("VeoPag webhook depósito ignorado (status={$status}, type={$type})", ['payload' => $payload]);
             return response()->json(['message' => 'ignored'], 200);
         }
 
         $externalId    = $payload['external_id']    ?? $payload['externalId']    ?? null;
         $transactionId = $payload['transaction_id'] ?? $payload['transactionId'] ?? null;
 
-        if (!$externalId) {
-            Log::warning('VeoPag webhook: external_id ausente', $payload);
-            return response()->json(['message' => 'external_id missing'], 400);
+        if (!$externalId && !$transactionId) {
+            Log::warning('VeoPag webhook depósito: nenhum ID identificável no payload', $payload);
+            return response()->json(['message' => 'no identifier found'], 400);
         }
 
-        // Busca a transação pelo external_id guardado em metadata
-        $transaction = Transaction::where(function ($q) use ($externalId, $transactionId) {
-            $q->where('external_transaction_id', $externalId)
-              ->orWhere('external_transaction_id', $transactionId);
-        })
-        ->where('type', 'deposit')
-        ->where('status', 'pending')
-        ->first();
+        // Busca por qualquer um dos identificadores possíveis
+        $transaction = Transaction::where('type', 'deposit')
+            ->where('status', 'pending')
+            ->where(function ($q) use ($externalId, $transactionId) {
+                if ($externalId) {
+                    $q->orWhere('external_transaction_id', $externalId)
+                      ->orWhere('payment_reference', $externalId);
+                }
+                if ($transactionId) {
+                    $q->orWhere('external_transaction_id', $transactionId)
+                      ->orWhere('payment_reference', $transactionId);
+                }
+            })
+            ->first();
+
+        // Fallback: buscar em metadata->veopag_transaction_id
+        if (!$transaction && $transactionId) {
+            $transaction = Transaction::where('type', 'deposit')
+                ->where('status', 'pending')
+                ->whereJsonContains('metadata->veopag_transaction_id', $transactionId)
+                ->first();
+        }
 
         if (!$transaction) {
-            Log::warning('VeoPag webhook: transação não encontrada ou já processada', compact('externalId'));
+            Log::warning('VeoPag webhook depósito: transação não encontrada ou já processada', [
+                'external_id'    => $externalId,
+                'transaction_id' => $transactionId,
+            ]);
             return response()->json(['message' => 'transaction not found or already processed'], 200);
         }
 

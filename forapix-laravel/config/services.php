@@ -38,8 +38,9 @@ return [
     ],
 
     'veopag' => [
-        'client_id'     => env('VEOPAG_CLIENT_ID', ''),
-        'client_secret' => env('VEOPAG_CLIENT_SECRET', ''),
+        'client_id'          => env('VEOPAG_CLIENT_ID', ''),
+        'client_secret'      => env('VEOPAG_CLIENT_SECRET', ''),
+        'webhook_signature'  => env('VEOPAG_WEBHOOK_SIGNATURE', ''),
     ],
 
     'admin' => [

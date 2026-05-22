@@ -185,8 +185,12 @@ class BetMatchingService
             foreach ($bets as $bet) {
                 $unmatched = (float) $bet->amount - (float) $bet->matched_amount;
 
-                if ($bet->bet_type === $winningBetType && (float) $bet->matched_amount > 0) {
-                    // Vencedor: recebe proporção do pool
+                if ((float) $bet->matched_amount <= 0) {
+                    // Nunca casada — reembolso integral independente do lado
+                    $this->refundFull($bet, 'Aposta não casada — reembolso integral');
+                    $refunded++;
+                } elseif ($bet->bet_type === $winningBetType) {
+                    // Vencedor com parte casada: recebe proporção do pool + devolução não casada
                     $payout = $totalWinnerMatched > 0
                         ? round(((float) $bet->matched_amount / $totalWinnerMatched) * $winnerPool, 2)
                         : 0;
@@ -194,11 +198,11 @@ class BetMatchingService
                     $this->payWinner($bet, $payout, $unmatched);
                     $processed++;
                 } else {
-                    // Perdedor: só registra como perdida
+                    // Perdedor com parte casada: registra como perdida
                     $bet->update([
-                        'status'       => 'lost',
+                        'status'        => 'lost',
                         'result_amount' => 0,
-                        'resolved_at'  => now(),
+                        'resolved_at'   => now(),
                     ]);
                     $processed++;
 

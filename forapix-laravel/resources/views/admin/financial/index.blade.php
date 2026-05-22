@@ -11,6 +11,10 @@
             <p class="text-[12px] uppercase tracking-[0.3em] text-gray-500">Gestão</p>
             <h2 class="text-2xl font-semibold">Financeiro</h2>
         </div>
+        <button onclick="reconcileDeposits()" id="reconcileBtn"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+            <i class="fas fa-sync-alt"></i> Reconciliar Depósitos
+        </button>
     </div>
 
     {{-- Cards de resumo --}}
@@ -340,6 +344,31 @@ function showAdminToast(msg, type) {
 }
 
 function updateBadges() { setTimeout(() => window.location.reload(), 1500); }
+
+async function reconcileDeposits() {
+    const btn = document.getElementById('reconcileBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando VeoPag...';
+
+    try {
+        const r = await fetch(`${BASE}/deposits/reconcile`, {
+            method: 'POST',
+            headers: {'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json'},
+        });
+        const data = await r.json();
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            if (data.confirmed > 0) setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showAdminToast(data.message || 'Erro ao reconciliar.', 'error');
+        }
+    } catch(e) {
+        showAdminToast('Erro de conexão.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Reconciliar Depósitos';
+    }
+}
 </script>
 @endpush
 @endsection
