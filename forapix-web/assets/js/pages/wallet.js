@@ -144,7 +144,7 @@ const WalletPage = {
                 </div>
                 <div class="transaction-item-content">
                     <p class="transaction-item-desc">${transaction.description}</p>
-                    <p class="transaction-item-date">${Utils.formatDate(transaction.date)}</p>
+                    <p class="transaction-item-date">${Utils.formatDate(transaction.created_at || transaction.date)}</p>
                 </div>
                 <div class="transaction-item-amount">
                     <p class="${color} font-bold">${isCredit ? '+' : ''}${Utils.formatCurrency(Math.abs(transaction.amount), true)}</p>
@@ -177,7 +177,7 @@ const WalletPage = {
                 </div>
                 <div class="transaction-item-content">
                     <p class="transaction-item-desc">${bet.fighterName || bet.option || 'Aposta'}</p>
-                    <p class="transaction-item-date">${Utils.formatDate(bet.placedAt || bet.date)}</p>
+                    <p class="transaction-item-date">${Utils.formatDate(bet.placedAt || bet.created_at || bet.date)}</p>
                 </div>
                 <div class="transaction-item-amount">
                     <p class="font-bold">-${Utils.formatCurrency(bet.amount, true)}</p>
@@ -256,9 +256,18 @@ const WalletPage = {
         }
     },
 
-    showWithdrawModal() {
-        const balance      = parseFloat(Storage.getBalance()) || 0;
-        const withdrawable = parseFloat(Storage.getItem('forapix_withdrawable')) || 0;
+    async showWithdrawModal() {
+        let balance      = parseFloat(Storage.getBalance()) || 0;
+        let withdrawable = parseFloat(Storage.getItem('forapix_withdrawable')) || 0;
+        try {
+            const res = await API.getBalance();
+            if (res && res.success && res.data) {
+                balance      = parseFloat(res.data.balance) || 0;
+                withdrawable = parseFloat(res.data.withdrawable_balance) || 0;
+                Storage.setBalance(balance);
+                Storage.setItem('forapix_withdrawable', withdrawable);
+            }
+        } catch (_) {}
         const canWithdraw  = withdrawable >= 10;
 
         Components.showModal(`
