@@ -110,3 +110,84 @@ Route::get('/test', function () {
         'version' => '1.0.0'
     ]);
 });
+
+// Reset saldo para testes — REMOVER após resolver
+Route::post('/admin/reset-balance', function (\Illuminate\Http\Request $request) {
+    $request->validate(['email' => 'required|email', 'balance' => 'required|numeric']);
+    $user = \App\Models\User::where('email', $request->email)->firstOrFail();
+    $oldBalance = $user->balance;
+    $user->update([
+        'balance'              => $request->balance,
+        'withdrawable_balance' => $request->balance,
+        'total_withdrawn'      => 0,
+    ]);
+    return response()->json([
+        'success' => true,
+        'message' => "Saldo de {$user->name} ({$user->email}) alterado de R$ {$oldBalance} para R$ {$request->balance}",
+    ]);
+})->middleware('auth:sanctum');
+
+// Diagnóstico VeoPag — REMOVER após resolver
+Route::get('/veopag/diagnostico', function () {
+    $results = ['timestamp' => now()->toIso8601String()];
+
+    $veopag = app(\App\Services\VeoPagService::class);
+
+    // 1) Credenciais configuradas?
+    $results['1_configurado'] = $veopag->isConfigured();
+    if (!$veopag->isConfigured()) {
+        $results['erro'] = 'VEOPAG_CLIENT_ID ou VEOPAG_CLIENT_SECRET vazio no .env';
+        return response()->json($results);
+    }
+
+    // 2) Autenticação
+    try {
+        \Illuminate\Support\Facades\Cache::forget('veopag_token');
+        $token = $veopag->getToken();
+        $results['2_autenticacao'] = 'OK — token obtido';
+        $results['2_token_preview'] = substr($token, 0, 20) . '...';
+    } catch (\Throwable $e) {
+        $results['2_autenticacao'] = 'FALHOU: ' . $e->getMessage();
+        return response()->json($results);
+    }
+
+    // 3) Consultar saldo na VeoPag
+    try {
+        $balanceResp = \Illuminate\Support\Facades\Http::withToken($token)
+            ->get('https://api.veopag.com/api/accounts/balance');
+        $results['3_saldo_status'] = $balanceResp->status();
+        $results['3_saldo_body'] = $balanceResp->json();
+    } catch (\Throwable $e) {
+        $results['3_saldo'] = 'FALHOU: ' . $e->getMessage();
+    }
+
+    // 4) Testar saque com R$1 (valor mínimo) — NÃO EXECUTA, só mostra o payload
+    $pixKey = '11941103981';
+    $keyType = 'PHONE'; // conforme detecção
+    $cleanPhone = preg_replace('/\D/', '', $pixKey);
+    $normalizedKey = '+55' . $cleanPhone;
+
+    $payload = [
+        'amount'      => 1.00,
+        'external_id' => 'diag-' . time(),
+        'pix_key'     => $normalizedKey,
+        'key_type'    => $keyType,
+        'name'        => 'Teste Diagnostico',
+        'description' => 'Teste diagnostico saque',
+        'taxId'       => '00000000000',
+        'clientCallbackUrl' => rtrim(config('app.url'), '/') . '/webhooks/withdraw',
+    ];
+    $results['4_payload_que_seria_enviado'] = $payload;
+
+    // 5) Executar saque real de teste (R$1)
+    try {
+        $resp = \Illuminate\Support\Facades\Http::withToken($token)
+            ->post('https://api.veopag.com/api/withdrawals/withdraw', $payload);
+        $results['5_saque_teste_status'] = $resp->status();
+        $results['5_saque_teste_body'] = $resp->json();
+    } catch (\Throwable $e) {
+        $results['5_saque_teste'] = 'FALHOU: ' . $e->getMessage();
+    }
+
+    return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+})->middleware('auth:sanctum');

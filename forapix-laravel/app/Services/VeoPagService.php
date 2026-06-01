@@ -132,30 +132,55 @@ class VeoPagService
      */
     public function createWithdrawal(float $amount, string $pixKey, string $externalId, array $recipient, string $callbackUrl = ''): array
     {
-        $token = $this->getToken();
+        $token    = $this->getToken();
+        $keyType  = $this->detectPixKeyType($pixKey);
+        $document = preg_replace('/\D/', '', $recipient['document'] ?? '');
+
+        // Normalizar telefone para formato +55DDDNUMERO
+        $normalizedKey = $pixKey;
+        if ($keyType === 'PHONE') {
+            $cleanPhone = preg_replace('/\D/', '', $pixKey);
+            if (!str_starts_with($cleanPhone, '55')) {
+                $cleanPhone = '55' . $cleanPhone;
+            }
+            $normalizedKey = '+' . $cleanPhone;
+        }
 
         $payload = [
             'amount'      => $amount,
             'external_id' => $externalId,
-            'pix_key'     => $pixKey,
-            'recipient'   => [
-                'name'     => $recipient['name'],
-                'document' => preg_replace('/\D/', '', $recipient['document'] ?? '00000000000'),
-            ],
+            'pix_key'     => $normalizedKey,
+            'key_type'    => $keyType,
+            'name'        => $recipient['name'],
+            'description' => "Saque #{$externalId}",
         ];
+
+        // taxId — sempre enviar quando disponível para validação do titular
+        if (!empty($document)) {
+            $payload['taxId'] = $document;
+        }
 
         if (!empty($callbackUrl)) {
             $payload['clientCallbackUrl'] = $callbackUrl;
         }
 
+        Log::info('VeoPag: enviando saque', [
+            'external_id' => $externalId,
+            'key_type'    => $keyType,
+            'pix_key'     => $normalizedKey,
+            'amount'      => $amount,
+            'name'        => $recipient['name'] ?? '(vazio)',
+            'taxId'       => $document ?: '(vazio)',
+        ]);
+
         $resp = Http::withToken($token)
-            ->post("{$this->baseUrl}/api/payments/withdrawal", $payload);
+            ->post("{$this->baseUrl}/api/withdrawals/withdraw", $payload);
 
         if ($resp->status() === 401) {
             Cache::forget('veopag_token');
             $token = $this->getToken();
             $resp  = Http::withToken($token)
-                ->post("{$this->baseUrl}/api/payments/withdrawal", $payload);
+                ->post("{$this->baseUrl}/api/withdrawals/withdraw", $payload);
         }
 
         if (!$resp->successful()) {
@@ -167,14 +192,73 @@ class VeoPagService
             throw new \RuntimeException($resp->json('message') ?? 'Erro ao processar saque PIX');
         }
 
-        $body = $resp->json();
+        $body       = $resp->json();
+        $withdrawal = $body['withdrawal'] ?? $body;
 
         return [
-            'transactionId' => $body['transaction_id'] ?? $body['transactionId'] ?? $externalId,
-            'status'        => $body['status'] ?? 'pending',
-            'amount'        => (float) ($body['amount'] ?? $amount),
-            'fee'           => (float) ($body['fee'] ?? 0),
+            'transactionId' => $withdrawal['transaction_id'] ?? $withdrawal['transactionId'] ?? $externalId,
+            'status'        => $withdrawal['status'] ?? 'pending',
+            'amount'        => (float) ($withdrawal['amount'] ?? $amount),
+            'fee'           => (float) ($withdrawal['fee'] ?? 0),
         ];
+    }
+
+    /**
+     * Detecta o tipo de chave PIX com base no formato.
+     *
+     * Telefone celular BR: DDD (11-99) + 9 + 8 dígitos = 11 dígitos
+     * CPF: 11 dígitos (mas não começa com DDD+9)
+     * CNPJ: 14 dígitos
+     */
+    private function detectPixKeyType(string $pixKey): string
+    {
+        $clean = preg_replace('/\D/', '', $pixKey);
+
+        // Copia e Cola (BR Code EMV)
+        if (str_starts_with($pixKey, '00020101')) {
+            return 'COPIAECOLA';
+        }
+
+        // Email
+        if (str_contains($pixKey, '@')) {
+            return 'EMAIL';
+        }
+
+        // Chave aleatória (EVP / UUID v4)
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $pixKey)) {
+            return 'EVP';
+        }
+
+        // Já vem com +55 — é telefone
+        if (str_starts_with($pixKey, '+55') || str_starts_with($clean, '55') && strlen($clean) === 13) {
+            return 'PHONE';
+        }
+
+        // CNPJ: 14 dígitos
+        if (strlen($clean) === 14) {
+            return 'CNPJ';
+        }
+
+        // Telefone celular BR: 11 dígitos onde DDD (2 dígitos) + 9 (indicador móvel)
+        // DDDs válidos: 11-99, terceiro dígito deve ser 9
+        if (strlen($clean) === 11) {
+            $ddd   = (int) substr($clean, 0, 2);
+            $digit = substr($clean, 2, 1);
+            if ($ddd >= 11 && $ddd <= 99 && $digit === '9') {
+                return 'PHONE';
+            }
+            return 'CPF';
+        }
+
+        // Telefone fixo ou com formato diferente (10 dígitos)
+        if (strlen($clean) === 10) {
+            $ddd = (int) substr($clean, 0, 2);
+            if ($ddd >= 11 && $ddd <= 99) {
+                return 'PHONE';
+            }
+        }
+
+        return 'CPF';
     }
 
     /**

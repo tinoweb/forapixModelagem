@@ -108,7 +108,7 @@ class WalletController extends Controller
 
         // external_id baseado no user + timestamp (idempotente)
         $externalId  = 'fp-' . $user->id . '-' . time();
-        $callbackUrl = config('app.url') . '/api/webhooks/deposit';
+        $callbackUrl = rtrim(config('app.url'), '/') . '/webhooks/deposit';
 
         try {
             $result = $veopag->createDeposit($amount, $externalId, [
@@ -273,8 +273,9 @@ class WalletController extends Controller
     public function withdraw(Request $request)
     {
         $validated = $request->validate([
-            'amount'  => 'required|numeric|min:10',
-            'pix_key' => 'required|string|max:255',
+            'amount'   => 'required|numeric|min:10',
+            'pix_key'  => 'required|string|max:255',
+            'document' => 'nullable|string|max:14',
         ]);
 
         $user   = $request->user();
@@ -312,19 +313,35 @@ class WalletController extends Controller
             $user->decrement('withdrawable_balance', $amount);
             $user->increment('total_withdrawn', $amount);
 
-            $veopag  = app(VeoPagService::class);
+            $veopag   = app(VeoPagService::class);
             $veopagId = null;
             $status   = 'pending';
 
+            $veopagError = null;
+
             if ($veopag->isConfigured()) {
-                $callbackUrl = config('app.url') . '/api/webhooks/withdraw';
-                $result   = $veopag->createWithdrawal($amount, $validated['pix_key'], $externalId, [
-                    'name'     => $user->name,
-                    'document' => $user->document ?? '00000000000',
-                ], $callbackUrl);
-                $veopagId = $result['transactionId'];
-                $status   = strtolower($result['status']) === 'completed' ? 'completed' : 'pending';
+                try {
+                    $callbackUrl = rtrim(config('app.url'), '/') . '/webhooks/withdraw';
+                    $recipientDoc = preg_replace('/\D/', '', $validated['document'] ?? $user->document ?? '');
+                    $result       = $veopag->createWithdrawal($amount, $validated['pix_key'], $externalId, [
+                        'name'     => $user->name,
+                        'document' => $recipientDoc,
+                    ], $callbackUrl);
+                    $veopagId = $result['transactionId'];
+                    $status   = strtolower($result['status']) === 'completed' ? 'completed' : 'pending';
+                } catch (\Throwable $veopagErr) {
+                    $veopagError = $veopagErr->getMessage();
+                    Log::warning('VeoPag saque falhou — criando como pendente para processamento manual', [
+                        'error'       => $veopagError,
+                        'user_id'     => $user->id,
+                        'amount'      => $amount,
+                        'pix_key'     => $validated['pix_key'],
+                        'external_id' => $externalId,
+                    ]);
+                }
             }
+
+            $source = $veopagId ? 'veopag' : 'manual';
 
             $transaction = Transaction::create([
                 'user_id'                 => $user->id,
@@ -340,9 +357,10 @@ class WalletController extends Controller
                 'balance_after'           => (float) $user->fresh()->balance,
                 'processed_at'            => $status === 'completed' ? now() : null,
                 'metadata'                => [
-                    'pix_key'              => $validated['pix_key'],
+                    'pix_key'               => $validated['pix_key'],
                     'veopag_transaction_id' => $veopagId,
-                    'source'               => $veopag->isConfigured() ? 'veopag' : 'manual',
+                    'source'                => $source,
+                    'veopag_error'          => $veopagError,
                 ],
             ]);
 

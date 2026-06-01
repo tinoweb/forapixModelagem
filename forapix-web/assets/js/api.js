@@ -289,13 +289,13 @@ const API = {
         });
     },
 
-    async withdraw(amount, pixKey) {
+    async withdraw(amount, pixKey, document) {
         if (!Storage.getItem(Config.STORAGE_KEYS.TOKEN)) {
             return { success: false, message: 'Você precisa estar logado para sacar.' };
         }
         return await this.request('/wallet/withdraw', {
             method: 'POST',
-            body: JSON.stringify({ amount, pix_key: pixKey })
+            body: JSON.stringify({ amount, pix_key: pixKey, document })
         });
     },
 

@@ -1,0 +1,16 @@
+# Forçar PHP em todas as subpastas
+AddHandler application/x-httpd-php .php
+
+# Direcionar /api/ para Laravel
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Se a URL começar com /api/, redirecionar para api/index.php
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/(.*)$ api/index.php [L]
+</IfModule>
+
+# Frontend
+DirectoryIndex index.html

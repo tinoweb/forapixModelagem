@@ -305,9 +305,13 @@ const WalletPage = {
                 <input type="number" id="withdrawAmount" class="input-field" placeholder="10,00"
                     min="10" max="${withdrawable.toFixed(2)}" step="0.01">
             </div>
-            <div class="input-group mb-6">
+            <div class="input-group mb-4">
                 <label class="input-label">Chave PIX</label>
                 <input type="text" id="withdrawPixKey" class="input-field" placeholder="CPF, email, telefone ou chave aleatória">
+            </div>
+            <div class="input-group mb-6">
+                <label class="input-label">CPF do titular da chave <span style="color:#6b7280;font-size:11px">(apenas números)</span></label>
+                <input type="text" id="withdrawDocument" class="input-field" placeholder="00000000000" maxlength="14">
             </div>
             <div class="flex gap-3">
                 <button class="btn btn-secondary flex-1" onclick="Components.closeModal()">Cancelar</button>
@@ -320,8 +324,9 @@ const WalletPage = {
     },
 
     async processWithdraw() {
-        const amount = parseFloat(document.getElementById('withdrawAmount')?.value);
-        const pixKey = document.getElementById('withdrawPixKey')?.value;
+        const amount  = parseFloat(document.getElementById('withdrawAmount')?.value);
+        const pixKey  = document.getElementById('withdrawPixKey')?.value;
+        const cpfDoc  = (document.getElementById('withdrawDocument')?.value || '').replace(/\D/g, '');
 
         if (!amount || amount < 10) {
             Components.showToast('Valor mínimo de saque: R$ 10,00', 'warning');
@@ -331,17 +336,23 @@ const WalletPage = {
             Components.showToast('Informe sua chave PIX', 'warning');
             return;
         }
+        if (!cpfDoc || cpfDoc.length < 11) {
+            Components.showToast('Informe o CPF do titular da chave PIX', 'warning');
+            return;
+        }
 
         try {
-            const result = await API.withdraw(amount, pixKey);
+            const result = await API.withdraw(amount, pixKey, cpfDoc);
             Components.closeModal();
 
             if (result.success) {
-                Components.showToast('Saque solicitado com sucesso!', 'success');
+                Components.showToast(result.message || 'Saque solicitado com sucesso!', 'success');
+                await this._refreshBalanceCard();
                 App.updateBalance();
+                this.loadTransactions();
                 this.switchTab('balance');
             } else {
-                Components.showToast(result.error || 'Erro ao processar saque', 'error');
+                Components.showToast(result.error || result.message || 'Erro ao processar saque', 'error');
             }
         } catch (error) {
             Components.showToast('Erro ao processar saque', 'error');
