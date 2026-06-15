@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # PROXY REVERSO E SSL (TRAEFIK)
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Painel do Traefik (remover ou proteger em produção)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - forapix_network
+
+  # FRONTEND ESTÁTICO (NGINX)
+  frontend:
+    build:
+      context: ./forapix-web
+      dockerfile: Dockerfile
+    container_name: forapix_frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`jrpix.com`) || Host(`www.jrpix.com`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+    networks:
+      - forapix_network
+
+  # BACKEND LARAVEL - SERVIDOR WEB (NGINX)
+  laravel_web:
+    image: nginx:alpine
+    container_name: laravel_web
+    volumes:
+      - ./forapix-laravel:/var/www
+      - ./forapix-laravel/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - laravel_app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.laravel_api.rule=(Host(`jrpix.com`) || Host(`www.jrpix.com`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.laravel_api.entrypoints=web"
+    networks:
+      - forapix_network
+
+  # BACKEND LARAVEL - APLICAÇÃO (PHP-FPM)
+  laravel_app:
+    build:
+      context: ./forapix-laravel
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    volumes:
+      - ./forapix-laravel:/var/www
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    depends_on:
+      - db
+      - redis
+    networks:
+      - forapix_network
+
+  # BANCO DE DADOS (MYSQL - COMPATÍVEL COM O SEU BACKUP)
+  db:
+    image: mysql:8.0
+    container_name: forapix_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_segura
+      MYSQL_DATABASE: forapix_db
+      MYSQL_USER: forapix_user
+      MYSQL_PASSWORD: forapix_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - forapix_network
+
+  # CACHE E FILAS (REDIS)
+  redis:
+    image: redis:alpine
+    container_name: forapix_redis
+    networks:
+      - forapix_network
+
+  # ARMAZENAMENTO DE ARQUIVOS (MINIO - COMPATÍVEL COM S3)
+  minio:
+    image: minio/minio
+    container_name: forapix_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin_forapix
+      MINIO_ROOT_PASSWORD: minio_password_segura
+    volumes:
+      - minio_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio_api.rule=Host(`s3.jrpix.com`)"
+      - "traefik.http.routers.minio_api.entrypoints=web"
+      - "traefik.http.services.minio_api.loadbalancer.server.port=9000"
+      - "traefik.http.routers.minio_console.rule=Host(`console.s3.jrpix.com`)"
+      - "traefik.http.routers.minio_console.entrypoints=web"
+      - "traefik.http.services.minio_console.loadbalancer.server.port=9001"
+    networks:
+      - forapix_network
+
+networks:
+  forapix_network:
+    driver: bridge
+
+volumes:
+  db_data:
+  minio_data:
