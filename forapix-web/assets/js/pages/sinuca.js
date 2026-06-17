@@ -639,7 +639,7 @@ const SinucaPage = {
 
         try {
             const betData = {
-                matchId: this.currentMatch.id,
+                matchId: this.currentMatch.hash_id || this.currentMatch.id,
                 option: this.selectedBet.type,
                 amount: this.betAmount,
                 odds: this.selectedBet.odds,

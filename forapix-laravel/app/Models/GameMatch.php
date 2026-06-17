@@ -62,7 +62,8 @@ class GameMatch extends Model
     ];
 
     protected $appends = [
-        'time_remaining'
+        'time_remaining',
+        'hash_id'
     ];
 
     /**
@@ -222,6 +223,14 @@ class GameMatch extends Model
         } else {
             return $diff->i . ' minutos';
         }
+    }
+
+    /**
+     * Get Hash ID for security
+     */
+    public function getHashIdAttribute(): string
+    {
+        return \Vinkla\Hashids\Facades\Hashids::encode($this->id);
     }
 
     /**

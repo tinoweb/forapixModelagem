@@ -18,6 +18,14 @@ class BetController extends Controller
      */
     public function store(Request $request)
     {
+        $rawMatchId = $request->input('match_id');
+        if (!is_numeric($rawMatchId) && !empty($rawMatchId)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($rawMatchId);
+            if (!empty($decoded)) {
+                $request->merge(['match_id' => $decoded[0]]);
+            }
+        }
+
         $validated = $request->validate([
             'match_id' => 'required|exists:matches,id',
             'bet_type' => 'required|in:first_player,second_player',

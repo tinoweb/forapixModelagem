@@ -135,7 +135,7 @@ const MatchesPage = {
         const isLive = match.status === 'live';
         const canBet = this.isBettingOpen(match);
         const winnerIs = this.resolveWinner(match, firstScore, secondScore);
-        const matchId = match.id || match.match_id || 0;
+        const matchId = match.hash_id || match.id || match.match_id || 0;
         const firstOdds = match.first_player_odds ?? match.firstPlayerOdds ?? null;
         const secondOdds = match.second_player_odds ?? match.secondPlayerOdds ?? null;
         const matchDate = this.formatDate(match.match_start, 'datetime');
@@ -151,7 +151,7 @@ const MatchesPage = {
             : (isFinished ? '<span class="mc-finished-badge"><i class="fas fa-circle-check"></i> ENCERRADA</span>' : '');
 
         return `
-            <div class="match-card-v2" onclick="MatchesPage.openMatch(${matchId})">
+            <div class="match-card-v2" onclick="MatchesPage.viewMatch('${matchId}')">
 
                 <!-- IMAGEM TOPO -->
                 <div class="mc-image" style="${bgStyle}">
@@ -201,7 +201,7 @@ const MatchesPage = {
                     </div>
 
                     <!-- Botão sempre visível -->
-                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: ${matchId} })">
+                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: '${matchId}' })">
                         ${canBet
                             ? '<i class="fas fa-bolt"></i> Apostar agora'
                             : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
@@ -253,8 +253,7 @@ const MatchesPage = {
         return Utils.formatDate(date);
     },
 
-    openMatch(id) {
-        if (!id) return;
+    viewMatch(id) {
         App.navigateTo('sinuca', { matchId: id });
     }
 };

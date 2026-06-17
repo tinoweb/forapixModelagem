@@ -94,6 +94,17 @@ class MatchController extends Controller
      */
     public function show($id)
     {
+        if (!is_numeric($id)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($id);
+            if (empty($decoded)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Partida não encontrada'
+                ], 404);
+            }
+            $id = $decoded[0];
+        }
+
         $match = GameMatch::with([
             'game.sport',
             'firstPlayer',

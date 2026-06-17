@@ -126,7 +126,7 @@ const Components = {
         const secondOdds = match.second_player_odds ?? match.odds2 ?? null;
         const sportLabel = (match.game?.sport?.name || match.game?.name || match.sport?.name || match.sport || 'Evento').toUpperCase();
         const modality = match.game?.name || '';
-        const matchId = match.id || match.match_id || 0;
+        const matchId = match.hash_id || match.id || match.match_id || 0;
         const isLive = match.status === 'live';
         const isFinished = match.status === 'finished';
         const canBet = match.status !== 'finished' && match.betting_deadline && new Date(match.betting_deadline) > new Date();
@@ -144,7 +144,7 @@ const Components = {
             : (isFinished ? '<span class="mc-finished-badge"><i class="fas fa-circle-check"></i> ENCERRADA</span>' : '');
 
         return `
-            <div class="match-card-v2" onclick="App.navigateTo('sinuca', { matchId: ${matchId} })">
+            <div class="match-card-v2" onclick="App.navigateTo('sinuca', { matchId: '${matchId}' })">
                 <div class="mc-image" style="${bgStyle}">
                     <div class="mc-image-overlay"></div>
                     <div class="mc-image-top">
@@ -183,7 +183,7 @@ const Components = {
                             ${secondOdds ? `<span class="mc-odds">${parseFloat(secondOdds).toFixed(2)}x</span>` : ''}
                         </div>
                     </div>
-                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: ${matchId} })">
+                    <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: '${matchId}' })">
                         ${canBet
                             ? '<i class="fas fa-bolt"></i> Apostar agora'
                             : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
