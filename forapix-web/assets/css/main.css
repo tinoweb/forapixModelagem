@@ -2,14 +2,14 @@
    CSS Variables
 ======================================== */
 :root {
-    --primary: #0f1226;
-    --secondary: #151a35;
+    --primary: #0f1a16;
+    --secondary: #162620;
     --accent: #10b981;
     --accent-light: #34d399;
     --accent-dark: #6d28d9;
-    --dark: #0a0b1a;
-    --card-bg: #1a1d3a;
-    --card-hover: #242849;
+    --dark: #0a0f0d;
+    --card-bg: #1b2a24;
+    --card-hover: #263b32;
     --success: #22c55e;
     --success-light: #4ade80;
     --warning: #f59e0b;
@@ -237,7 +237,7 @@ body {
 .welcome-card {
     background:
         radial-gradient(circle at 100% 0%, rgba(34, 197, 94, 0.35) 0%, rgba(34, 197, 94, 0.05) 35%, transparent 60%),
-        linear-gradient(135deg, #1a1d3a 0%, #151a35 100%);
+        linear-gradient(135deg, #1b2a24 0%, #151a35 100%);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     position: relative;
@@ -280,13 +280,13 @@ body {
     font-weight: 700;
     font-size: 14px;
     background: linear-gradient(135deg, #059669 0%, #34d399 50%, #10b981 100%);
-    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     transition: all 0.25s ease;
 }
 
 .invite-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 14px 30px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* ========================================
@@ -417,8 +417,8 @@ header.hidden,
 }
 
 .service-item {
-    background: linear-gradient(180deg, #1a1d3a 0%, #161936 100%);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.25);
     border-radius: 16px;
     padding: 18px 12px;
     display: flex;
@@ -430,7 +430,7 @@ header.hidden,
 }
 
 .service-item:hover {
-    border-color: rgba(139, 92, 246, 0.4);
+    border-color: rgba(52, 211, 153, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
 }
@@ -442,9 +442,10 @@ header.hidden,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(124, 58, 237, 0.1) 100%);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    color: var(--accent-light);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.8) 0%, rgba(4, 120, 87, 0.8) 100%);
+    border: 1px solid rgba(52, 211, 153, 0.6);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    color: #ffffff;
     font-size: 18px;
 }
 
@@ -669,7 +670,7 @@ header.hidden,
 .input-field:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .input-field::placeholder {
@@ -746,10 +747,10 @@ header.hidden,
 }
 
 .status-tab.active {
-    background: rgba(124, 58, 237, 0.12);
+    background: rgba(16, 185, 129, 0.12);
     color: var(--text-primary);
-    border-color: rgba(124, 58, 237, 0.6);
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
 }
 
 .game-match-card {
@@ -782,7 +783,7 @@ header.hidden,
 .betting-option:hover,
 .betting-option.selected {
     border-color: var(--accent);
-    box-shadow: 0 12px 25px rgba(124, 58, 237, 0.25);
+    box-shadow: 0 12px 25px rgba(16, 185, 129, 0.25);
     transform: translateY(-2px);
 }
 
@@ -978,7 +979,7 @@ header.hidden,
     overflow: hidden;
     border: 3px solid var(--accent);
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .match-detail-avatar-large img {
@@ -1476,7 +1477,7 @@ header.hidden,
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background: rgba(139, 92, 246, 0.15);
+    background: rgba(52, 211, 153, 0.15);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1695,8 +1696,8 @@ header.hidden,
 }
 
 .quick-amount-btn:hover {
-    border-color: rgba(139, 92, 246, 0.4);
-    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(52, 211, 153, 0.08);
     color: var(--accent-light);
 }
 
@@ -1729,8 +1730,8 @@ header.hidden,
 }
 
 .sport-filter-btn:hover {
-    border-color: rgba(139, 92, 246, 0.4);
-    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(52, 211, 153, 0.4);
+    background: rgba(52, 211, 153, 0.08);
     color: var(--accent-light);
 }
 
@@ -1738,7 +1739,7 @@ header.hidden,
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
     color: #ffffff;
     border-color: transparent;
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
 }
 
 .sport-filter-btn i {
@@ -1761,7 +1762,7 @@ header.hidden,
 }
 
 .game-item-card {
-    background: linear-gradient(180deg, #1a1d3a 0%, #15182f 100%);
+    background: linear-gradient(180deg, #1b2a24 0%, #15182f 100%);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     overflow: hidden;
@@ -1771,7 +1772,7 @@ header.hidden,
 
 .game-item-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: rgba(52, 211, 153, 0.3);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -1914,11 +1915,11 @@ header.hidden,
 .profile-tab.active {
     background: var(--accent);
     color: #ffffff;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .profile-card {
-    background: linear-gradient(180deg, #1a1d3a 0%, #15182f 100%);
+    background: linear-gradient(180deg, #1b2a24 0%, #15182f 100%);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     padding: 24px;
@@ -1934,7 +1935,7 @@ header.hidden,
     align-items: center;
     justify-content: center;
     margin: 0 auto 16px;
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
 .profile-avatar-text {
@@ -1997,7 +1998,7 @@ header.hidden,
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: rgba(139, 92, 246, 0.15);
+    background: rgba(52, 211, 153, 0.15);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2086,7 +2087,7 @@ header.hidden,
     border-radius: 20px;
     padding: 24px;
     text-align: center;
-    box-shadow: 0 12px 30px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
 }
 
 .wallet-balance-label {
@@ -2404,7 +2405,7 @@ header.hidden,
     border-radius: 50%;
     overflow: hidden;
     border: 2px solid rgba(255,255,255,0.12);
-    background: #1a1d3a;
+    background: #1b2a24;
     flex-shrink: 0;
 }
 .mh-bets-av img { width: 100%; height: 100%; object-fit: cover; }
@@ -2525,7 +2526,7 @@ header.hidden,
 .mc-image {
     position: relative;
     height: 140px;
-    background-color: #1a1d3a;
+    background-color: #1b2a24;
     background-size: cover;
     background-position: center;
     display: flex;
@@ -2646,7 +2647,7 @@ header.hidden,
     border-radius: 50%;
     overflow: hidden;
     border: 2px solid rgba(255,255,255,0.1);
-    background: #1a1d3a;
+    background: #1b2a24;
 }
 .mc-avatar img {
     width: 100%;

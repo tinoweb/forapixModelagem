@@ -83,12 +83,7 @@ const HomePage = {
         const services = [
             { name: 'Depósito', icon: 'fa-dice-five', action: "App.navigateTo('deposit')" },
             { name: 'Suporte', icon: 'fa-headset', action: "HomePage.openSupport()" },
-            { name: 'Resultados', icon: 'fa-trophy', action: "HomePage.showResults()" },
-            { name: 'Palpites do Dia', icon: 'fa-star', action: "Components.showToast('Em breve!', 'info')" },
-            { name: 'Sonhos', icon: 'fa-moon', action: "Components.showToast('Em breve!', 'info')" },
-            { name: 'Atrasados', icon: 'fa-clock', action: "Components.showToast('Em breve!', 'info')" },
-            { name: 'Calculadora', icon: 'fa-calculator', action: "Components.showToast('Em breve!', 'info')" },
-            { name: 'Tabela de Bichos', icon: 'fa-paw', action: "Components.showToast('Em breve!', 'info')" }
+            { name: 'Resultados', icon: 'fa-trophy', action: "HomePage.showResults()" }
         ];
 
         return services.map(service => Components.renderServiceItem(service)).join('');
