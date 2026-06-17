@@ -4,8 +4,8 @@
 :root {
     --primary: #0f1226;
     --secondary: #151a35;
-    --accent: #7c3aed;
-    --accent-light: #8b5cf6;
+    --accent: #10b981;
+    --accent-light: #34d399;
     --accent-dark: #6d28d9;
     --dark: #0a0b1a;
     --card-bg: #1a1d3a;
@@ -279,7 +279,7 @@ body {
     color: #ffffff;
     font-weight: 700;
     font-size: 14px;
-    background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 50%, #7c3aed 100%);
+    background: linear-gradient(135deg, #059669 0%, #34d399 50%, #10b981 100%);
     box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     transition: all 0.25s ease;
 }

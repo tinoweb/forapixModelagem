@@ -211,7 +211,7 @@ const Components = {
     renderGameCard(game) {
         return `
             <div class="game-card" onclick="App.navigateTo('matches', { gameId: ${game.id} })">
-                <img src="${game.image}" alt="${game.name}" onerror="this.src='https://via.placeholder.com/200x100/7c3aed/ffffff?text=${encodeURIComponent(game.name)}'">
+                <img src="${game.image}" alt="${game.name}" onerror="this.src='https://via.placeholder.com/200x100/10b981/ffffff?text=${encodeURIComponent(game.name)}'">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent rounded-2xl"></div>
                 <div class="absolute bottom-4 left-4 right-4">
                     <h3 class="text-white font-bold text-lg">${game.name}</h3>

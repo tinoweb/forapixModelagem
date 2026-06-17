@@ -210,12 +210,12 @@ const SinucaPage = {
                 <span class="text-white font-semibold">${(p2.name || 'J2').split(' ')[0]}</span>
             </div>
             <div class="mh-bets-track" style="border-radius:8px;overflow:hidden;display:flex;height:10px;gap:1px">
-                <div style="width:${pFp}%;background:#8b5cf6;transition:width .4s"></div>
+                <div style="width:${pFp}%;background:#34d399;transition:width .4s"></div>
                 <div style="width:${pSp}%;background:#f59e0b;transition:width .4s"></div>
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
                 <span>
-                    <span class="text-purple-400 font-semibold">${fmtR(fp.total)}</span>
+                    <span class="text-emerald-400 font-semibold">${fmtR(fp.total)}</span>
                     <span class="text-gray-600 ml-1">(${fmtR(fp.matched)} casado)</span>
                 </span>
                 <span>

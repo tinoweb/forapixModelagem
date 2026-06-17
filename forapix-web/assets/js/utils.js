@@ -238,9 +238,9 @@ const Utils = {
     /**
      * Build inline SVG avatar for placeholders
      */
-    buildAvatar(initials = '?', bgColor = '#7c3aed') {
+    buildAvatar(initials = '?', bgColor = '#10b981') {
         const safeInitials = initials.slice(0, 2).toUpperCase();
-        const color = bgColor || '#7c3aed';
+        const color = bgColor || '#10b981';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="100%" height="100%" rx="80" fill="${color}"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="'Inter', 'Segoe UI', sans-serif" font-size="64" fill="#ffffff">${safeInitials}</text></svg>`;
         return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
     },
@@ -248,7 +248,7 @@ const Utils = {
     /**
      * Build player avatar with fallback initials
      */
-    getPlayerPhoto(player, fallbackColor = '#7c3aed') {
+    getPlayerPhoto(player, fallbackColor = '#10b981') {
         if (!player) return this.buildAvatar('?', fallbackColor);
         const photoPath = player.photo_url || player.photo;
         if (photoPath) {
