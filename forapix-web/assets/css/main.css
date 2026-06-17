@@ -61,7 +61,7 @@ body {
    Header
 ======================================== */
 .app-header {
-    background: linear-gradient(180deg, #0f1226 0%, #0a0b1a 100%);
+    background: linear-gradient(180deg, #0a110e 0%, #050a07 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -150,7 +150,7 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: linear-gradient(180deg, #0d1024 0%, #050614 100%);
+    background: linear-gradient(180deg, #0a110e 0%, #050a07 100%);
     border-top: 1px solid rgba(255, 255, 255, 0.04);
     padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
 }
@@ -2667,7 +2667,7 @@ header.hidden,
 .mc-odds {
     font-size: 12px;
     font-weight: 700;
-    color: #a78bfa;
+    color: #34d399;
 }
 
 /* Score */
