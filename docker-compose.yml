@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # PROXY REVERSO E SSL (TRAEFIK)
   traefik:
-    image: traefik:v2.10
+    image: traefik:v2.11
     container_name: traefik
     command:
       - "--api.insecure=true"
@@ -44,7 +44,7 @@ services:
       - laravel_app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel_api.rule=(Host(`jrpix.com`) || Host(`www.jrpix.com`)) && PathPrefix(`/api`)"
+      - "traefik.http.routers.laravel_api.rule=(Host(`jrpix.com`) || Host(`www.jrpix.com`)) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/uploads`) || PathPrefix(`/sanctum`))"
       - "traefik.http.routers.laravel_api.entrypoints=web"
     networks:
       - forapix_network
