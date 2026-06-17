@@ -70,9 +70,9 @@ Isso vai iniciar:
 - MinIO (Storage para os avatares compatível com S3)
 
 ### 4.1 Instalar Dependências do Laravel
-Logo após os containers subirem, instale as dependências:
+Logo após os containers subirem, instale as dependências. (Usamos `update` na primeira vez para sincronizar os novos pacotes do Redis e S3):
 ```bash
-docker exec -it laravel_app composer install --no-dev --optimize-autoloader
+docker exec -it laravel_app composer update --no-dev --optimize-autoloader
 docker exec -it laravel_app php artisan key:generate
 docker exec -it laravel_app php artisan migrate --force
 ```
