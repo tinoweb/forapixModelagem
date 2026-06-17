@@ -228,9 +228,9 @@ class GameMatch extends Model
     /**
      * Get Hash ID for security
      */
-    public function getHashIdAttribute(): string
+    public function getHashIdAttribute(): ?string
     {
-        return \Vinkla\Hashids\Facades\Hashids::encode($this->id);
+        return $this->id ? \Vinkla\Hashids\Facades\Hashids::encode($this->id) : null;
     }
 
     /**
