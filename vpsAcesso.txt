@@ -1,11 +1,15 @@
 JuniorPix1@2
-
 ssh root@187.77.33.76
-
 
 -----------------------acesso admin----------------------
 
-Login: admin@forapix.com
-Senha: admin123
+Login: JuniorPix1@2.com
+Senha: 876f7b4162b7dc9a7342d8aa915fce2a78e35149
+
+---------------------------------------------------------
+
+
+
+
 
 

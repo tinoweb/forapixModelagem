@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Main Application
+ * JRpix - Main Application
  * Controlador principal da aplicação
  */
 
@@ -10,7 +10,7 @@ const App = {
      * Initialize application
      */
     init() {
-        console.log('🚀 ApostaCasada App iniciando...');
+        console.log('🚀 JRpix App iniciando...');
         
         // Initialize storage
         Storage.init();
@@ -49,7 +49,7 @@ const App = {
         // Test API connection
         this.testApiConnection();
         
-        console.log('✅ ApostaCasada App iniciado com sucesso!');
+        console.log('✅ JRpix App iniciado com sucesso!');
     },
 
     /**
@@ -261,8 +261,7 @@ const App = {
             `;
         } else {
             brand.innerHTML = `
-                <span class="logo-icon"><i class="fas fa-leaf"></i></span>
-                <span class="logo-text">APOSTACASADA</span>
+                <img src="assets/images/loGOJRpix.png" alt="JRpix" class="h-8">
             `;
         }
     },

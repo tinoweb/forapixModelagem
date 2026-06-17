@@ -32,7 +32,7 @@ const HomePage = {
                 <!-- Aposta Casada Banner -->
                 <div class="mb-4">
                     <div class="game-card cursor-pointer" onclick="App.navigateTo('matches')">
-                        <img src="assets/images/apostacasada.png" alt="Aposta Casada" class="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(124,58,237,0.3)]">
+                        <img src="assets/images/jrpix.png" alt="JRpix" class="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                     </div>
                 </div>
 
@@ -185,13 +185,13 @@ const HomePage = {
      * Share invite link
      */
     async shareInvite() {
-        const inviteLink = 'https://apostacasada.com/invite/ABC123';
+        const inviteLink = 'https://jrpix.com/invite/ABC123';
         
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'ApostaCasada - Apostas Online',
-                    text: 'Venha apostar comigo no ApostaCasada!',
+                    title: 'JRpix - Jogos e Apostas',
+                    text: 'Venha apostar comigo na JRpix!',
                     url: inviteLink
                 });
                 Components.showToast('Link compartilhado!', 'success');
@@ -222,7 +222,7 @@ const HomePage = {
         const settings = await this._getSettings();
         const whatsappNumber = settings.whatsapp_number || '';
         const whatsappEnabled = settings.whatsapp_enabled !== false;
-        const supportEmail = settings.support_email || 'suporte@apostacasada.com';
+        const supportEmail = settings.support_email || 'suporte@jrpix.com';
 
         let whatsappButton = '';
         if (whatsappEnabled && whatsappNumber) {

@@ -102,10 +102,8 @@ const ProfilePage = {
         return `
         <div class="page-enter p-4 max-w-sm mx-auto">
             <div class="text-center mb-8 mt-4">
-                <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-leaf text-3xl text-accent"></i>
-                </div>
-                <h2 class="text-2xl font-bold">ApostaCasada</h2>
+                <img src="assets/images/loGOJRpix.png" alt="JRpix" class="h-12 mx-auto mb-4">
+                <h2 class="text-2xl font-bold">JRpix</h2>
                 <p class="text-gray-400 text-sm">Apostas esportivas ao vivo</p>
             </div>
 

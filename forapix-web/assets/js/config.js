@@ -20,7 +20,7 @@ const Config = {
 
     // App Configuration
     APP: {
-        NAME: 'ApostaCasada',
+        NAME: 'JRpix',
         VERSION: '1.0.0',
         THEME: 'dark',
         LANGUAGE: 'pt-BR',
