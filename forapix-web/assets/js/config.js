@@ -89,5 +89,5 @@ const Config = {
 const API_BASE_ORIGIN = Config.API.BASE_URL.replace(/\/api$/, '');
 Config.MEDIA = {
     BASE_URL: API_BASE_ORIGIN,
-    STORAGE_URL: `${API_BASE_ORIGIN}/storage`
+    STORAGE_URL: 'https://s3.jrpix.com/jrpix-media'
 };

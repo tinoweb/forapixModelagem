@@ -96,7 +96,7 @@ class GameManagementController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $gameData['image'] = $request->file('image')->store('games', 'public');
+            $gameData['image'] = $request->file('image')->store('games');
         }
 
         // Parse settings JSON
@@ -152,7 +152,7 @@ class GameManagementController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $gameData['image'] = $request->file('image')->store('games', 'public');
+            $gameData['image'] = $request->file('image')->store('games');
         }
 
         // Parse settings JSON
@@ -304,7 +304,7 @@ class GameManagementController extends Controller
             $metadata['stream_url'] = $request->input('stream_url');
         }
         if ($request->hasFile('banner_image')) {
-            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
+            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners');
         } elseif (empty($metadata['banner_image'])) {
             // Imagem padrão para todas as partidas
             $metadata['banner_image'] = 'matches/banners/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png';
@@ -386,7 +386,7 @@ class GameManagementController extends Controller
             $metadata['stream_url'] = $request->input('stream_url');
         }
         if ($request->hasFile('banner_image')) {
-            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 'public');
+            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners');
         }
         if ($request->has('banner_button_label')) {
             $metadata['banner_button_label'] = $request->input('banner_button_label');
