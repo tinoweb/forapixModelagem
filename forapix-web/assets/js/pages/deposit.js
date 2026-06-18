@@ -196,12 +196,15 @@ const DepositPage = {
             <!-- Copia e Cola -->
             <div class="mb-4">
                 <label class="input-label">PIX Copia e Cola</label>
-                <div class="flex gap-2">
+                <div class="flex gap-2 mb-3">
                     <input type="text" id="pixCodeInput" class="input-field flex-1 text-xs" value="${data.qrcode}" readonly>
                     <button class="btn btn-secondary" onclick="DepositPage.copyPixCode()">
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
+                <button class="btn btn-warning w-full py-3.5 font-bold flex items-center justify-center gap-2" onclick="DepositPage.copyPixCode()">
+                    <i class="fas fa-copy"></i> COPIAR CÓDIGO PIX
+                </button>
             </div>
 
             <!-- Status do pagamento -->
