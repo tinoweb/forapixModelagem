@@ -36,16 +36,6 @@ const HomePage = {
                     </div>
                 </div>
 
-                <!-- Games Section -->
-                <p class="section-title mb-3">JOGOS</p>
-                <div class="games-grid mb-6">
-                    <div class="game-card cursor-pointer" onclick="App.navigateTo('matches', { gameType: 'casino' })">
-                        <img src="assets/images/casino.png" alt="Cassino" class="w-full h-full object-cover rounded-2xl">
-                    </div>
-                    <div class="game-card cursor-pointer" onclick="App.navigateTo('games')">
-                        <img src="assets/images/bingo.png" alt="Bingo" class="w-full h-full object-cover rounded-2xl">
-                    </div>
-                </div>
 
                 <!-- Services Section -->
                 <p class="section-title mb-3">SERVIÇOS</p>
