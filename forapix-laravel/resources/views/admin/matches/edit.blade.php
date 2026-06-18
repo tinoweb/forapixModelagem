@@ -133,7 +133,7 @@
                     <label class="text-sm text-gray-300">Banner</label>
                     @if(!empty($meta['banner_image']))
                         <div class="mt-2 mb-2">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($meta['banner_image']) }}" alt="Banner atual" class="h-32 rounded-xl border border-white/10">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($meta['banner_image']) }}" alt="Banner atual" class="h-32 rounded-xl border border-white/10">
                         </div>
                     @endif
                     <input type="file" name="banner_image" accept="image/*" class="mt-1 w-full text-sm text-gray-400">
