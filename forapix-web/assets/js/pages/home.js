@@ -52,12 +52,10 @@ const HomePage = {
         `;
     },
 
-    /**
-     * Render services
-     */
     renderServices() {
         const services = [
             { name: 'Depósito', icon: 'fa-dice-five', action: "App.navigateTo('deposit')" },
+            { name: 'Saque', icon: 'fa-wallet', action: "App.navigateTo('wallet')" },
             { name: 'Suporte', icon: 'fa-headset', action: "HomePage.openSupport()" },
             { name: 'Resultados', icon: 'fa-trophy', action: "HomePage.showResults()" }
         ];
