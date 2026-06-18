@@ -96,7 +96,10 @@ class GameManagementController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $gameData['image'] = $request->file('image')->store('games', 's3');
+            $f = $request->file('image');
+            $fn = 'games/' . \Illuminate\Support\Str::random(40) . '.' . $f->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('s3')->put($fn, file_get_contents($f->getRealPath()));
+            $gameData['image'] = $fn;
         }
 
         // Parse settings JSON
@@ -152,7 +155,10 @@ class GameManagementController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $gameData['image'] = $request->file('image')->store('games', 's3');
+            $f = $request->file('image');
+            $fn = 'games/' . \Illuminate\Support\Str::random(40) . '.' . $f->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('s3')->put($fn, file_get_contents($f->getRealPath()));
+            $gameData['image'] = $fn;
         }
 
         // Parse settings JSON
@@ -304,7 +310,10 @@ class GameManagementController extends Controller
             $metadata['stream_url'] = $request->input('stream_url');
         }
         if ($request->hasFile('banner_image')) {
-            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 's3');
+            $f = $request->file('banner_image');
+            $fn = 'matches/banners/' . \Illuminate\Support\Str::random(40) . '.' . $f->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('s3')->put($fn, file_get_contents($f->getRealPath()));
+            $metadata['banner_image'] = $fn;
         } elseif (empty($metadata['banner_image'])) {
             // Imagem padrão para todas as partidas
             $metadata['banner_image'] = 'matches/banners/6b0z8T0MQaoG4SVQ4B9MOiw4rvhqWUf3aCquHoGn.png';
@@ -386,23 +395,11 @@ class GameManagementController extends Controller
             $metadata['stream_url'] = $request->input('stream_url');
         }
         if ($request->hasFile('banner_image')) {
-            try {
-                $file = $request->file('banner_image');
-                \Log::info('S3 Upload attempt', [
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'file_valid' => $file->isValid(),
-                    'disk_default' => config('filesystems.default'),
-                    's3_endpoint' => config('filesystems.disks.s3.endpoint'),
-                    's3_bucket' => config('filesystems.disks.s3.bucket'),
-                ]);
-                $path = $file->store('matches/banners', 's3');
-                \Log::info('S3 Upload result', ['path' => $path]);
-                $metadata['banner_image'] = $path;
-            } catch (\Exception $e) {
-                \Log::error('S3 Upload FAILED', ['error' => $e->getMessage()]);
-                $metadata['banner_image'] = null;
-            }
+            $file = $request->file('banner_image');
+            $filename = 'matches/banners/' . \Illuminate\Support\Str::random(40) . '.' . $file->getClientOriginalExtension();
+            $stored = \Illuminate\Support\Facades\Storage::disk('s3')->put($filename, file_get_contents($file->getRealPath()));
+            $metadata['banner_image'] = $stored ? $filename : null;
+            \Log::info('S3 Upload', ['stored' => $stored, 'path' => $filename]);
         }
         if ($request->has('banner_button_label')) {
             $metadata['banner_button_label'] = $request->input('banner_button_label');
