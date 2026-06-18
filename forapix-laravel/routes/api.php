@@ -190,4 +190,4 @@ Route::get('/veopag/diagnostico', function () {
     }
 
     return response()->json($results, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-})->middleware('auth:sanctum');
+});

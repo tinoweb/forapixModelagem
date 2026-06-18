@@ -8,14 +8,19 @@ https://jrpix.com/admin/login
 Login: JuniorPix1@2.com
 Senha: 876f7b4162b7dc9a7342d8aa915fce2a78e35149
 
------------------------aceso ao ninio-------------------
+-----------------------aceso ao minio-------------------
 https://s3-console.jrpix.com/login
 
 admin_forapix 
 minio_password_segura
 
---------------------------------------------------------
+-------------------------VEOPAG-------------------------
+Client ID: cli_e90d2085ef5aed84557775db09d180dd
+Client Secret: AFNzH4pODaMvKDUNJLj3c96DckdfoGbgsPamR0Bi_xffBLge0AUvZmhD1xX7imychjibGmmxMerywVmfLIcCwov7cYhCvWaWt0Xd
+signatureKey: 044ca19f977f373b6e34d55b6205775a7f0a37e51b6bcf39fea41d13bec0854c
 
 
+
+# webhook_url = https://jrpix.com/api/gateway/veopag/webhook
 
 
