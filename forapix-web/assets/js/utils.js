@@ -224,15 +224,31 @@ const Utils = {
      */
     resolveImage(path, fallback = null) {
         if (!path) return fallback;
-        if (path.startsWith('http')) return path;
-        if (path.startsWith('/')) {
-            return `${Config.MEDIA.BASE_URL}${path}`;
+        
+        let targetPath = path;
+        if (targetPath.includes('localhost:3000') || targetPath.includes('localhost:8000') || targetPath.includes('127.0.0.1')) {
+            const parts = targetPath.split('/assets/');
+            if (parts.length > 1) {
+                targetPath = 'assets/' + parts[1];
+            }
         }
+
+        if (targetPath.startsWith('http')) return targetPath;
+        
+        let cleanPath = targetPath;
+        if (cleanPath.startsWith('/storage/')) {
+            cleanPath = cleanPath.substring(9);
+        } else if (cleanPath.startsWith('storage/')) {
+            cleanPath = cleanPath.substring(8);
+        } else if (cleanPath.startsWith('/')) {
+            return `${Config.MEDIA.BASE_URL}${cleanPath}`;
+        }
+
         // Arquivos servidos via rota Laravel /api/uploads/{path}
-        if (path.startsWith('uploads/')) {
-            return `${Config.API.BASE_URL}/${path}`;
+        if (cleanPath.startsWith('uploads/')) {
+            return `${Config.API.BASE_URL}/${cleanPath}`;
         }
-        return `${Config.MEDIA.STORAGE_URL}/${path}`;
+        return `${Config.MEDIA.STORAGE_URL}/${cleanPath}`;
     },
 
     /**
