@@ -36,35 +36,16 @@ const HomePage = {
                     </div>
                 </div>
 
-                <!-- Aposta Casada Banner 2 -->
-                <div class="mb-4">
-                    <div class="game-card cursor-pointer" onclick="App.navigateTo('matches')">
-                        <img src="assets/images/jrpix2.png" alt="JRpix" class="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                    </div>
-                </div>
                 <!-- Services Section -->
                 <p class="section-title mb-3">SERVIÇOS</p>
                 <div class="service-grid mb-6">
                     ${this.renderServices()}
                 </div>
 
-                <!-- Partidas ao vivo -->
-                <div class="mb-4" id="liveMatchesSection" style="display:none">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="section-title" style="color:#22c55e"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;animation:pulse 1.5s infinite"></span>AO VIVO AGORA</p>
-                        <button class="text-accent text-sm font-semibold" onclick="App.navigateTo('matches', { status: 'live' })">Ver todas</button>
-                    </div>
-                    <div id="liveMatchesList"></div>
-                </div>
-
-                <!-- Partidas agendadas -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="section-title">PRÓXIMAS PARTIDAS</p>
-                        <button class="text-accent text-sm font-semibold" onclick="App.navigateTo('matches', { status: 'scheduled' })">Ver todas</button>
-                    </div>
-                    <div id="featuredMatches">
-                        <div class="matches-skeleton">${Array.from({length:2}).map(()=>'<div class="skeleton-row" style="height:80px;border-radius:12px;margin-bottom:8px"></div>').join('')}</div>
+                <!-- Aposta Casada Banner 2 (abaixo dos botões de serviços) -->
+                <div class="mb-4">
+                    <div class="game-card cursor-pointer" onclick="App.navigateTo('matches')">
+                        <img src="assets/images/jrpix2.png" alt="JRpix" class="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                     </div>
                 </div>
             </div>
@@ -88,8 +69,6 @@ const HomePage = {
      * Initialize home page
      */
     init() {
-        this.loadLiveMatches();
-        this.loadFeaturedMatches();
         this._refreshUserCard();
     },
 
