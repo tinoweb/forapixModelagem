@@ -36,7 +36,12 @@ const HomePage = {
                     </div>
                 </div>
 
-
+                <!-- Aposta Casada Banner 2 -->
+                <div class="mb-4">
+                    <div class="game-card cursor-pointer" onclick="App.navigateTo('matches')">
+                        <img src="assets/images/jrpix2.png" alt="JRpix" class="w-full h-auto rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    </div>
+                </div>
                 <!-- Services Section -->
                 <p class="section-title mb-3">SERVIÇOS</p>
                 <div class="service-grid mb-6">
