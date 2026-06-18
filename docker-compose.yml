@@ -101,9 +101,11 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.minio_api.rule=Host(`s3.jrpix.com`)"
       - "traefik.http.routers.minio_api.entrypoints=web"
+      - "traefik.http.routers.minio_api.service=minio_api"
       - "traefik.http.services.minio_api.loadbalancer.server.port=9000"
       - "traefik.http.routers.minio_console.rule=Host(`s3-console.jrpix.com`)"
       - "traefik.http.routers.minio_console.entrypoints=web"
+      - "traefik.http.routers.minio_console.service=minio_console"
       - "traefik.http.services.minio_console.loadbalancer.server.port=9001"
     networks:
       - forapix_network
