@@ -108,7 +108,9 @@ services:
       - "traefik.http.routers.minio_console.service=minio_console"
       - "traefik.http.services.minio_console.loadbalancer.server.port=9001"
     networks:
-      - forapix_network
+      forapix_network:
+        aliases:
+          - minio
 
 networks:
   forapix_network:
