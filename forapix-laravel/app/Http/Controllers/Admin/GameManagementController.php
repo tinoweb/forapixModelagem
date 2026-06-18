@@ -386,7 +386,23 @@ class GameManagementController extends Controller
             $metadata['stream_url'] = $request->input('stream_url');
         }
         if ($request->hasFile('banner_image')) {
-            $metadata['banner_image'] = $request->file('banner_image')->store('matches/banners', 's3');
+            try {
+                $file = $request->file('banner_image');
+                \Log::info('S3 Upload attempt', [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'file_valid' => $file->isValid(),
+                    'disk_default' => config('filesystems.default'),
+                    's3_endpoint' => config('filesystems.disks.s3.endpoint'),
+                    's3_bucket' => config('filesystems.disks.s3.bucket'),
+                ]);
+                $path = $file->store('matches/banners', 's3');
+                \Log::info('S3 Upload result', ['path' => $path]);
+                $metadata['banner_image'] = $path;
+            } catch (\Exception $e) {
+                \Log::error('S3 Upload FAILED', ['error' => $e->getMessage()]);
+                $metadata['banner_image'] = null;
+            }
         }
         if ($request->has('banner_button_label')) {
             $metadata['banner_button_label'] = $request->input('banner_button_label');
