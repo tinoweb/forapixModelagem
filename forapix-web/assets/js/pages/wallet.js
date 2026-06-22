@@ -9,14 +9,29 @@ const WalletPage = {
     render(params = {}) {
         this.currentTab = params.tab || 'balance';
         const balance = Storage.getBalance();
+        const withdrawable = parseFloat(Storage.getItem('forapix_withdrawable')) || 0;
+        const locked = Math.max(0, balance - withdrawable);
 
         return `
             <div class="page-enter p-4">
                 <!-- Card de saldo -->
                 <div class="wallet-balance-card mb-6">
-                    <p class="wallet-balance-label">Saldo disponível</p>
+                    <p class="wallet-balance-label">Saldo Total</p>
                     <p class="wallet-balance-value">${Utils.formatCurrency(balance, true)}</p>
-                    <div class="wallet-balance-actions">
+                    
+                    <!-- Sub-saldos: disponível para saque e trancado -->
+                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/10 text-left">
+                        <div class="flex-1 border-r border-white/10 pr-4">
+                            <p style="font-size: 11px; color: rgba(255, 255, 255, 0.75); text-transform: uppercase; letter-spacing: 0.5px;">Disponível p/ Saque</p>
+                            <p class="wallet-withdrawable-value" style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 2px;">${Utils.formatCurrency(withdrawable, true)}</p>
+                        </div>
+                        <div class="flex-1 pl-4">
+                            <p style="font-size: 11px; color: rgba(255, 255, 255, 0.75); text-transform: uppercase; letter-spacing: 0.5px;">Saldo Trancado</p>
+                            <p class="wallet-locked-value" style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 2px;">${Utils.formatCurrency(locked, true)}</p>
+                        </div>
+                    </div>
+
+                    <div class="wallet-balance-actions mt-6">
                         <button class="wallet-action-btn deposit" onclick="App.navigateTo('deposit')">
                             <i class="fas fa-plus"></i> Depositar
                         </button>
@@ -57,10 +72,18 @@ const WalletPage = {
             if (res && res.success && res.data) {
                 const fresh        = parseFloat(res.data.balance) || 0;
                 const withdrawable = parseFloat(res.data.withdrawable_balance) || 0;
+                const locked       = Math.max(0, fresh - withdrawable);
                 Storage.setBalance(fresh);
                 Storage.setItem('forapix_withdrawable', withdrawable);
-                const el = document.querySelector('.wallet-balance-value');
-                if (el) el.textContent = Utils.formatCurrency(fresh, true);
+                
+                const elBalance = document.querySelector('.wallet-balance-value');
+                if (elBalance) elBalance.textContent = Utils.formatCurrency(fresh, true);
+                
+                const elWithdrawable = document.querySelector('.wallet-withdrawable-value');
+                if (elWithdrawable) elWithdrawable.textContent = Utils.formatCurrency(withdrawable, true);
+                
+                const elLocked = document.querySelector('.wallet-locked-value');
+                if (elLocked) elLocked.textContent = Utils.formatCurrency(locked, true);
             }
         } catch (_) {}
     },
