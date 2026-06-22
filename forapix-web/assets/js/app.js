@@ -129,12 +129,6 @@ const App = {
     navigateTo(page, params = {}) {
         console.log(`📍 Navegando para: ${page}`, params);
 
-        // Se tentar ir para a home sem estar logado, redireciona para o cadastro (menu)
-        if (page === 'home' && !Storage.isLoggedIn()) {
-            page = 'menu';
-            params = { mode: 'register' };
-        }
-
         const hash = this._buildHash(page, params);
         window.history.pushState({ page, params }, '', hash);
 
@@ -166,12 +160,6 @@ const App = {
             } else {
                 // Fallback: lê o hash atual
                 ({ page, params } = this._parseHash());
-            }
-
-            // Se for home e não estiver logado, redireciona para menu/cadastro
-            if (page === 'home' && !Storage.isLoggedIn()) {
-                page = 'menu';
-                params = { mode: 'register' };
             }
 
             this.currentPage = page;
