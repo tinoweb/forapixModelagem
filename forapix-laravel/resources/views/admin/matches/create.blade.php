@@ -67,20 +67,7 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Odds Empate</label>
-                        <input type="number" step="0.01" min="1.01" name="draw_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="3.00">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Odds Par</label>
-                        <input type="number" step="0.01" min="1.01" name="par_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="1.85">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Odds Ímpar</label>
-                        <input type="number" step="0.01" min="1.01" name="impar_odds" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="1.95">
-                    </div>
-                </div>
+
 
                 <div>
                     <label class="text-sm text-gray-300">Descrição / transmissão</label>
