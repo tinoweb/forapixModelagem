@@ -32,7 +32,14 @@ const App = {
 
         // Determina página inicial pelo hash da URL (deep link / refresh)
         if (!handledReset) {
-            const { page: initialPage, params: initialParams } = this._parseHash();
+            let { page: initialPage, params: initialParams } = this._parseHash();
+
+            // Se não estiver logado e for a home (ou sem hash), redireciona para cadastro (menu com mode register)
+            if (initialPage === 'home' && !Storage.isLoggedIn()) {
+                initialPage = 'menu';
+                initialParams = { mode: 'register' };
+            }
+
             // Garante que o estado inicial está registrado no histórico do browser
             window.history.replaceState(
                 { page: initialPage, params: initialParams },
@@ -40,6 +47,7 @@ const App = {
                 this._buildHash(initialPage, initialParams)
             );
             this.currentPage = initialPage;
+            this.updateNavigation(initialPage);
             this.renderPage(initialPage, initialParams);
         }
         
@@ -121,6 +129,12 @@ const App = {
     navigateTo(page, params = {}) {
         console.log(`📍 Navegando para: ${page}`, params);
 
+        // Se tentar ir para a home sem estar logado, redireciona para o cadastro (menu)
+        if (page === 'home' && !Storage.isLoggedIn()) {
+            page = 'menu';
+            params = { mode: 'register' };
+        }
+
         const hash = this._buildHash(page, params);
         window.history.pushState({ page, params }, '', hash);
 
@@ -153,6 +167,13 @@ const App = {
                 // Fallback: lê o hash atual
                 ({ page, params } = this._parseHash());
             }
+
+            // Se for home e não estiver logado, redireciona para menu/cadastro
+            if (page === 'home' && !Storage.isLoggedIn()) {
+                page = 'menu';
+                params = { mode: 'register' };
+            }
+
             this.currentPage = page;
             this.updateNavigation(page);
             this.updateShellVisibility(page);
@@ -427,7 +448,7 @@ const App = {
     handleUnauthorized() {
         Storage.logout();
         this.updateAuthUI();
-        this.navigateTo('menu');
+        this.navigateTo('menu', { mode: 'login' });
         Components.showToast('Sessão expirada. Faça login novamente.', 'warning');
     },
 

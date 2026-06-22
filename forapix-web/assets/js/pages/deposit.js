@@ -136,7 +136,7 @@ const DepositPage = {
 
         if (!Storage.isLoggedIn()) {
             Components.showToast('Faça login para depositar.', 'warning');
-            App.navigateTo('menu');
+            App.navigateTo('menu', { mode: 'login' });
             return;
         }
 

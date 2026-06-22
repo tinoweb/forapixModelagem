@@ -12,6 +12,10 @@ const ProfilePage = {
         this.currentTab = params.tab || 'profile';
         this.editingProfile = false;
 
+        if (params.mode) {
+            this.authTab = params.mode;
+        }
+
         if (!Storage.isLoggedIn()) {
             return this.renderAuthPage();
         }
