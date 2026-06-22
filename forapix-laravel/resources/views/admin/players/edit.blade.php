@@ -21,35 +21,18 @@
                 @csrf
                 @method('PUT')
 
+                <!-- Campos ocultos para compatibilidade com a validação/banco -->
+                <input type="hidden" name="sport_id" value="{{ $player->sport_id }}">
+                <input type="hidden" name="nationality" value="{{ $player->nationality }}">
+                <input type="hidden" name="rating" value="{{ $player->rating }}">
+                <input type="hidden" name="bio" value="{{ $player->bio }}">
+                @if($player->birth_date)
+                    <input type="hidden" name="birth_date" value="{{ $player->birth_date->format('Y-m-d') }}">
+                @endif
+
                 <div>
                     <label class="text-sm text-gray-300">Nome completo</label>
                     <input type="text" name="name" value="{{ $player->name }}" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Esporte</label>
-                        <select name="sport_id" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
-                            @foreach($sports as $sport)
-                                <option value="{{ $sport->id }}" @selected($sport->id == $player->sport_id)>{{ $sport->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Nacionalidade (ISO)</label>
-                        <input type="text" name="nationality" value="{{ $player->nationality }}" maxlength="3" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="BRA">
-                    </div>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Data de nascimento</label>
-                        <input type="date" name="birth_date" value="{{ optional($player->birth_date)->format('Y-m-d') }}" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Rating</label>
-                        <input type="number" step="0.01" name="rating" value="{{ $player->rating }}" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
-                    </div>
                 </div>
 
                 <div>
@@ -61,11 +44,6 @@
                             <a href="{{ $player->photo }}" class="text-xs text-accent" target="_blank">ver foto atual</a>
                         </div>
                     @endif
-                </div>
-
-                <div>
-                    <label class="text-sm text-gray-300">Bio</label>
-                    <textarea name="bio" rows="4" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">{{ $player->bio }}</textarea>
                 </div>
 
                 <div class="flex gap-3">
