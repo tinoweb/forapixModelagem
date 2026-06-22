@@ -112,13 +112,20 @@ const App = {
     },
 
     /**
-     * Setup profile button
+     * Setup profile button and balance click
      */
     setupProfileButton() {
         const profileBtn = document.getElementById('profileBtn');
         if (profileBtn) {
             profileBtn.addEventListener('click', () => {
                 this.navigateTo('menu');
+            });
+        }
+
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        if (balanceDisplay) {
+            balanceDisplay.addEventListener('click', () => {
+                this.navigateTo('wallet');
             });
         }
     },
