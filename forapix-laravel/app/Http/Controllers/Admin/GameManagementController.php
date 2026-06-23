@@ -397,7 +397,43 @@ class GameManagementController extends Controller
         }
 
         // Handle status changes
-        if ($request->has('status')) {
+        if ($request->filled('status') && $request->status !== $match->status) {
+            $newStatus = $request->status;
+            if ($newStatus === 'finished' && !in_array($match->status, ['finished', 'cancelled'])) {
+                // Determine winner
+                $winnerId = $request->input('winner_player_id') ?? $match->winner_player_id;
+                if (!$winnerId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Para finalizar a partida, você deve selecionar o jogador vencedor.'
+                    ], 422);
+                }
+                
+                $firstPlayerId = $request->input('first_player_id') ?? $match->first_player_id;
+                $secondPlayerId = $request->input('second_player_id') ?? $match->second_player_id;
+                
+                $result = null;
+                if ($winnerId == $firstPlayerId) {
+                    $result = 'first_player';
+                } elseif ($winnerId == $secondPlayerId) {
+                    $result = 'second_player';
+                }
+                
+                if ($result) {
+                    $service = new \App\Services\BetMatchingService();
+                    $service->resolveMatch($match, $result);
+                    $matchData['result'] = $result;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Jogador vencedor selecionado não faz parte da partida.'
+                    ], 422);
+                }
+            } elseif ($newStatus === 'cancelled' && !in_array($match->status, ['finished', 'cancelled'])) {
+                $service = new \App\Services\BetMatchingService();
+                $service->cancelMatch($match, 'Partida cancelada pelo administrador');
+            }
+            
             $this->handleStatusChange($match, $request->status, $matchData);
         }
 
@@ -443,21 +479,19 @@ class GameManagementController extends Controller
     {
         switch ($newStatus) {
             case 'live':
-                if ($match->status === 'scheduled') {
-                    $matchData['actual_start'] = now();
-                }
+                // No actual_start column exists in the database
                 break;
 
             case 'finished':
                 if (in_array($match->status, ['scheduled', 'live'])) {
-                    $matchData['finished_at'] = now();
+                    $matchData['match_end'] = now();
                     // Process bets resolution will be handled by a job
                 }
                 break;
 
             case 'cancelled':
                 if (in_array($match->status, ['scheduled', 'live'])) {
-                    $matchData['cancelled_at'] = now();
+                    $matchData['match_end'] = now();
                     // Cancel and refund bets will be handled by a job
                 }
                 break;
@@ -553,8 +587,8 @@ class GameManagementController extends Controller
             }
 
             $match->update([
-                'status'       => 'cancelled',
-                'cancelled_at' => now(),
+                'status'    => 'cancelled',
+                'match_end' => now(),
             ]);
 
             DB::commit();
@@ -758,7 +792,7 @@ class GameManagementController extends Controller
                 $updated = $matches->update(['status' => 'cancelled']);
                 break;
             case 'cancel':
-                $updated = $matches->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+                $updated = $matches->update(['status' => 'cancelled', 'match_end' => now()]);
                 break;
             case 'feature':
                 $updated = $matches->update(['featured' => true]);

@@ -76,22 +76,48 @@
                 <input type="hidden" name="par_odds" value="{{ $match->par_odds }}">
                 <input type="hidden" name="impar_odds" value="{{ $match->impar_odds }}">
 
-                <div class="grid md:grid-cols-3 gap-4">
+                <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm text-gray-300">Placar Jogador 1</label>
-                        <input type="number" min="0" name="first_player_score" value="{{ $match->first_player_score }}" class="input-admin mt-1">
+                        <label class="text-sm text-gray-300">Status</label>
+                        <select name="status" class="input-admin mt-1">
+                            <option value="scheduled" @selected($match->status == 'scheduled')>Agendado</option>
+                            <option value="live" @selected($match->status == 'live')>Ao Vivo</option>
+                            <option value="finished" @selected($match->status == 'finished')>Finalizado</option>
+                            <option value="cancelled" @selected($match->status == 'cancelled')>Cancelado</option>
+                            <option value="postponed" @selected($match->status == 'postponed')>Adiado</option>
+                        </select>
                     </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Placar Jogador 2</label>
-                        <input type="number" min="0" name="second_player_score" value="{{ $match->second_player_score }}" class="input-admin mt-1">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm text-gray-300">Placar {{ $match->firstPlayer->name ?? 'Jogador 1' }}</label>
+                            <input type="number" min="0" name="first_player_score" value="{{ $match->first_player_score }}" class="input-admin mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-300">Placar {{ $match->secondPlayer->name ?? 'Jogador 2' }}</label>
+                            <input type="number" min="0" name="second_player_score" value="{{ $match->second_player_score }}" class="input-admin mt-1">
+                        </div>
                     </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm text-gray-300">Vencedor</label>
-                        <select name="winner_player_id" class="input-admin mt-1">
-                            <option value="">Nenhum</option>
+                        <select name="winner_player_id" id="editWinner" class="input-admin mt-1">
+                            <option value="">Nenhum / Empate</option>
                             @foreach($players as $player)
                                 @if($player->id == $match->first_player_id || $player->id == $match->second_player_id)
                                     <option value="{{ $player->id }}" @selected($match->winner_player_id == $player->id)>{{ $player->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-300">Perdedor</label>
+                        <select id="editLoser" class="input-admin mt-1">
+                            <option value="">Nenhum / Empate</option>
+                            @foreach($players as $player)
+                                @if($player->id == $match->first_player_id || $player->id == $match->second_player_id)
+                                    <option value="{{ $player->id }}" @selected($match->winner_player_id && $match->winner_player_id != $player->id)>{{ $player->name }}</option>
                                 @endif
                             @endforeach
                         </select>
@@ -267,7 +293,7 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <div class="grid md:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="text-sm text-gray-300">Resultado da partida <span class="text-red-400">*</span></label>
                     <select id="resolveResult" class="input-admin mt-1">
@@ -278,8 +304,16 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-sm text-gray-300">Jogador vencedor (placar)</label>
+                    <label class="text-sm text-gray-300">Jogador vencedor</label>
                     <select id="resolveWinner" class="input-admin mt-1">
+                        <option value="">Nenhum / Não aplicável</option>
+                        <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</option>
+                        <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-300">Jogador derrotado</label>
+                    <select id="resolveLoser" class="input-admin mt-1">
                         <option value="">Nenhum / Não aplicável</option>
                         <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</option>
                         <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</option>
@@ -410,5 +444,90 @@ async function resolveMatch(matchId) {
         await AdminConfirm.show({ title: 'Erro ao encerrar', message: data.message, confirmText: 'Fechar', cancelText: '', variant: 'danger' });
     }
 }
+
+// Synchronize Winner & Loser dropdowns in edit form
+document.addEventListener('DOMContentLoaded', function() {
+    const editWinner = document.getElementById('editWinner');
+    const editLoser = document.getElementById('editLoser');
+
+    if (editWinner && editLoser) {
+        const p1Id = "{{ $match->first_player_id }}";
+        const p2Id = "{{ $match->second_player_id }}";
+
+        editWinner.addEventListener('change', function() {
+            const val = editWinner.value;
+            if (!val) {
+                editLoser.value = "";
+            } else if (val === p1Id) {
+                editLoser.value = p2Id;
+            } else if (val === p2Id) {
+                editLoser.value = p1Id;
+            }
+        });
+
+        editLoser.addEventListener('change', function() {
+            const val = editLoser.value;
+            if (!val) {
+                editWinner.value = "";
+            } else if (val === p1Id) {
+                editWinner.value = p2Id;
+            } else if (val === p2Id) {
+                editWinner.value = p1Id;
+            }
+        });
+    }
+
+    // Synchronize Winner & Loser dropdowns in resolve panel
+    const resolveResult = document.getElementById('resolveResult');
+    const resolveWinner = document.getElementById('resolveWinner');
+    const resolveLoser = document.getElementById('resolveLoser');
+
+    if (resolveResult && resolveWinner && resolveLoser) {
+        const p1Id = "{{ $match->first_player_id }}";
+        const p2Id = "{{ $match->second_player_id }}";
+
+        resolveResult.addEventListener('change', function() {
+            const val = resolveResult.value;
+            if (val === 'first_player') {
+                resolveWinner.value = p1Id;
+                resolveLoser.value = p2Id;
+            } else if (val === 'second_player') {
+                resolveWinner.value = p2Id;
+                resolveLoser.value = p1Id;
+            } else {
+                resolveWinner.value = "";
+                resolveLoser.value = "";
+            }
+        });
+
+        resolveWinner.addEventListener('change', function() {
+            const val = resolveWinner.value;
+            if (!val) {
+                resolveResult.value = "";
+                resolveLoser.value = "";
+            } else if (val === p1Id) {
+                resolveResult.value = 'first_player';
+                resolveLoser.value = p2Id;
+            } else if (val === p2Id) {
+                resolveResult.value = 'second_player';
+                resolveLoser.value = p1Id;
+            }
+        });
+
+        resolveLoser.addEventListener('change', function() {
+            const val = resolveLoser.value;
+            if (!val) {
+                resolveResult.value = "";
+                resolveWinner.value = "";
+            } else if (val === p1Id) {
+                resolveResult.value = 'second_player';
+                resolveWinner.value = p2Id;
+            } else if (val === p2Id) {
+                resolveResult.value = 'first_player';
+                resolveWinner.value = p1Id;
+            }
+        });
+    }
+});
 </script>
 @endpush

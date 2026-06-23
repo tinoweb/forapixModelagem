@@ -88,7 +88,7 @@ class BetManagementController extends Controller
         if ($request->result === 'cancelled') {
             // Devolução total
             $count = $service->cancelMatch($match, 'Partida cancelada pelo administrador');
-            $match->update(['status' => 'cancelled', 'cancelled_at' => now()]);
+            $match->update(['status' => 'cancelled', 'match_end' => now()]);
 
             return response()->json([
                 'success' => true,
