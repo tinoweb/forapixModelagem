@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes()
             ->withoutOverlapping()
             ->runInBackground();
+
+        // Altera partidas agendadas para ao vivo automaticamente quando o horário de início for atingido
+        $schedule->command('matches:start-live')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**
