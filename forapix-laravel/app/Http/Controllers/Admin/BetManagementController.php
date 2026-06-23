@@ -112,8 +112,8 @@ class BetManagementController extends Controller
         $match->update($updates);
 
         $winnerLabel = $request->result === 'first_player'
-            ? ($match->firstPlayer->name ?? 'Jogador 1')
-            : ($match->secondPlayer->name ?? 'Jogador 2');
+            ? ($match->firstPlayer?->name ?? 'Jogador 1')
+            : ($match->secondPlayer?->name ?? 'Jogador 2');
 
         return response()->json([
             'success' => true,

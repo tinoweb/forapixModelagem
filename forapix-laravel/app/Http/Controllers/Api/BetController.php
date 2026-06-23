@@ -109,8 +109,8 @@ class BetController extends Controller
     private function sendBetConfirmationEmail($user, $bet, $match): void
     {
         $betLabels = [
-            'first_player'  => $match->firstPlayer->name ?? 'Jogador 1',
-            'second_player' => $match->secondPlayer->name ?? 'Jogador 2',
+            'first_player'  => $match->firstPlayer?->name ?? 'Jogador 1',
+            'second_player' => $match->secondPlayer?->name ?? 'Jogador 2',
             'draw'          => 'Empate',
             'par'           => 'Par',
             'impar'         => 'Ímpar',
@@ -119,8 +119,8 @@ class BetController extends Controller
         $html = view('emails.bet_confirmed', [
             'userName'     => $user->name,
             'gameName'     => $match->game?->name ?? 'Sinuca',
-            'player1'      => explode(' ', $match->firstPlayer->name ?? 'Jogador 1')[0],
-            'player2'      => explode(' ', $match->secondPlayer->name ?? 'Jogador 2')[0],
+            'player1'      => explode(' ', $match->firstPlayer?->name ?? 'Jogador 1')[0],
+            'player2'      => explode(' ', $match->secondPlayer?->name ?? 'Jogador 2')[0],
             'matchDate'    => optional($match->match_start)->format('d/m/Y H:i') ?? '--',
             'betLabel'     => $betLabels[$bet->bet_type] ?? $bet->bet_type,
             'amount'       => number_format($bet->amount, 2, ',', '.'),
