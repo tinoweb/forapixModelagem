@@ -350,8 +350,8 @@ class BetMatchingService
 
         $bet->user->increment('balance', $totalCredit);
         $bet->user->increment('total_won', $payout);
-        // Todo o valor do prêmio (incluindo stake retornado) fica disponível para saque
-        $bet->user->increment('withdrawable_balance', $payout);
+        // Todo o valor creditado (prêmio + parte não casada) volta/fica disponível para saque
+        $bet->user->increment('withdrawable_balance', $totalCredit);
 
         $bet->update([
             'status'        => 'won',
@@ -394,6 +394,7 @@ class BetMatchingService
     {
         $balanceBefore = (float) $bet->user->balance;
         $bet->user->increment('balance', $amount);
+        $bet->user->increment('withdrawable_balance', $amount);
 
         Transaction::create([
             'user_id'        => $bet->user_id,
@@ -416,16 +417,7 @@ class BetMatchingService
         $balanceBefore = (float) $bet->user->balance;
 
         $bet->user->increment('balance', $amount);
-
-        // Restaurar withdrawable_balance pela quantia consumida ao apostar
-        $betTx = Transaction::where('reference_id', $bet->id)
-            ->where('reference_type', 'bet')
-            ->where('type', 'bet')
-            ->first();
-        $withdrawableConsumed = (float) ($betTx?->metadata['withdrawable_consumed'] ?? 0);
-        if ($withdrawableConsumed > 0) {
-            $bet->user->increment('withdrawable_balance', $withdrawableConsumed);
-        }
+        $bet->user->increment('withdrawable_balance', $amount);
 
         $bet->update([
             'status'               => 'cancelled',

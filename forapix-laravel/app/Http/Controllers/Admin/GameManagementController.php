@@ -574,6 +574,7 @@ class GameManagementController extends Controller
                     'resolved_at'         => now(),
                 ]);
                 $bet->user->increment('balance', $bet->amount);
+                $bet->user->increment('withdrawable_balance', $bet->amount);
                 \App\Models\Transaction::create([
                     'user_id'     => $bet->user_id,
                     'type'        => 'refund',
