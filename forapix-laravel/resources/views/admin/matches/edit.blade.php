@@ -60,14 +60,16 @@
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm text-gray-300">Início da partida</label>
-                        <input type="datetime-local" name="match_start" value="{{ optional($match->match_start)->format('Y-m-d\TH:i') }}" class="input-admin mt-1">
+                        <label class="text-sm text-gray-300">Hora de início do jogo</label>
+                        <input type="datetime-local" name="match_start" id="match_start" value="{{ optional($match->match_start)->format('Y-m-d\TH:i') }}" class="input-admin mt-1">
                     </div>
                     <div>
-                        <label class="text-sm text-gray-300">Limite de apostas</label>
-                        <input type="datetime-local" name="betting_deadline" value="{{ optional($match->betting_deadline)->format('Y-m-d\TH:i') }}" class="input-admin mt-1">
+                        <label class="text-sm text-gray-300">Hora de término do jogo</label>
+                        <input type="datetime-local" name="match_end" value="{{ optional($match->match_end)->format('Y-m-d\TH:i') }}" class="input-admin mt-1">
                     </div>
                 </div>
+                <!-- betting_deadline é preenchido automaticamente com o horário de início -->
+                <input type="hidden" name="betting_deadline" id="betting_deadline">
 
                 <!-- Campos ocultos para compatibilidade com o banco de dados -->
                 <input type="hidden" name="draw_odds" value="{{ $match->draw_odds }}">
@@ -96,15 +98,9 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Link da transmissão (stream)</label>
-                        <input type="url" name="stream_url" value="{{ $meta['stream_url'] ?? '' }}" class="input-admin mt-1" placeholder="https://youtube.com/...">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Fim da partida</label>
-                        <input type="datetime-local" name="match_end" value="{{ optional($match->match_end)->format('Y-m-d\TH:i') }}" class="input-admin mt-1">
-                    </div>
+                <div>
+                    <label class="text-sm text-gray-300">Link da transmissão (stream)</label>
+                    <input type="url" name="stream_url" value="{{ $meta['stream_url'] ?? '' }}" class="input-admin mt-1" placeholder="https://youtube.com/...">
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -323,6 +319,28 @@
 @push('scripts')
 <script>
 const ADMIN_MATCHES_BASE = '{{ rtrim(url('/admin/matches'), '/') }}';
+
+// Sincroniza betting_deadline (hidden) com match_start
+document.addEventListener('DOMContentLoaded', function() {
+    const matchStartInput = document.getElementById('match_start');
+    const bettingDeadlineInput = document.getElementById('betting_deadline');
+
+    function syncDeadline() {
+        if (matchStartInput && bettingDeadlineInput) {
+            bettingDeadlineInput.value = matchStartInput.value;
+        }
+    }
+
+    if (matchStartInput) {
+        matchStartInput.addEventListener('change', syncDeadline);
+        syncDeadline(); // Sync on load
+    }
+
+    const form = document.querySelector('.ajax-form');
+    if (form) {
+        form.addEventListener('submit', syncDeadline);
+    }
+});
 
 async function toggleLiveBetting(matchId) {
     const btn = document.getElementById('toggleLiveBettingBtn');

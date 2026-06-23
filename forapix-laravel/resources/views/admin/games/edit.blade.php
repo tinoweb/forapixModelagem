@@ -38,8 +38,9 @@
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm text-gray-300">Tipo</label>
-                        <select name="type" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
+                        <label class="text-sm text-gray-300">Tipo <span class="text-gray-500 text-xs">(opcional)</span></label>
+                        <select name="type" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
+                            <option value="">Nenhum (padrão: Head to head)</option>
                             @foreach(['head_to_head' => 'Head to head','sinuca' => 'Sinuca','par_impar' => 'Par/Ímpar','casino' => 'Cassino','bingo' => 'Bingo'] as $value => $label)
                                 <option value="{{ $value }}" @selected($game->type === $value)>{{ $label }}</option>
                             @endforeach

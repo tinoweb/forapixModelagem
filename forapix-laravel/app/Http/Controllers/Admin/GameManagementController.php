@@ -71,7 +71,7 @@ class GameManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'sport_id' => 'nullable|exists:sports,id',
-            'type' => 'required|in:head_to_head,casino,bingo,sinuca,par_impar',
+            'type' => 'nullable|in:head_to_head,casino,bingo,sinuca,par_impar',
             'description' => 'nullable|string',
             'min_bet' => 'required|numeric|min:0.01',
             'max_bet' => 'required|numeric|min:0.01',
@@ -92,6 +92,7 @@ class GameManagementController extends Controller
         $gameData['slug'] = Str::slug($request->name);
         $gameData['created_by'] = auth()->id();
         $gameData['status'] = $request->input('status', 'active');
+        $gameData['type'] = $request->input('type') ?: 'head_to_head';
         $gameData['house_edge'] = $request->input('house_edge') / 100;
 
         // Handle image upload
@@ -124,7 +125,7 @@ class GameManagementController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'sport_id' => 'sometimes|nullable|exists:sports,id',
-            'type' => 'sometimes|in:head_to_head,casino,bingo,sinuca,par_impar',
+            'type' => 'sometimes|nullable|in:head_to_head,casino,bingo,sinuca,par_impar',
             'description' => 'sometimes|nullable|string',
             'min_bet' => 'sometimes|numeric|min:0.01',
             'max_bet' => 'sometimes|numeric|min:0.01',
@@ -273,7 +274,7 @@ class GameManagementController extends Controller
             'second_player_id' => 'required|exists:players,id|different:first_player_id',
             'match_start' => 'required|date',
             'match_end' => 'nullable|date|after:match_start',
-            'betting_deadline' => 'required|date|before:match_start',
+            'betting_deadline' => 'nullable|date',
             'first_player_odds' => 'nullable|numeric|min:1.01',
             'second_player_odds' => 'nullable|numeric|min:1.01',
             'draw_odds' => 'nullable|numeric|min:1.01',
@@ -299,6 +300,11 @@ class GameManagementController extends Controller
         $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['created_by'] = auth()->id();
         $matchData['status'] = $request->input('status', 'scheduled');
+
+        // Se betting_deadline não foi informado, usa o horário de início da partida
+        if (empty($matchData['betting_deadline']) && !empty($matchData['match_start'])) {
+            $matchData['betting_deadline'] = $matchData['match_start'];
+        }
 
         // Parse betting options JSON
         if ($request->has('betting_options')) {
@@ -375,6 +381,11 @@ class GameManagementController extends Controller
 
         $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['updated_by'] = auth()->id();
+
+        // Se match_start foi alterado, sincroniza betting_deadline
+        if (!empty($matchData['match_start']) && (empty($matchData['betting_deadline']) || $matchData['betting_deadline'] === '')) {
+            $matchData['betting_deadline'] = $matchData['match_start'];
+        }
 
         // Parse JSON fields
         if ($request->has('result')) {

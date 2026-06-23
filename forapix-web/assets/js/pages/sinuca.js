@@ -262,7 +262,8 @@ const SinucaPage = {
         const modality = match.game?.name        || '--';
         const detail   = match.title             || '--';
         const info     = match.description       || '';
-        const deadline = this.formatDate(match.betting_deadline, 'datetime');
+        const matchStart = this.formatDate(match.match_start, 'datetime');
+        const matchEnd   = this.formatDate(match.match_end, 'datetime');
 
         return `
         <div class="md-card">
@@ -304,12 +305,17 @@ const SinucaPage = {
             <div class="md-item">
                 <div class="md-item-header">
                     <div class="md-item-icon"><i class="fas fa-calendar-days"></i></div>
-                    <span class="md-item-label">PRAZO PARA APOSTAS</span>
+                    <span class="md-item-label">HORA DE INÍCIO DO JOGO</span>
                 </div>
-                <span class="md-item-value">${deadline}</span>
-                <span class="md-status-badge ${canBet ? 'md-status-badge--open' : 'md-status-badge--closed'}">
-                    ${canBet ? 'Aberta' : 'Encerrada'}
-                </span>
+                <span class="md-item-value">${matchStart}</span>
+            </div>
+
+            <div class="md-item">
+                <div class="md-item-header">
+                    <div class="md-item-icon"><i class="fas fa-clock"></i></div>
+                    <span class="md-item-label">HORA DE TÉRMINO DO JOGO</span>
+                </div>
+                <span class="md-item-value">${matchEnd}</span>
             </div>
         </div>`;
     },

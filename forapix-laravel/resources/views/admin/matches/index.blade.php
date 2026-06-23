@@ -152,9 +152,9 @@
                             </div>
                             <p class="text-sm text-gray-400 flex items-center gap-2 mt-3">
                                 <i class="fas fa-calendar"></i>
-                                {{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}
-                                @if($match->betting_deadline)
-                                    · <i class="fas fa-clock"></i> Apostas até {{ optional($match->betting_deadline)->format('d/m H:i') }}
+                                Início: {{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}
+                                @if($match->match_end)
+                                    · <i class="fas fa-clock"></i> Término: {{ optional($match->match_end)->format('d/m/Y H:i') }}
                                 @endif
                             </p>
                             <div class="flex flex-wrap gap-2 text-xs mt-3">

@@ -58,14 +58,16 @@
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-sm text-gray-300">Início da partida</label>
-                        <input type="datetime-local" name="match_start" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
+                        <label class="text-sm text-gray-300">Hora de início do jogo</label>
+                        <input type="datetime-local" name="match_start" id="match_start" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
                     </div>
                     <div>
-                        <label class="text-sm text-gray-300">Limite de apostas</label>
-                        <input type="datetime-local" name="betting_deadline" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
+                        <label class="text-sm text-gray-300">Hora de término do jogo</label>
+                        <input type="datetime-local" name="match_end" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
                     </div>
                 </div>
+                <!-- betting_deadline é preenchido automaticamente com o horário de início -->
+                <input type="hidden" name="betting_deadline" id="betting_deadline">
 
 
 
@@ -74,15 +76,9 @@
                     <textarea name="description" rows="3" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="Detalhes, regras ou link da transmissão"></textarea>
                 </div>
 
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-300">Link da transmissão (stream)</label>
-                        <input type="url" name="stream_url" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="https://youtube.com/...">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-300">Fim da partida (opcional)</label>
-                        <input type="datetime-local" name="match_end" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
-                    </div>
+                <div>
+                    <label class="text-sm text-gray-300">Link da transmissão (stream)</label>
+                    <input type="url" name="stream_url" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="https://youtube.com/...">
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-4">
@@ -111,3 +107,28 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const matchStartInput = document.getElementById('match_start');
+    const bettingDeadlineInput = document.getElementById('betting_deadline');
+
+    function syncDeadline() {
+        if (matchStartInput && bettingDeadlineInput) {
+            bettingDeadlineInput.value = matchStartInput.value;
+        }
+    }
+
+    if (matchStartInput) {
+        matchStartInput.addEventListener('change', syncDeadline);
+    }
+
+    // Sync antes do envio do formulário
+    const form = document.querySelector('.ajax-form');
+    if (form) {
+        form.addEventListener('submit', syncDeadline);
+    }
+});
+</script>
+@endpush
