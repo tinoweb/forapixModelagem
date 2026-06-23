@@ -63,7 +63,7 @@
                     </div>
                     <div>
                         <label class="text-sm text-gray-300">Hora de término do jogo</label>
-                        <input type="datetime-local" name="match_end" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
+                        <input type="datetime-local" name="match_end" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
                     </div>
                 </div>
                 <!-- betting_deadline é preenchido automaticamente com o horário de início -->
