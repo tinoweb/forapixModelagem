@@ -18,12 +18,12 @@
 
             <p class="text-gray-300 mb-6">
                 Tem certeza que deseja excluir a partida
-                <strong class="text-white">{{ $match->title ?? (($match->firstPlayer->name ?? 'Jog. 1') . ' vs ' . ($match->secondPlayer->name ?? 'Jog. 2')) }}</strong>?
+                <strong class="text-white">{{ $match->title ?? (($match->firstPlayer?->name ?? 'Jog. 1') . ' vs ' . ($match->secondPlayer?->name ?? 'Jog. 2')) }}</strong>?
                 Esta ação não poderá ser desfeita.
             </p>
 
             <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 mb-6 space-y-1 text-sm">
-                <div class="flex justify-between"><span class="text-gray-500">Jogo:</span> <span>{{ $match->game->name ?? '---' }}</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Jogo:</span> <span>{{ $match->game?->name ?? '---' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Início:</span> <span>{{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="uppercase">{{ $match->status }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Apostas vinculadas:</span> <span class="{{ $match->bets()->count() > 0 ? 'text-red-300 font-semibold' : '' }}">{{ $match->bets()->count() }}</span></div>

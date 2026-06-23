@@ -100,7 +100,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-2">
                                 <span class="material-icons text-accent-light text-lg">sports</span>
-                                <span class="text-[11px] uppercase tracking-[0.2em] text-gray-500">{{ $match->game->name ?? 'Jogo' }}</span>
+                                <span class="text-[11px] uppercase tracking-[0.2em] text-gray-500">{{ $match->game?->name ?? 'Jogo' }}</span>
                                 <span class="badge {{ $st['class'] }}">{{ $st['label'] }}</span>
                                 @if($match->featured)
                                     <span class="badge badge-warning"><i class="fas fa-star"></i> Destaque</span>
@@ -116,7 +116,7 @@
                                 @endphp
                                 <div class="text-left">
                                     <p class="text-sm text-gray-400">Jogador 1</p>
-                                    <p class="text-lg font-semibold {{ $p1Leading ? 'text-success' : '' }}">{{ explode(' ', $match->firstPlayer->name ?? 'Jog. 1')[0] }}</p>
+                                    <p class="text-lg font-semibold {{ $p1Leading ? 'text-success' : '' }}">{{ explode(' ', $match->firstPlayer?->name ?? 'Jog. 1')[0] }}</p>
                                     <p class="text-accent-light font-semibold">{{ number_format($match->first_player_odds, 2) }}x</p>
                                     <p class="text-xs text-gray-500 mt-1">{{ $player1Percent }}% das apostas</p>
                                 </div>
@@ -145,7 +145,7 @@
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm text-gray-400">Jogador 2</p>
-                                    <p class="text-lg font-semibold {{ $p2Leading ? 'text-success' : '' }}">{{ explode(' ', $match->secondPlayer->name ?? 'Jog. 2')[0] }}</p>
+                                    <p class="text-lg font-semibold {{ $p2Leading ? 'text-success' : '' }}">{{ explode(' ', $match->secondPlayer?->name ?? 'Jog. 2')[0] }}</p>
                                     <p class="text-accent-light font-semibold">{{ number_format($match->second_player_odds, 2) }}x</p>
                                     <p class="text-xs text-gray-500 mt-1">{{ $player2Percent }}% das apostas</p>
                                 </div>
@@ -175,7 +175,7 @@
                         <!-- Botões: grid 2 colunas no mobile, coluna no desktop -->
                         <div class="grid grid-cols-2 gap-2 mt-1 lg:mt-0 lg:flex lg:flex-col lg:items-stretch lg:min-w-[130px]">
                             @if(!in_array($match->status, ['finished','cancelled']))
-                            <button onclick="openScoreModal({{ $match->id }}, '{{ addslashes($match->firstPlayer->name ?? 'Jogador 1') }}', '{{ addslashes($match->secondPlayer->name ?? 'Jogador 2') }}', {{ $match->first_player_score ?? 0 }}, {{ $match->second_player_score ?? 0 }})"
+                            <button onclick="openScoreModal({{ $match->id }}, '{{ addslashes($match->firstPlayer?->name ?? 'Jogador 1') }}', '{{ addslashes($match->secondPlayer?->name ?? 'Jogador 2') }}', {{ $match->first_player_score ?? 0 }}, {{ $match->second_player_score ?? 0 }})"
                                     class="admin-btn-primary col-span-2 justify-center">
                                 <i class="fas fa-hashtag"></i> Placar
                             </button>
@@ -187,7 +187,7 @@
                                 <i class="fas fa-ticket"></i> Apostas
                             </a>
                             @if(!in_array($match->status, ['finished','cancelled']))
-                            <button onclick="openCancelModal({{ $match->id }}, '{{ addslashes($match->title ?? ($match->firstPlayer->name ?? '') . ' vs ' . ($match->secondPlayer->name ?? '')) }}')"
+                            <button onclick="openCancelModal({{ $match->id }}, '{{ addslashes($match->title ?? ($match->firstPlayer?->name ?? '') . ' vs ' . ($match->secondPlayer?->name ?? '')) }}')"
                                     class="admin-btn-warning justify-center">
                                 <i class="fas fa-ban"></i> Cancelar
                             </button>

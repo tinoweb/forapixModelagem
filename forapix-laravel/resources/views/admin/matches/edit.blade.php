@@ -89,11 +89,11 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-sm text-gray-300">Placar {{ $match->firstPlayer->name ?? 'Jogador 1' }}</label>
+                            <label class="text-sm text-gray-300">Placar {{ $match->firstPlayer?->name ?? 'Jogador 1' }}</label>
                             <input type="number" min="0" name="first_player_score" value="{{ $match->first_player_score }}" class="input-admin mt-1">
                         </div>
                         <div>
-                            <label class="text-sm text-gray-300">Placar {{ $match->secondPlayer->name ?? 'Jogador 2' }}</label>
+                            <label class="text-sm text-gray-300">Placar {{ $match->secondPlayer?->name ?? 'Jogador 2' }}</label>
                             <input type="number" min="0" name="second_player_score" value="{{ $match->second_player_score }}" class="input-admin mt-1">
                         </div>
                     </div>
@@ -277,7 +277,7 @@
             @endphp
             <div class="grid grid-cols-3 gap-3 mb-5 text-center text-sm">
                 <div class="bg-[#10162c] rounded-xl p-3">
-                    <p class="text-gray-400 text-xs mb-1">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</p>
+                    <p class="text-gray-400 text-xs mb-1">{{ $match->firstPlayer?->name ?? 'Jogador 1' }}</p>
                     <p class="font-bold text-white">R$ {{ number_format($poolStats['first_player']['total'], 2, ',', '.') }}</p>
                     <p class="text-emerald-400 text-xs">R$ {{ number_format($poolStats['first_player']['matched'], 2, ',', '.') }} casado</p>
                 </div>
@@ -287,7 +287,7 @@
                     <p class="text-yellow-400 text-xs">Casa: R$ {{ number_format($poolStats['house_cut'], 2, ',', '.') }}</p>
                 </div>
                 <div class="bg-[#10162c] rounded-xl p-3">
-                    <p class="text-gray-400 text-xs mb-1">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</p>
+                    <p class="text-gray-400 text-xs mb-1">{{ $match->secondPlayer?->name ?? 'Jogador 2' }}</p>
                     <p class="font-bold text-white">R$ {{ number_format($poolStats['second_player']['total'], 2, ',', '.') }}</p>
                     <p class="text-emerald-400 text-xs">R$ {{ number_format($poolStats['second_player']['matched'], 2, ',', '.') }} casado</p>
                 </div>
@@ -298,8 +298,8 @@
                     <label class="text-sm text-gray-300">Resultado da partida <span class="text-red-400">*</span></label>
                     <select id="resolveResult" class="input-admin mt-1">
                         <option value="">Selecione o resultado</option>
-                        <option value="first_player">🏆 {{ $match->firstPlayer->name ?? 'Jogador 1' }} venceu</option>
-                        <option value="second_player">🏆 {{ $match->secondPlayer->name ?? 'Jogador 2' }} venceu</option>
+                        <option value="first_player">🏆 {{ $match->firstPlayer?->name ?? 'Jogador 1' }} venceu</option>
+                        <option value="second_player">🏆 {{ $match->secondPlayer?->name ?? 'Jogador 2' }} venceu</option>
                         <option value="cancelled">↩ Jogo não concluído — devolver tudo</option>
                     </select>
                 </div>
@@ -307,28 +307,28 @@
                     <label class="text-sm text-gray-300">Jogador vencedor</label>
                     <select id="resolveWinner" class="input-admin mt-1">
                         <option value="">Nenhum / Não aplicável</option>
-                        <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</option>
-                        <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</option>
+                        <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer?->name ?? 'Jogador 1' }}</option>
+                        <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer?->name ?? 'Jogador 2' }}</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-sm text-gray-300">Jogador derrotado</label>
                     <select id="resolveLoser" class="input-admin mt-1">
                         <option value="">Nenhum / Não aplicável</option>
-                        <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer->name ?? 'Jogador 1' }}</option>
-                        <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer->name ?? 'Jogador 2' }}</option>
+                        <option value="{{ $match->first_player_id }}">{{ $match->firstPlayer?->name ?? 'Jogador 1' }}</option>
+                        <option value="{{ $match->second_player_id }}">{{ $match->secondPlayer?->name ?? 'Jogador 2' }}</option>
                     </select>
                 </div>
             </div>
 
             <div class="grid md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="text-sm text-gray-300">Placar {{ $match->firstPlayer->name ?? 'J1' }}</label>
+                    <label class="text-sm text-gray-300">Placar {{ $match->firstPlayer?->name ?? 'J1' }}</label>
                     <input type="number" id="resolveScore1" class="input-admin mt-1" min="0"
                            value="{{ $match->first_player_score ?? 0 }}">
                 </div>
                 <div>
-                    <label class="text-sm text-gray-300">Placar {{ $match->secondPlayer->name ?? 'J2' }}</label>
+                    <label class="text-sm text-gray-300">Placar {{ $match->secondPlayer?->name ?? 'J2' }}</label>
                     <input type="number" id="resolveScore2" class="input-admin mt-1" min="0"
                            value="{{ $match->second_player_score ?? 0 }}">
                 </div>
