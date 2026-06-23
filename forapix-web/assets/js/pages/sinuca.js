@@ -48,8 +48,8 @@ const SinucaPage = {
         const spTotal = stats.second_player?.total || 0;
         const totalPool = fpTotal + spTotal;
         
-        // Se não há apostas, odds iguais (1.0)
-        let fpOdds = 1.0, spOdds = 1.0;
+        // Se não há apostas, odds iguais (2.0 que resulta em 1.80 após a taxa de 10%)
+        let fpOdds = 2.0, spOdds = 2.0;
         if (totalPool > 0) {
             fpOdds = totalPool / fpTotal;
             spOdds = totalPool / spTotal;

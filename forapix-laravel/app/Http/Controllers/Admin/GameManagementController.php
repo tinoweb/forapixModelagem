@@ -301,6 +301,14 @@ class GameManagementController extends Controller
         $matchData['created_by'] = auth()->id();
         $matchData['status'] = $request->input('status', 'scheduled');
 
+        // Garantir que as odds dos jogadores tenham o valor padrão de 1.80 se não forem enviadas
+        if (empty($matchData['first_player_odds'])) {
+            $matchData['first_player_odds'] = 1.80;
+        }
+        if (empty($matchData['second_player_odds'])) {
+            $matchData['second_player_odds'] = 1.80;
+        }
+
         // Se betting_deadline não foi informado, usa o horário de início da partida
         if (empty($matchData['betting_deadline']) && !empty($matchData['match_start'])) {
             $matchData['betting_deadline'] = $matchData['match_start'];
