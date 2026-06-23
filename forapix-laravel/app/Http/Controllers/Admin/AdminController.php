@@ -44,7 +44,7 @@ class AdminController extends Controller
                         'icon' => 'fa-dice',
                         'color' => 'purple',
                         'title' => 'Nova aposta',
-                        'description' => ($bet->user->name ?? 'Usuário') . ' apostou R$ ' . number_format($bet->amount, 2, ',', '.') . ' em ' . ($bet->match->game->name ?? 'partida'),
+                        'description' => ($bet->user->name ?? 'Usuário') . ' apostou R$ ' . number_format($bet->amount, 2, ',', '.') . ' em ' . ($bet->match->game?->name ?? 'partida'),
                         'created_at' => $bet->created_at,
                     ];
                 });
@@ -203,7 +203,7 @@ class AdminController extends Controller
             ->map(function ($bet) {
                 return [
                     'type' => 'bet',
-                    'description' => "{$bet->user->name} apostou R$ {$bet->amount} em {$bet->match->game->name}",
+                    'description' => "{$bet->user->name} apostou R$ {$bet->amount} em " . ($bet->match->game?->name ?? 'partida'),
                     'amount' => $bet->amount,
                     'status' => $bet->status,
                     'created_at' => $bet->created_at,

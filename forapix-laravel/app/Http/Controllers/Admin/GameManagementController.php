@@ -269,7 +269,7 @@ class GameManagementController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:255',
-            'game_id' => 'required|exists:games,id',
+            'game_id' => 'nullable|exists:games,id',
             'first_player_id' => 'required|exists:players,id',
             'second_player_id' => 'required|exists:players,id|different:first_player_id',
             'match_start' => 'required|date',

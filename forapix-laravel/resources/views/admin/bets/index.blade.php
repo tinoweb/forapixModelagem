@@ -136,7 +136,7 @@
                                     vs
                                     {{ $bet->match->secondPlayer->name ?? 'J2' }}
                                 </p>
-                                <p class="text-xs text-gray-500">{{ $bet->match->game->name ?? '' }}</p>
+                                <p class="text-xs text-gray-500">{{ $bet->match->game?->name ?? '' }}</p>
                             </td>
                             <td class="py-3 pr-4">
                                 <span class="px-2 py-1 rounded-lg bg-white/5 text-xs">{{ $typeLabel }}</span>

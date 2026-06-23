@@ -115,7 +115,7 @@
                     <span class="text-gray-500 mx-1">vs</span>
                     {{ $bet->match->secondPlayer->name ?? 'J2' }}
                 </p>
-                <p class="text-xs text-gray-400 mb-3">{{ $bet->match->game->name ?? '' }} · {{ $bet->match->game->sport->name ?? '' }}</p>
+                <p class="text-xs text-gray-400 mb-3">{{ $bet->match->game?->name ?? '' }} · {{ $bet->match->game?->sport?->name ?? '' }}</p>
                 <div class="flex flex-wrap gap-2 text-xs">
                     @php
                         $mStatus = ['scheduled' => ['Agendada','badge-info'], 'live' => ['Ao vivo','badge-success'], 'finished' => ['Encerrada','badge-warning'], 'cancelled' => ['Cancelada','badge-danger']];
