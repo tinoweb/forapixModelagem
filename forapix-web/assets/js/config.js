@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Configuration
+ * JrPix - Configuration
  * Configurações globais do sistema
  */
 

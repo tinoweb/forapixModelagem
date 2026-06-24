@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Home Page
+ * JrPix - Home Page
  * Página inicial baseada na interface de referência
  */
 

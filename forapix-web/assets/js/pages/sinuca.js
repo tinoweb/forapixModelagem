@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Página de partida (Sinuca / Jogos)
+ * JrPix - Página de partida (Sinuca / Jogos)
  * Layout padronizado conforme site de referência
  */
 

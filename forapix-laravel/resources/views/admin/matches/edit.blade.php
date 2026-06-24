@@ -129,10 +129,14 @@
                     <input type="url" name="stream_url" value="{{ $meta['stream_url'] ?? '' }}" class="input-admin mt-1" placeholder="https://youtube.com/...">
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <label class="text-sm text-gray-300 flex items-center gap-3">
-                        <input type="checkbox" name="featured" value="1" class="w-4 h-4 text-accent" @checked($match->featured)>
+                <div class="flex flex-col gap-3">
+                    <label class="text-sm text-gray-300 flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="featured" value="1" class="w-4 h-4 text-accent rounded border-white/10 bg-white/5" @checked($match->featured)>
                         Destacar partida na home
+                    </label>
+                    <label class="text-sm text-gray-300 flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="betting_locked" value="1" class="w-4 h-4 text-accent rounded border-white/10 bg-white/5" @checked($match->betting_locked)>
+                        <span class="text-yellow-400 font-medium">Trancar Apostas (bloqueia novos palpites e impede cancelamentos pelos usuários)</span>
                     </label>
                 </div>
 

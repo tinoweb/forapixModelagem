@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Página de Depósito
+ * JrPix - Página de Depósito
  * Integração real com VeoPag (PIX)
  */
 

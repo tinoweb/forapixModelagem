@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Página de Perfil e Configurações
+ * JrPix - Página de Perfil e Configurações
  * Gerenciamento de perfil do usuário e configurações do app
  */
 

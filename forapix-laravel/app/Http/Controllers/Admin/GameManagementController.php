@@ -287,7 +287,8 @@ class GameManagementController extends Controller
             'stream_url' => 'nullable|url',
             'banner_image' => 'nullable|image|max:4096',
             'banner_button_label' => 'nullable|string|max:40',
-            'banner_button_link' => 'nullable|url'
+            'banner_button_link' => 'nullable|url',
+            'betting_locked' => 'nullable|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -300,6 +301,8 @@ class GameManagementController extends Controller
         $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['created_by'] = auth()->id();
         $matchData['status'] = $request->input('status', 'scheduled');
+        $matchData['featured'] = $request->has('featured');
+        $matchData['betting_locked'] = $request->has('betting_locked');
 
         // Garantir que as odds dos jogadores tenham o valor padrão de 1.80 se não forem enviadas
         if (empty($matchData['first_player_odds'])) {
@@ -377,7 +380,8 @@ class GameManagementController extends Controller
             'stream_url' => 'sometimes|nullable|url',
             'banner_image' => 'sometimes|nullable|image|max:4096',
             'banner_button_label' => 'sometimes|nullable|string|max:40',
-            'banner_button_link' => 'sometimes|nullable|url'
+            'banner_button_link' => 'sometimes|nullable|url',
+            'betting_locked' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -389,6 +393,8 @@ class GameManagementController extends Controller
 
         $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
         $matchData['updated_by'] = auth()->id();
+        $matchData['featured'] = $request->has('featured');
+        $matchData['betting_locked'] = $request->has('betting_locked');
 
         // Se match_start foi alterado, sincroniza betting_deadline
         if (!empty($matchData['match_start']) && (empty($matchData['betting_deadline']) || $matchData['betting_deadline'] === '')) {
@@ -557,49 +563,62 @@ class GameManagementController extends Controller
     }
 
     /**
+     * Helper to cancel match and refund all pending bets
+     */
+    private function cancelAndRefundMatch(GameMatch $match, string $reason): int
+    {
+        $pendingBets = $match->bets()->where('status', 'pending')->with('user')->get();
+        $refundedCount = 0;
+
+        foreach ($pendingBets as $bet) {
+            $bet->update([
+                'status'              => 'cancelled',
+                'cancellation_reason' => $reason,
+                'resolved_at'         => now(),
+            ]);
+            $bet->user->increment('balance', $bet->amount);
+            $bet->user->increment('withdrawable_balance', $bet->amount);
+            \App\Models\Transaction::create([
+                'user_id'     => $bet->user_id,
+                'type'        => 'refund',
+                'amount'      => $bet->amount,
+                'net_amount'  => $bet->amount,
+                'status'      => 'completed',
+                'description' => "Reembolso — partida #{$match->id} cancelada: {$reason}",
+                'reference'   => $bet->bet_id ?? "bet-{$bet->id}",
+            ]);
+            $refundedCount++;
+        }
+
+        $match->update([
+            'status'    => 'cancelled',
+            'match_end' => now(),
+        ]);
+
+        return $refundedCount;
+    }
+
+    /**
      * Cancel match and refund all pending bets
      */
     public function cancelMatch(Request $request, GameMatch $match)
     {
+        $hasPendingBets = $match->bets()->where('status', 'pending')->exists();
+
         if (in_array($match->status, ['finished', 'cancelled'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Esta partida não pode ser cancelada (já encerrada ou cancelada).'
-            ], 422);
+            if ($match->status === 'finished' || !$hasPendingBets) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta partida não pode ser cancelada (já encerrada ou cancelada sem apostas pendentes).'
+                ], 422);
+            }
         }
 
         $reason = $request->input('reason', 'Partida cancelada pelo administrador');
 
         DB::beginTransaction();
         try {
-            $pendingBets = $match->bets()->where('status', 'pending')->with('user')->get();
-            $refundedCount = 0;
-
-            foreach ($pendingBets as $bet) {
-                $bet->update([
-                    'status'              => 'cancelled',
-                    'cancellation_reason' => $reason,
-                    'resolved_at'         => now(),
-                ]);
-                $bet->user->increment('balance', $bet->amount);
-                $bet->user->increment('withdrawable_balance', $bet->amount);
-                \App\Models\Transaction::create([
-                    'user_id'     => $bet->user_id,
-                    'type'        => 'refund',
-                    'amount'      => $bet->amount,
-                    'net_amount'  => $bet->amount,
-                    'status'      => 'completed',
-                    'description' => "Reembolso — partida #{$match->id} cancelada: {$reason}",
-                    'reference'   => $bet->bet_id ?? "bet-{$bet->id}",
-                ]);
-                $refundedCount++;
-            }
-
-            $match->update([
-                'status'    => 'cancelled',
-                'match_end' => now(),
-            ]);
-
+            $refundedCount = $this->cancelAndRefundMatch($match, $reason);
             DB::commit();
 
             return response()->json([
@@ -622,6 +641,21 @@ class GameManagementController extends Controller
      */
     public function deleteMatch(GameMatch $match)
     {
+        // Se a partida estiver cancelada e ainda tiver apostas pendentes, cancela/reembolsa automaticamente antes de excluir
+        if ($match->status === 'cancelled') {
+            DB::beginTransaction();
+            try {
+                $this->cancelAndRefundMatch($match, 'Partida excluída pelo administrador');
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao reembolsar apostas pendentes antes da exclusão: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+
         // Bloqueia exclusão se houver apostas PENDENTES, GANHAS ou PERDIDAS
         // Apostas canceladas (dinheiro já devolvido) NÃO bloqueiam a exclusão
         $activeBetsCount = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count();
@@ -799,10 +833,22 @@ class GameManagementController extends Controller
                 $updated = $matches->update(['status' => 'scheduled']);
                 break;
             case 'deactivate':
-                $updated = $matches->update(['status' => 'cancelled']);
-                break;
             case 'cancel':
-                $updated = $matches->update(['status' => 'cancelled', 'match_end' => now()]);
+                DB::beginTransaction();
+                try {
+                    $matchesToCancel = $matches->get();
+                    foreach ($matchesToCancel as $m) {
+                        $this->cancelAndRefundMatch($m, 'Cancelamento em lote pelo administrador');
+                        $updated++;
+                    }
+                    DB::commit();
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erro ao processar cancelamento em lote: ' . $e->getMessage()
+                    ], 500);
+                }
                 break;
             case 'feature':
                 $updated = $matches->update(['featured' => true]);

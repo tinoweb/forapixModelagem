@@ -1,14 +1,14 @@
 <?php
 /**
- * Script de Diagnóstico - ForaPix Laravel
- * Acesse: https://apostacasada.net/api/diagnose.php
+ * Script de Diagnóstico - JrPix Laravel
+ * Acesse: https://jrpix.com/api/diagnose.php
  */
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>🔍 Diagnóstico ForaPix - Laravel</h1>";
+echo "<h1>🔍 Diagnóstico JrPix - Laravel</h1>";
 echo "<pre>";
 
 // 1. Verificar estrutura de pastas

@@ -42,6 +42,7 @@ class GameMatch extends Model
         'live_betting_open',
         'live_betting_opened_at',
         'live_betting_closed_at',
+        'betting_locked',
     ];
 
     protected $casts = [
@@ -59,6 +60,7 @@ class GameMatch extends Model
         'live_betting_open' => 'boolean',
         'live_betting_opened_at' => 'datetime',
         'live_betting_closed_at' => 'datetime',
+        'betting_locked' => 'boolean',
     ];
 
     protected $appends = [
@@ -172,6 +174,10 @@ class GameMatch extends Model
      */
     public function isBettingOpen(): bool
     {
+        if ($this->betting_locked) {
+            return false;
+        }
+
         if (in_array($this->status, ['finished', 'cancelled'])) {
             return false;
         }

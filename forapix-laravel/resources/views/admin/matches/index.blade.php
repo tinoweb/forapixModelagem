@@ -105,6 +105,9 @@
                                 @if($match->featured)
                                     <span class="badge badge-warning"><i class="fas fa-star"></i> Destaque</span>
                                 @endif
+                                @if($match->betting_locked)
+                                    <span class="badge badge-danger"><i class="fas fa-lock mr-1"></i> Trancada</span>
+                                @endif
                             </div>
                             <div class="flex items-center justify-between gap-4 mt-3">
                                 @php

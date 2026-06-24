@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Página de Carteira
+ * JrPix - Página de Carteira
  * Gerenciamento de saldo, transações, depósito e saque
  */
 
@@ -333,9 +333,13 @@ const WalletPage = {
                 <label class="input-label">Chave PIX</label>
                 <input type="text" id="withdrawPixKey" class="input-field" placeholder="CPF, email, telefone ou chave aleatória" value="${user.pix_key || ''}">
             </div>
-            <div class="input-group mb-6">
+            <div class="input-group mb-4">
                 <label class="input-label">CPF do titular da chave <span style="color:#6b7280;font-size:11px">(apenas números)</span></label>
                 <input type="text" id="withdrawDocument" class="input-field" placeholder="00000000000" maxlength="14" value="${user.document || ''}">
+            </div>
+            <div class="flex items-center gap-2 mb-6 cursor-pointer">
+                <input type="checkbox" id="withdrawSavePix" class="w-4 h-4 text-primary rounded border-white/10 bg-white/5 cursor-pointer" style="accent-color: #22c55e;" checked>
+                <label for="withdrawSavePix" class="text-xs text-gray-400 cursor-pointer select-none">Salvar dados de PIX no meu perfil para futuros saques</label>
             </div>
             <div class="flex gap-3">
                 <button class="btn btn-secondary flex-1" onclick="Components.closeModal()">Cancelar</button>
@@ -351,6 +355,7 @@ const WalletPage = {
         const amount  = parseFloat(document.getElementById('withdrawAmount')?.value);
         const pixKey  = document.getElementById('withdrawPixKey')?.value;
         const cpfDoc  = (document.getElementById('withdrawDocument')?.value || '').replace(/\D/g, '');
+        const savePix = document.getElementById('withdrawSavePix')?.checked;
 
         if (!amount || amount < 10) {
             Components.showToast('Valor mínimo de saque: R$ 10,00', 'warning');
@@ -371,6 +376,26 @@ const WalletPage = {
 
             if (result.success) {
                 Components.showToast(result.message || 'Saque solicitado com sucesso!', 'success');
+                
+                // Salvar dados de PIX e CPF no perfil se o checkbox estiver marcado
+                if (savePix) {
+                    try {
+                        const user = Storage.getUser() || {};
+                        const profileRes = await API.updateProfile({
+                            name: user.name,
+                            email: user.email,
+                            phone: user.phone || '',
+                            pix_key: pixKey,
+                            document: cpfDoc
+                        });
+                        if (profileRes && profileRes.success) {
+                            Storage.setUser({ ...user, ...profileRes.data });
+                        }
+                    } catch (err) {
+                        console.error('Erro ao atualizar chave PIX no perfil:', err);
+                    }
+                }
+
                 await this._refreshBalanceCard();
                 App.updateBalance();
                 this.loadTransactions();

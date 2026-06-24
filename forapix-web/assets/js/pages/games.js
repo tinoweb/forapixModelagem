@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Página de Jogos
+ * JrPix - Página de Jogos
  * Listagem de jogos disponíveis com filtros por esporte
  */
 

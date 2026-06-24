@@ -92,9 +92,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-sm text-gray-300">Link do botão</label>
-                    <input type="url" name="banner_button_link" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="https://">
+                <div class="flex flex-col gap-3 py-2">
+                    <label class="text-sm text-gray-300 flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="featured" value="1" class="w-4 h-4 text-accent rounded border-white/10 bg-white/5">
+                        Destacar partida na home
+                    </label>
+                    <label class="text-sm text-gray-300 flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="betting_locked" value="1" class="w-4 h-4 text-accent rounded border-white/10 bg-white/5">
+                        <span class="text-yellow-400 font-medium">Trancar Apostas (bloqueia novos palpites e impede cancelamentos pelos usuários)</span>
+                    </label>
                 </div>
 
                 <div class="flex gap-3">

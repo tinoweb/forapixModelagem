@@ -16,8 +16,8 @@ class AdminUserSeeder extends Seeder
         // Create admin user
         User::create([
             'name' => 'Administrador',
-            'email' => env('FORAPIX_ADMIN_EMAIL', 'admin@forapix.com'),
-            'password' => Hash::make(env('FORAPIX_ADMIN_PASSWORD', 'admin123')),
+            'email' => env('JRPIX_ADMIN_EMAIL', env('FORAPIX_ADMIN_EMAIL', 'admin@jrpix.com')),
+            'password' => Hash::make(env('JRPIX_ADMIN_PASSWORD', env('FORAPIX_ADMIN_PASSWORD', 'admin123'))),
             'phone' => '+55 11 99999-9999',
             'balance' => 0.00,
             'is_admin' => true,

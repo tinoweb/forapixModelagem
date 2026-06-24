@@ -165,6 +165,9 @@ class Bet extends Model
         if (!$this->isPending()) return false;
         if (!$this->match) return false;
 
+        // Se a partida tiver as apostas trancadas pelo administrador -> bloqueado
+        if ($this->match->betting_locked) return false;
+
         // Já foi casada (mesmo que parcialmente) → bloqueado
         if ((float) $this->matched_amount > 0) return false;
 

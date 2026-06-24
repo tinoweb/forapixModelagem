@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Utility Functions
+ * JrPix - Utility Functions
  * Funções utilitárias do sistema
  */
 

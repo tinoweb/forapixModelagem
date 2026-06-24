@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - Storage Service
+ * JrPix - Storage Service
  * Gerenciamento de dados no localStorage
  */
 

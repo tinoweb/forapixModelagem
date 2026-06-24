@@ -16,7 +16,7 @@ use App\Http\Controllers\Admin\SettingsController;
 | Admin Routes
 |--------------------------------------------------------------------------
 |
-| Rotas para o painel administrativo do ForaPix
+| Rotas para o painel administrativo do JrPix
 |
 */
 

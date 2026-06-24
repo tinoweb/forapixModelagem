@@ -106,7 +106,7 @@ Route::post('/webhooks/debug', [WebhookDebugController::class, 'capture'])
 Route::get('/test', function () {
     return response()->json([
         'success' => true,
-        'message' => 'ForaPix API funcionando!',
+        'message' => 'JrPix API funcionando!',
         'timestamp' => now(),
         'version' => '1.0.0'
     ]);

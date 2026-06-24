@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - API Service
+ * JrPix - API Service
  * Serviço para comunicação com a API Laravel
  */
 

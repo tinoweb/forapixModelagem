@@ -1,5 +1,5 @@
 /**
- * ApostaCasada - UI Components
+ * JrPix - UI Components
  * Componentes reutilizáveis da interface
  */
 

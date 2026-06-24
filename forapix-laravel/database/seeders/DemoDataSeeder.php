@@ -266,7 +266,7 @@ class DemoDataSeeder extends Seeder
 
         // Criar usuário de teste
         User::firstOrCreate(
-            ['email' => 'demo@forapix.com'],
+            ['email' => 'demo@jrpix.com'],
             [
                 'name' => 'Usuário Demo',
                 'password' => Hash::make('password'),
@@ -276,6 +276,6 @@ class DemoDataSeeder extends Seeder
         );
 
         $this->command->info('✅ Dados de demonstração criados com sucesso!');
-        $this->command->info('📧 Usuário demo: demo@forapix.com / password');
+        $this->command->info('📧 Usuário demo: demo@jrpix.com / password');
     }
 }
