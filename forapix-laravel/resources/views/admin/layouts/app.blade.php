@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0b0f1d">
-    <title>@yield('title', 'ForaPix Admin')</title>
+    <title>@yield('title', 'JrPix Admin')</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] text-gray-400 uppercase tracking-[0.2em]">Painel Admin</p>
-                    <p class="text-xl font-bold tracking-tight leading-none">ForaPix</p>
+                    <p class="text-xl font-bold tracking-tight leading-none">JrPix</p>
                 </div>
             </div>
             <button onclick="closeSidebar()" class="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white">
@@ -158,7 +158,7 @@
                 </button>
                 <div class="min-w-0">
                     <p class="text-[10px] uppercase text-gray-500 tracking-[0.3em] hidden sm:block truncate">@yield('breadcrumb', 'Administração')</p>
-                    <h1 class="text-base lg:text-xl font-semibold tracking-tight truncate">@yield('title', 'ForaPix Admin')</h1>
+                    <h1 class="text-base lg:text-xl font-semibold tracking-tight truncate">@yield('title', 'JrPix Admin')</h1>
                 </div>
             </div>
 

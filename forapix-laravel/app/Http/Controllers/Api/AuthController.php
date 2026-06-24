@@ -49,7 +49,7 @@ class AuthController extends Controller
         $user->updateLoginInfo($request->ip());
 
         // Create token
-        $token = $user->createToken('ForaPix Mobile')->plainTextToken;
+        $token = $user->createToken('JrPix Mobile')->plainTextToken;
 
         return response()->json([
             'success' => true,
@@ -102,7 +102,7 @@ class AuthController extends Controller
         $user->updateLoginInfo($request->ip());
 
         // Create token
-        $token = $user->createToken('ForaPix Mobile')->plainTextToken;
+        $token = $user->createToken('JrPix Mobile')->plainTextToken;
 
         return response()->json([
             'success' => true,

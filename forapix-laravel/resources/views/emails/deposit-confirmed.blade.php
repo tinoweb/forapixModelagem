@@ -40,8 +40,8 @@
     <a href="{{ config('app.url') }}" class="cta">Ir para minha carteira →</a>
   </div>
   <div class="footer">
-    <p>ForaPix — Apostas Esportivas &bull; Não responda este e-mail.</p>
-    <p>Problemas? Acesse <a href="{{ config('app.url') }}" style="color:#8b5cf6;">apostacasada.net</a></p>
+    <p>JrPix — Apostas Esportivas &bull; Não responda este e-mail.</p>
+    <p>Problemas? Acesse <a href="{{ config('app.url') }}" style="color:#8b5cf6;">jrpix.com</a></p>
   </div>
 </div>
 </body>

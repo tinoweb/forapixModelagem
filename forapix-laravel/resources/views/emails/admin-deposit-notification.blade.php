@@ -37,7 +37,7 @@
     <div class="info-row"><span class="k">Método</span><span class="v">PIX (VeoPag)</span></div>
     <a href="{{ config('app.url') }}/admin" class="cta">Abrir painel administrativo →</a>
   </div>
-  <div class="footer">ForaPix Admin — Notificação automática</div>
+  <div class="footer">JrPix Admin — Notificação automática</div>
 </div>
 </body>
 </html>

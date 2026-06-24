@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForaPix - Login Admin</title>
+    <title>JrPix - Login Admin</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -99,7 +99,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <h1>⚡ FORAPIX</h1>
+            <h1>⚡ JRPIX</h1>
             <p>Painel Administrativo</p>
         </div>
         
@@ -121,7 +121,7 @@
                 
                 <div class="form-group">
                     <label for="email">📧 Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', 'admin@forapix.com') }}" required>
+                    <input type="email" id="email" name="email" value="{{ old('email', 'admin@jrpix.com') }}" required>
                 </div>
                 
                 <div class="form-group">
@@ -145,7 +145,7 @@
                 <p>🔐 Acesso restrito para administradores</p>
                 <p style="margin-top: 10px;">
                     <strong>Credenciais padrão:</strong><br>
-                    Email: admin@forapix.com<br>
+                    Email: admin@jrpix.com<br>
                     Senha: Admin@2024!
                 </p>
             </div>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ForaPix - Login Administrativo</title>
+    <title>JrPix - Login Administrativo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -28,7 +28,7 @@
         <div class="text-center mb-8">
             <div class="inline-flex items-center gap-2 mb-4">
                 <i class="fas fa-bolt text-accent text-3xl"></i>
-                <span class="text-3xl font-bold text-white">FORAPIX</span>
+                <span class="text-3xl font-bold text-white">JRPIX</span>
             </div>
             <h1 class="text-xl text-gray-400">Painel Administrativo</h1>
         </div>
@@ -63,7 +63,7 @@
                            name="email" 
                            value="{{ old('email') }}"
                            class="w-full px-4 py-3 bg-secondary border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
-                           placeholder="admin@forapix.com"
+                           placeholder="admin@jrpix.com"
                            required>
                     @error('email')
                         <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
@@ -133,7 +133,7 @@
         <!-- Footer -->
         <div class="text-center mt-8">
             <p class="text-gray-500 text-sm">
-                © {{ date('Y') }} ForaPix. Todos os direitos reservados.
+                © {{ date('Y') }} JrPix. Todos os direitos reservados.
             </p>
         </div>
     </div>

@@ -107,7 +107,7 @@ class WalletController extends Controller
         }
 
         // external_id baseado no user + timestamp (idempotente)
-        $externalId  = 'fp-' . $user->id . '-' . time();
+        $externalId  = 'jr-' . $user->id . '-' . time();
         $callbackUrl = rtrim(config('app.url'), '/') . '/webhooks/deposit';
 
         try {
@@ -396,8 +396,8 @@ class WalletController extends Controller
      */
     private function generatePixCode(float $amount, $user): string
     {
-        $pixKey = config('services.pix.key', 'forapix@pix.com.br');
-        $merchantName = 'FORAPIX';
+        $pixKey = config('services.pix.key', 'jrpix@pix.com.br');
+        $merchantName = 'JRPIX';
         $merchantCity = 'SAO PAULO';
         $txid = 'DEP' . strtoupper(substr(md5($user->id . time()), 0, 8));
 

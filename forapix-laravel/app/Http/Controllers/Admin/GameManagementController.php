@@ -532,14 +532,14 @@ class GameManagementController extends Controller
             'odds'         => '1,75',
             'potentialWin' => '87,50',
             'betCode'      => 'BETTEST01',
-            'appUrl'       => config('app.url', 'https://forapix.com'),
+            'appUrl'       => config('app.url', 'https://jrpix.com'),
         ])->render();
 
         $resend = new \App\Services\ResendService();
         $sent = $resend->send(
             $admin->email,
             $admin->name ?? 'Admin',
-            '🧪 Teste de email — ForaPix',
+            '🧪 Teste de email — JrPix',
             $html
         );
 

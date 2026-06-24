@@ -139,16 +139,16 @@ class DepositWebhookController extends Controller
         $this->resend->send(
             $user->email,
             $user->name,
-            "✅ Depósito de {$formattedAmount} confirmado — ForaPix",
+            "✅ Depósito de {$formattedAmount} confirmado — JrPix",
             $userHtml
         );
 
         // E-mail para o admin
-        $adminEmail = config('services.admin.email', env('ADMIN_EMAIL', 'admin@apostacasada.net'));
+        $adminEmail = config('services.admin.email', env('ADMIN_EMAIL', 'admin@jrpix.com'));
         $adminHtml  = view('emails.admin-deposit-notification', compact('user', 'amount', 'formattedAmount', 'transactionId', 'date'))->render();
         $this->resend->send(
             $adminEmail,
-            'Admin ForaPix',
+            'Admin JrPix',
             "💰 Novo depósito: {$formattedAmount} — {$user->name}",
             $adminHtml
         );
