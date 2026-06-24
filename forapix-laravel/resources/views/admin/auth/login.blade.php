@@ -63,7 +63,7 @@
                            name="email" 
                            value="{{ old('email') }}"
                            class="w-full px-4 py-3 bg-secondary border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition"
-                           placeholder="admin@jrpix.com"
+                           placeholder="Digite seu e-mail"
                            required>
                     @error('email')
                         <p class="text-red-400 text-sm mt-2">{{ $message }}</p>

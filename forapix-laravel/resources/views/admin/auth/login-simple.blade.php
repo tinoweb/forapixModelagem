@@ -121,12 +121,12 @@
                 
                 <div class="form-group">
                     <label for="email">📧 Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', 'admin@jrpix.com') }}" required>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="Seu email" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">🔒 Senha</label>
-                    <input type="password" id="password" name="password" placeholder="Admin@2024!" required>
+                    <input type="password" id="password" name="password" placeholder="Sua senha" required>
                 </div>
                 
                 <div class="form-group">
@@ -143,11 +143,6 @@
             
             <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #9ca3af;">
                 <p>🔐 Acesso restrito para administradores</p>
-                <p style="margin-top: 10px;">
-                    <strong>Credenciais padrão:</strong><br>
-                    Email: admin@jrpix.com<br>
-                    Senha: Admin@2024!
-                </p>
             </div>
         </div>
     </div>
