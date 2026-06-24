@@ -26,13 +26,15 @@
                 <div class="flex justify-between"><span class="text-gray-500">Jogo:</span> <span>{{ $match->game?->name ?? '---' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Início:</span> <span>{{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="uppercase">{{ $match->status }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Apostas vinculadas:</span> <span class="{{ $match->bets()->count() > 0 ? 'text-red-300 font-semibold' : '' }}">{{ $match->bets()->count() }}</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Apostas ativas:</span> <span class="{{ $match->bets()->whereIn('status',['pending','won','lost'])->count() > 0 ? 'text-red-300 font-semibold' : 'text-green-300' }}">{{ $match->bets()->whereIn('status',['pending','won','lost'])->count() }} ({{ $match->bets()->count() }} total)</span></div>
             </div>
 
-            @if($match->bets()->count() > 0)
+            @php $activeBets = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count(); @endphp
+
+            @if($activeBets > 0)
                 <div class="bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 rounded-2xl p-4 mb-6 text-sm">
                     <i class="fas fa-circle-info mr-2"></i>
-                    Esta partida possui apostas vinculadas e <strong>não poderá ser excluída</strong>. Cancele a partida em vez disso.
+                    Esta partida possui <strong>{{ $activeBets }} aposta(s) ativa(s)</strong> e <strong>não poderá ser excluída</strong>. Cancele a partida primeiro para devolver os valores aos apostadores.
                 </div>
             @endif
 
@@ -42,7 +44,8 @@
                 <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost flex-1 justify-center">
                     <i class="fas fa-arrow-left"></i> Cancelar
                 </a>
-                <button type="submit" class="admin-btn-danger flex-1 justify-center" @disabled($match->bets()->count() > 0)>
+                @php $activeBets2 = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count(); @endphp
+                <button type="submit" class="admin-btn-danger flex-1 justify-center" @disabled($activeBets2 > 0)>
                     <i class="fas fa-trash"></i> Excluir definitivamente
                 </button>
             </form>

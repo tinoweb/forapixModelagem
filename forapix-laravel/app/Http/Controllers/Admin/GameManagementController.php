@@ -622,13 +622,14 @@ class GameManagementController extends Controller
      */
     public function deleteMatch(GameMatch $match)
     {
-        // Check if match has bets
-        $betsCount = $match->bets()->count();
-        
-        if ($betsCount > 0) {
+        // Bloqueia exclusão se houver apostas PENDENTES, GANHAS ou PERDIDAS
+        // Apostas canceladas (dinheiro já devolvido) NÃO bloqueiam a exclusão
+        $activeBetsCount = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count();
+
+        if ($activeBetsCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir partida com apostas'
+                'message' => 'Não é possível excluir partida com apostas ativas (pendentes ou já processadas). Cancele a partida primeiro para devolver os valores.'
             ], 400);
         }
 
