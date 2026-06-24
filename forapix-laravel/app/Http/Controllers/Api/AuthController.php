@@ -148,6 +148,8 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'document' => $user->document,
+                'pix_key' => $user->pix_key,
                 'birth_date' => $user->birth_date,
                 'balance' => $user->balance,
                 'total_deposited' => $user->total_deposited,
@@ -160,6 +162,47 @@ class AuthController extends Controller
                 'created_at' => $user->created_at,
             ],
             'message' => 'Perfil carregado com sucesso'
+        ]);
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone'    => 'nullable|string|max:20',
+            'document' => 'nullable|string|max:14',
+            'pix_key'  => 'nullable|string|max:255',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'document' => $user->document,
+                'pix_key' => $user->pix_key,
+                'birth_date' => $user->birth_date,
+                'balance' => $user->balance,
+                'total_deposited' => $user->total_deposited,
+                'total_withdrawn' => $user->total_withdrawn,
+                'total_bet' => $user->total_bet,
+                'total_won' => $user->total_won,
+                'profit_loss' => $user->profit_loss,
+                'win_rate' => $user->win_rate,
+                'status' => $user->status,
+                'created_at' => $user->created_at,
+            ],
+            'message' => 'Perfil atualizado com sucesso!'
         ]);
     }
 }

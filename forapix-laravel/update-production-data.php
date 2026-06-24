@@ -96,7 +96,7 @@ if (is_dir($storagePath)) {
     $count = 0;
     foreach ($iterator as $file) {
         if ($count < 20) {
-            echo $file->getPathname() . " (" . round($file->getSize()/1024, 2) . " KB)\n";
+            echo $file->getPathname() . " (" . round($file->getSize() / 1024, 2) . " KB)\n";
         }
         $count++;
     }
@@ -109,7 +109,8 @@ echo "\n=== FIM ===\n";
 echo "</pre>";
 echo "<p style='color:red'><b>DELETE ESTE ARQUIVO APÓS USAR!</b></p>";
 
-function copy_dir($src, $dst) {
+function copy_dir($src, $dst)
+{
     $dir = opendir($src);
     @mkdir($dst);
     while (($file = readdir($dir)) !== false) {

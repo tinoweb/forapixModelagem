@@ -79,6 +79,13 @@ const API = {
         return await this.request('/auth/profile');
     },
 
+    async updateProfile(profileData) {
+        return await this.request('/auth/profile', {
+            method: 'PUT',
+            body: JSON.stringify(profileData)
+        });
+    },
+
     async forgotPassword(email) {
         return await this.request('/auth/forgot-password', {
             method: 'POST',

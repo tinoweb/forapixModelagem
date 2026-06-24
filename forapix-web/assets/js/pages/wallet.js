@@ -292,6 +292,7 @@ const WalletPage = {
             }
         } catch (_) {}
         const canWithdraw  = withdrawable >= 10;
+        const user = Storage.getUser() || {};
 
         Components.showModal(`
             <div class="modal-header">
@@ -330,11 +331,11 @@ const WalletPage = {
             </div>
             <div class="input-group mb-4">
                 <label class="input-label">Chave PIX</label>
-                <input type="text" id="withdrawPixKey" class="input-field" placeholder="CPF, email, telefone ou chave aleatória">
+                <input type="text" id="withdrawPixKey" class="input-field" placeholder="CPF, email, telefone ou chave aleatória" value="${user.pix_key || ''}">
             </div>
             <div class="input-group mb-6">
                 <label class="input-label">CPF do titular da chave <span style="color:#6b7280;font-size:11px">(apenas números)</span></label>
-                <input type="text" id="withdrawDocument" class="input-field" placeholder="00000000000" maxlength="14">
+                <input type="text" id="withdrawDocument" class="input-field" placeholder="00000000000" maxlength="14" value="${user.document || ''}">
             </div>
             <div class="flex gap-3">
                 <button class="btn btn-secondary flex-1" onclick="Components.closeModal()">Cancelar</button>

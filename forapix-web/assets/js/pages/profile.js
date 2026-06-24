@@ -434,6 +434,24 @@ const ProfilePage = {
                 </div>
                 <div class="settings-item">
                     <div class="settings-item-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="settings-item-content">
+                        <p class="settings-item-label">Chave PIX Salva</p>
+                        <p class="settings-item-value">${user.pix_key || 'Nenhuma chave cadastrada'}</p>
+                    </div>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="settings-item-content">
+                        <p class="settings-item-label">CPF Titular Salvo</p>
+                        <p class="settings-item-value">${user.document || 'Nenhum CPF cadastrado'}</p>
+                    </div>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-item-icon">
                         <i class="fas fa-calendar"></i>
                     </div>
                     <div class="settings-item-content">
@@ -475,15 +493,23 @@ const ProfilePage = {
                 <h3 class="settings-section-title mb-4">Editar perfil</h3>
                 <div class="input-group mb-4">
                     <label class="input-label">Nome</label>
-                    <input type="text" id="profileName" class="input-field" value="${user.name}" placeholder="Seu nome">
+                    <input type="text" id="profileName" class="input-field" value="${user.name || ''}" placeholder="Seu nome">
                 </div>
                 <div class="input-group mb-4">
                     <label class="input-label">Email</label>
-                    <input type="email" id="profileEmail" class="input-field" value="${user.email}" placeholder="seu@email.com">
+                    <input type="email" id="profileEmail" class="input-field" value="${user.email || ''}" placeholder="seu@email.com">
+                </div>
+                <div class="input-group mb-4">
+                    <label class="input-label">Telefone</label>
+                    <input type="tel" id="profilePhone" class="input-field" value="${user.phone || ''}" placeholder="(00) 00000-0000">
+                </div>
+                <div class="input-group mb-4">
+                    <label class="input-label">Chave PIX para Saque</label>
+                    <input type="text" id="profilePixKey" class="input-field" value="${user.pix_key || ''}" placeholder="CPF, e-mail, telefone ou chave aleatória">
                 </div>
                 <div class="input-group mb-6">
-                    <label class="input-label">Telefone</label>
-                    <input type="tel" id="profilePhone" class="input-field" placeholder="(00) 00000-0000">
+                    <label class="input-label">CPF do Titular da Chave (apenas números)</label>
+                    <input type="text" id="profileDocument" class="input-field" value="${user.document || ''}" placeholder="00000000000" maxlength="14">
                 </div>
                 <div class="flex gap-3">
                     <button class="btn btn-secondary flex-1" onclick="ProfilePage.toggleEditProfile()">
@@ -644,30 +670,44 @@ const ProfilePage = {
         }
     },
 
-    saveProfile() {
-        const name = document.getElementById('profileName').value;
-        const email = document.getElementById('profileEmail').value;
-        const phone = document.getElementById('profilePhone').value;
+    async saveProfile() {
+        const name = document.getElementById('profileName')?.value?.trim();
+        const email = document.getElementById('profileEmail')?.value?.trim();
+        const phone = document.getElementById('profilePhone')?.value?.trim();
+        const pixKey = document.getElementById('profilePixKey')?.value?.trim();
+        const documentVal = document.getElementById('profileDocument')?.value?.trim()?.replace(/\D/g, '');
 
         if (!name || !email) {
             Components.showToast('Preencha todos os campos obrigatórios', 'warning');
             return;
         }
 
-        const user = Storage.getUser();
-        user.name = name;
-        user.email = email;
-        if (phone) user.phone = phone;
+        try {
+            const res = await API.updateProfile({
+                name,
+                email,
+                phone,
+                pix_key: pixKey,
+                document: documentVal
+            });
 
-        Storage.setUser(user);
-        this.editingProfile = false;
+            if (res && res.success) {
+                const fresh = res.data;
+                const stored = Storage.getUser() || {};
+                Storage.setUser({ ...stored, ...fresh });
 
-        const content = document.getElementById('profileContent');
-        if (content) {
-            content.innerHTML = this.renderCurrentTab();
+                this.editingProfile = false;
+                const content = document.getElementById('profileContent');
+                if (content) {
+                    content.innerHTML = this.renderCurrentTab();
+                }
+                Components.showToast('Perfil atualizado com sucesso!', 'success');
+            } else {
+                Components.showToast(res.message || 'Erro ao atualizar perfil', 'error');
+            }
+        } catch (e) {
+            Components.showToast(e.message || 'Erro de conexão ao salvar perfil', 'error');
         }
-
-        Components.showToast('Perfil atualizado com sucesso!', 'success');
     },
 
     toggleTheme() {
