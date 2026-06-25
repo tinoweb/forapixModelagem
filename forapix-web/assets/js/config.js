@@ -39,13 +39,7 @@ const Config = {
         SETTINGS: 'forapix_settings'
     },
 
-    // Sports Configuration
     SPORTS: [
-        { id: 1, name: 'MMA/UFC', slug: 'mma-ufc', icon: 'fa-hand-fist' },
-        { id: 2, name: 'Futebol', slug: 'futebol', icon: 'fa-futbol' },
-        { id: 3, name: 'Basquete', slug: 'basquete', icon: 'fa-basketball' },
-        { id: 4, name: 'Tênis', slug: 'tenis', icon: 'fa-baseball' },
-        { id: 5, name: 'Boxe', slug: 'boxe', icon: 'fa-hand-fist' },
         { id: 6, name: 'Sinuca', slug: 'sinuca', icon: 'fa-8ball' }
     ],
 
