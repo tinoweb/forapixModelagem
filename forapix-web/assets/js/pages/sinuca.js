@@ -10,16 +10,105 @@ const SinucaPage = {
     selectedBet: null,
     betAmount: 0,
 
+    pollingTimer: null,
+
     render(params = {}) {
         this.matchId = params.matchId || params.id || this.matchId;
         this.betOptions = [];
         this.selectedBet = null;
         this.betAmount = 0;
+        this._stopPolling();
         return `<div class="page-enter" id="sinucaPage">${this.renderLoading()}</div>`;
     },
 
     init() {
         this.loadMatch();
+        this._startPolling();
+    },
+
+    _startPolling() {
+        this._stopPolling();
+        this.pollingTimer = setInterval(() => this._pollMatchStatus(), 4000);
+    },
+
+    _stopPolling() {
+        if (this.pollingTimer) {
+            clearInterval(this.pollingTimer);
+            this.pollingTimer = null;
+        }
+    },
+
+    async _pollMatchStatus() {
+        if (App.currentPage !== 'sinuca' || !document.getElementById('sinucaPage') || !this.matchId) {
+            this._stopPolling();
+            return;
+        }
+
+        try {
+            const response = await API.getMatch(this.matchId);
+            if (response.success && response.data) {
+                const newMatch = response.data;
+                const oldMatch = this.currentMatch;
+
+                if (oldMatch) {
+                    // Alert if betting_locked status changed
+                    if (oldMatch.betting_locked !== newMatch.betting_locked) {
+                        if (newMatch.betting_locked) {
+                            Components.showToast('⚠️ As apostas para esta partida foram TRANCADAS!', 'warning');
+                        } else {
+                            Components.showToast('🟢 As apostas para esta partida foram LIBERADAS!', 'success');
+                        }
+                    }
+                    
+                    // Alert if live_betting_open status changed (if not locked)
+                    if (oldMatch.live_betting_open !== newMatch.live_betting_open && !newMatch.betting_locked) {
+                        if (newMatch.live_betting_open) {
+                            Components.showToast('⚡ Apostas ao vivo ABERTAS!', 'success');
+                        } else {
+                            Components.showToast('🔒 Apostas ao vivo fechadas.', 'info');
+                        }
+                    }
+
+                    // Alert if score changed
+                    if (oldMatch.first_player_score !== newMatch.first_player_score || oldMatch.second_player_score !== newMatch.second_player_score) {
+                        Components.showToast(`📊 Placar atualizado: ${newMatch.first_player_score} x ${newMatch.second_player_score}`, 'info');
+                    }
+                    
+                    // Alert if match status changed
+                    if (oldMatch.status !== newMatch.status) {
+                        const statusLabels = { live: 'ao vivo', finished: 'finalizada', cancelled: 'cancelada' };
+                        const lbl = statusLabels[newMatch.status] || newMatch.status;
+                        Components.showToast(`📢 Partida está agora ${lbl}!`, 'info');
+                    }
+                }
+
+                this.currentMatch = newMatch;
+                this.betOptions = this.buildBetOptions(newMatch);
+                
+                // Re-render dynamically without closing open modals
+                const container = document.getElementById('sinucaPage');
+                if (container) {
+                    container.innerHTML = this.renderContent();
+                    this.loadMyBetsQuietly();
+                }
+            }
+        } catch (error) {
+            console.error('Erro no polling do jogo:', error);
+        }
+    },
+
+    async loadMyBetsQuietly() {
+        const el = document.getElementById('myBetsList');
+        if (!el || !this.matchId) return;
+        try {
+            const res = await API.getMyBetsForMatch(this.matchId);
+            const bets = res?.data?.data || res?.data || [];
+            if (!bets.length) {
+                el.innerHTML = '<div class="match-section-empty">Você ainda não apostou nesta partida</div>';
+                return;
+            }
+            el.innerHTML = bets.map(b => this.renderBetItem(b)).join('');
+        } catch (e) {}
     },
 
     async loadMatch() {
@@ -81,6 +170,7 @@ const SinucaPage = {
 
     canBet(match) {
         if (!match) return false;
+        if (match.betting_locked) return false;
         // Se estiver ao vivo, verifica live_betting_open
         if (match.status === 'live') {
             return match.live_betting_open === true;
@@ -115,6 +205,11 @@ const SinucaPage = {
             <div class="match-page">
                 ${this.renderHero(match)}
                 ${this.renderBetsBar(match)}
+                ${match.betting_locked ? `
+                    <div class="bg-yellow-500/10 border-y border-yellow-500/20 text-yellow-400 text-xs px-4 py-3 text-center flex items-center justify-center gap-2 animate-pulse">
+                        <i class="fas fa-lock"></i> <span><strong>Apostas Trancadas:</strong> Novos palpites estão suspensos temporariamente nesta partida.</span>
+                    </div>
+                ` : ''}
                 <div class="match-page-body">
                     ${this.renderMatchDetails(match)}
                     ${this.renderApostarBtn(match)}
@@ -325,14 +420,22 @@ const SinucaPage = {
         const canBet       = this.canBet(match);
         const isLiveBetting = match.status === 'live' && match.live_betting_open;
         const btnClass  = canBet ? (isLiveBetting ? 'apostar-btn apostar-btn--live' : '') : 'apostar-btn--disabled';
-        const btnLabel  = isLiveBetting
-            ? `<i class="fas fa-bolt"></i> APOSTAR AO VIVO`
-            : canBet
-                ? `<i class="fas fa-check-circle"></i> APOSTAR`
-                : `<i class="fas fa-lock"></i> Apostas encerradas`;
+        
+        let btnLabel;
+        if (match.betting_locked) {
+            btnLabel = `<i class="fas fa-lock text-yellow-400"></i> Apostas trancadas`;
+        } else if (isLiveBetting) {
+            btnLabel = `<i class="fas fa-bolt"></i> APOSTAR AO VIVO`;
+        } else if (canBet) {
+            btnLabel = `<i class="fas fa-check-circle"></i> APOSTAR`;
+        } else {
+            btnLabel = `<i class="fas fa-lock"></i> Apostas encerradas`;
+        }
+
         return `
         <div class="px-4 pb-2">
             ${isLiveBetting ? '<p class="text-center text-xs text-green-400 mb-2 animate-pulse">⚡ JANELA DE APOSTAS AO VIVO ABERTA</p>' : ''}
+            ${match.betting_locked ? '<p class="text-center text-xs text-yellow-400 mb-2 font-bold"><i class="fas fa-lock"></i> APOSTAS TRANCADAS TEMPORARIAMENTE</p>' : ''}
             <button class="apostar-btn ${btnClass}"
                     onclick="SinucaPage.showBettingPanel()"
                     ${canBet ? '' : 'disabled'}>

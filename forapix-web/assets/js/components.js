@@ -129,7 +129,10 @@ const Components = {
         const matchId = match.hash_id || match.id || match.match_id || 0;
         const isLive = match.status === 'live';
         const isFinished = match.status === 'finished';
-        const canBet = match.status !== 'finished' && match.betting_deadline && new Date(match.betting_deadline) > new Date();
+        const canBet = match.status !== 'finished' && !match.betting_locked && (
+            (match.status === 'live' && match.live_betting_open) ||
+            (match.betting_deadline && new Date(match.betting_deadline) > new Date())
+        );
         const firstScore = match.first_player_score ?? 0;
         const secondScore = match.second_player_score ?? 0;
         const winnerIs = isFinished && firstScore > secondScore ? 'first' : (isFinished && secondScore > firstScore ? 'second' : null);
@@ -186,7 +189,7 @@ const Components = {
                     <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: '${matchId}' })">
                         ${canBet
                             ? '<i class="fas fa-bolt"></i> Apostar agora'
-                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
+                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : (match.betting_locked ? '<i class="fas fa-lock text-yellow-400"></i> Apostas trancadas' : '<i class="fas fa-lock"></i> Apostas fechadas'))}
                     </button>
                 </div>
             </div>

@@ -52,33 +52,40 @@ class ReconcileDeposits extends Command
                     continue;
                 }
 
-                $user          = $transaction->user;
-                $balanceBefore = (float) $user->balance;
-                $amount        = (float) $transaction->amount;
+                DB::transaction(function () use ($transaction, $result, &$confirmed) {
+                    // Lock transaction record for update to prevent race conditions
+                    $lockedTransaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
 
-                DB::transaction(function () use ($user, $transaction, $amount, $balanceBefore, $result) {
+                    if (!$lockedTransaction || $lockedTransaction->status === 'completed') {
+                        return;
+                    }
+
+                    $user          = $lockedTransaction->user;
+                    $balanceBefore = (float) $user->balance;
+                    $amount        = (float) $lockedTransaction->amount;
+
                     $user->increment('balance', $amount);
                     $user->increment('total_deposited', $amount);
 
-                    $transaction->update([
+                    $lockedTransaction->update([
                         'status'         => 'completed',
                         'balance_before' => $balanceBefore,
                         'balance_after'  => $balanceBefore + $amount,
                         'processed_at'   => now(),
-                        'metadata'       => array_merge($transaction->metadata ?? [], [
+                        'metadata'       => array_merge($lockedTransaction->metadata ?? [], [
                             'confirmed_via'  => 'reconciliation',
                             'confirmed_at'   => now()->toIso8601String(),
                             'veopag_status'  => $result['status'],
                         ]),
                     ]);
-                });
 
-                $this->info("     ✅ Confirmado! Saldo de {$user->name}: R$ " . number_format($balanceBefore + $amount, 2, ',', '.'));
-                Log::info("ReconcileDeposits: depósito {$transaction->transaction_id} confirmado", [
-                    'user_id' => $user->id,
-                    'amount'  => $amount,
-                ]);
-                $confirmed++;
+                    $this->info("     ✅ Confirmado! Saldo de {$user->name}: R$ " . number_format($balanceBefore + $amount, 2, ',', '.'));
+                    Log::info("ReconcileDeposits: depósito {$lockedTransaction->transaction_id} confirmado", [
+                        'user_id' => $user->id,
+                        'amount'  => $amount,
+                    ]);
+                    $confirmed++;
+                });
 
             } catch (\Throwable $e) {
                 $this->warn("     ⚠ Erro: {$e->getMessage()}");

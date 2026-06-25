@@ -182,6 +182,14 @@
                                     class="admin-btn-primary col-span-2 justify-center">
                                 <i class="fas fa-hashtag"></i> Placar
                             </button>
+                            <button id="lock-btn-{{ $match->id }}" onclick="toggleBettingLock({{ $match->id }}, {{ $match->betting_locked ? 'false' : 'true' }})"
+                                    class="col-span-2 justify-center {{ $match->betting_locked ? 'admin-btn-warning' : 'admin-btn-ghost' }}">
+                                @if($match->betting_locked)
+                                    <i class="fas fa-unlock mr-1"></i> Destrancar
+                                @else
+                                    <i class="fas fa-lock mr-1 text-yellow-400"></i> Trancar
+                                @endif
+                            </button>
                             @endif
                             <a href="{{ route('admin.matches.edit', $match) }}" class="admin-btn-ghost justify-center">
                                 <i class="fas fa-pen"></i> Editar
@@ -437,6 +445,52 @@ async function confirmCancelMatch() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-ban"></i> Confirmar cancelamento';
+    }
+}
+
+async function toggleBettingLock(matchId, isLocking) {
+    const btn = document.getElementById(`lock-btn-${matchId}`);
+    if (!btn) return;
+    
+    const originalHtml = btn.innerHTML;
+    const originalClass = btn.className;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    try {
+        const res = await fetch(`/admin/matches/${matchId}/toggle-betting-lock`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAdminToast(data.message, 'success');
+            
+            // Atualiza o botão sem recarregar a página inteira para ser extremamente fluido!
+            if (data.betting_locked) {
+                btn.className = "col-span-2 justify-center admin-btn-warning";
+                btn.innerHTML = '<i class="fas fa-unlock mr-1"></i> Destrancar';
+                btn.setAttribute('onclick', `toggleBettingLock(${matchId}, false)`);
+            } else {
+                btn.className = "col-span-2 justify-center admin-btn-ghost";
+                btn.innerHTML = '<i class="fas fa-lock mr-1 text-yellow-400"></i> Trancar';
+                btn.setAttribute('onclick', `toggleBettingLock(${matchId}, true)`);
+            }
+        } else {
+            showAdminToast(data.message || 'Erro ao alterar trancamento', 'error');
+            btn.innerHTML = originalHtml;
+            btn.className = originalClass;
+        }
+    } catch (e) {
+        showAdminToast('Erro de conexão.', 'error');
+        btn.innerHTML = originalHtml;
+        btn.className = originalClass;
+    } finally {
+        btn.disabled = false;
     }
 }
 

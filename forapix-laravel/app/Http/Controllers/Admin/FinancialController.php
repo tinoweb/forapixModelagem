@@ -143,12 +143,16 @@ class FinancialController extends Controller
      */
     public function approveDeposit(Request $request, Transaction $transaction)
     {
-        if ($transaction->type !== 'deposit' || $transaction->status !== 'pending') {
-            return response()->json(['success' => false, 'message' => 'Depósito não está pendente.'], 422);
-        }
-
         try {
             DB::beginTransaction();
+
+            // Lock transaction record for update to prevent race conditions
+            $transaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+
+            if (!$transaction || $transaction->type !== 'deposit' || $transaction->status !== 'pending') {
+                DB::commit();
+                return response()->json(['success' => false, 'message' => 'Depósito não está pendente ou já foi processado.'], 422);
+            }
 
             $user          = User::findOrFail($transaction->user_id);
             $balanceBefore = (float) $user->balance;
@@ -215,33 +219,40 @@ class FinancialController extends Controller
                     continue;
                 }
 
-                $user          = $transaction->user;
-                $balanceBefore = (float) $user->balance;
-                $amount        = (float) $transaction->amount;
+                DB::transaction(function () use ($transaction, $result, &$confirmed) {
+                    // Lock transaction record for update
+                    $lockedTransaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
 
-                DB::transaction(function () use ($user, $transaction, $amount, $balanceBefore, $result) {
+                    if (!$lockedTransaction || $lockedTransaction->status === 'completed') {
+                        return;
+                    }
+
+                    $user          = $lockedTransaction->user;
+                    $balanceBefore = (float) $user->balance;
+                    $amount        = (float) $lockedTransaction->amount;
+
                     $user->increment('balance', $amount);
                     $user->increment('total_deposited', $amount);
 
-                    $transaction->update([
+                    $lockedTransaction->update([
                         'status'         => 'completed',
                         'balance_before' => $balanceBefore,
                         'balance_after'  => $balanceBefore + $amount,
                         'processed_at'   => now(),
-                        'metadata'       => array_merge($transaction->metadata ?? [], [
+                        'metadata'       => array_merge($lockedTransaction->metadata ?? [], [
                             'confirmed_via' => 'admin_reconcile',
                             'confirmed_at'  => now()->toIso8601String(),
                             'veopag_status' => $result['status'],
                         ]),
                     ]);
+
+                    Log::info("Admin reconcile: depósito {$lockedTransaction->transaction_id} confirmado", [
+                        'user_id' => $user->id,
+                        'amount'  => $amount,
+                    ]);
+
+                    $confirmed++;
                 });
-
-                Log::info("Admin reconcile: depósito {$transaction->transaction_id} confirmado", [
-                    'user_id' => $user->id,
-                    'amount'  => $amount,
-                ]);
-
-                $confirmed++;
 
             } catch (\Throwable $e) {
                 $errors[] = "{$transaction->transaction_id}: {$e->getMessage()}";

@@ -737,6 +737,35 @@ class GameManagementController extends Controller
     }
 
     /**
+     * Tranca ou destranca apostas de uma partida manualmente (toggle)
+     */
+    public function toggleBettingLock(Request $request, GameMatch $match)
+    {
+        if (in_array($match->status, ['finished', 'cancelled'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível alterar o trancamento de uma partida encerrada ou cancelada.',
+            ], 422);
+        }
+
+        $locking = !$match->betting_locked;
+
+        $match->update([
+            'betting_locked' => $locking,
+        ]);
+
+        $msg = $locking
+            ? '🔒 Apostas trancadas com sucesso!'
+            : '🔓 Apostas destrancadas com sucesso!';
+
+        return response()->json([
+            'success'        => true,
+            'message'        => $msg,
+            'betting_locked' => $locking,
+        ]);
+    }
+
+    /**
      * Atualiza o placar de uma partida manualmente.
      * Lógica automática:
      *  - Muda status para 'live' se estava 'scheduled'

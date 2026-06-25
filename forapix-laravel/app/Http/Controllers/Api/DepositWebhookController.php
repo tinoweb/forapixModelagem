@@ -88,6 +88,14 @@ class DepositWebhookController extends Controller
         try {
             DB::beginTransaction();
 
+            // Lock transaction record for update to prevent race conditions
+            $transaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+
+            if (!$transaction || $transaction->status === 'completed') {
+                DB::commit();
+                return response()->json(['message' => 'transaction already processed'], 200);
+            }
+
             $user          = User::findOrFail($transaction->user_id);
             $balanceBefore = $user->balance;
             $amount        = $transaction->amount;

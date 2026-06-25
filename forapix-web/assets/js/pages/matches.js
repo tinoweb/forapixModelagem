@@ -204,7 +204,7 @@ const MatchesPage = {
                     <button class="mc-bet-btn ${canBet ? '' : 'mc-bet-btn--locked'}" onclick="event.stopPropagation(); App.navigateTo('sinuca', { matchId: '${matchId}' })">
                         ${canBet
                             ? '<i class="fas fa-bolt"></i> Apostar agora'
-                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : '<i class="fas fa-lock"></i> Apostas fechadas')}
+                            : (isFinished ? '<i class="fas fa-eye"></i> Ver resultado' : (match.betting_locked ? '<i class="fas fa-lock text-yellow-400"></i> Apostas trancadas' : '<i class="fas fa-lock"></i> Apostas fechadas'))}
                     </button>
                 </div>
             </div>
@@ -230,6 +230,7 @@ const MatchesPage = {
 
     isBettingOpen(match) {
         if (match.status === 'finished' || match.status === 'cancelled') return false;
+        if (match.betting_locked) return false;
         // Prazo expirado = apostas encerradas independente do status
         if (match.betting_deadline && new Date(match.betting_deadline) <= new Date()) {
             // Exceto se ao vivo com live_betting_open

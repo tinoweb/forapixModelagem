@@ -78,6 +78,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
         Route::post('/{match}/resolve-bets', [BetManagementController::class, 'resolveMatch'])->name('resolve-bets');
         Route::post('/{match}/cancel', [GameManagementController::class, 'cancelMatch'])->name('cancel');
         Route::post('/{match}/toggle-live-betting', [GameManagementController::class, 'toggleLiveBetting'])->name('toggle-live-betting');
+        Route::post('/{match}/toggle-betting-lock', [GameManagementController::class, 'toggleBettingLock'])->name('toggle-betting-lock');
         Route::post('/{match}/update-score', [GameManagementController::class, 'updateScore'])->name('update-score');
     });
 

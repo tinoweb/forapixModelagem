@@ -196,13 +196,30 @@ class WalletController extends Controller
                 $paidStatuses = ['COMPLETED', 'PAID', 'APPROVED', 'CONFIRMED', 'SUCCESS'];
 
                 if (in_array($result['status'], $paidStatuses)) {
-                    // Confirmar automaticamente
-                    $user          = $request->user()->fresh();
-                    $balanceBefore = (float) $user->balance;
-                    $amount        = (float) $transaction->amount;
-
                     DB::beginTransaction();
                     try {
+                        // Lock transaction record for update to prevent race conditions
+                        $transaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+
+                        if (!$transaction || $transaction->status === 'completed') {
+                            DB::commit();
+                            
+                            $user = $request->user()->fresh();
+                            return response()->json([
+                                'success' => true,
+                                'data'    => [
+                                    'transaction_id' => $transaction->transaction_id,
+                                    'status'         => 'completed',
+                                    'amount'         => (float) $transaction->amount,
+                                    'balance'        => $user->balance,
+                                ],
+                            ]);
+                        }
+
+                        $user          = $request->user()->fresh();
+                        $balanceBefore = (float) $user->balance;
+                        $amount        = (float) $transaction->amount;
+
                         $user->increment('balance', $amount);
                         $user->increment('total_deposited', $amount);
 
