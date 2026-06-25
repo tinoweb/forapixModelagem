@@ -9,11 +9,14 @@ const App = {
     /**
      * Initialize application
      */
-    init() {
+    async init() {
         console.log('🚀 JRpix App iniciando...');
         
         // Initialize storage
         Storage.init();
+        
+        // Carrega esportes dinamicamente da API para evitar cache do config.js
+        await this.loadSportsFromApi();
         
         // Setup navigation
         this.setupNavigation();
@@ -485,6 +488,26 @@ const App = {
                 }
             }
         } catch (_) {}
+    },
+
+    /**
+     * Carrega esportes da API
+     */
+    async loadSportsFromApi() {
+        try {
+            const response = await API.getSports();
+            if (response && response.success && Array.isArray(response.data)) {
+                Config.SPORTS = response.data.map(sport => ({
+                    id: sport.id,
+                    name: sport.name,
+                    slug: sport.slug,
+                    icon: sport.icon || 'fa-gamepad'
+                }));
+                console.log('✅ Esportes carregados da API:', Config.SPORTS);
+            }
+        } catch (error) {
+            console.warn('⚠️ Erro ao carregar esportes da API, usando fallback:', error);
+        }
     },
 
     /**
