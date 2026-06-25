@@ -155,7 +155,7 @@
 
 @push('scripts')
 <script>
-const ADMIN_BETS_BASE = '{{ rtrim(url('/admin/bets'), '/') }}';
+const ADMIN_BETS_BASE = '/admin/bets';
 
 async function cancelBet(id, betId) {
     const ok = await AdminConfirm.show({

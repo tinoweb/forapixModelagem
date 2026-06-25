@@ -321,7 +321,7 @@
 </div>
 
 <script>
-const ADMIN_MATCHES_BASE = '{{ rtrim(url('/admin/matches'), '/') }}';
+const ADMIN_MATCHES_BASE = '/admin/matches';
 
 let _scoreMatchId = null;
 

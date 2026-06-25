@@ -356,7 +356,7 @@
 
 @push('scripts')
 <script>
-const ADMIN_MATCHES_BASE = '{{ rtrim(url('/admin/matches'), '/') }}';
+const ADMIN_MATCHES_BASE = '/admin/matches';
 
 // Sincroniza betting_deadline (hidden) com match_start
 document.addEventListener('DOMContentLoaded', function() {

@@ -186,7 +186,7 @@
 
 @push('scripts')
 <script>
-const ADMIN_USERS_BASE = '{{ rtrim(url('/admin/users'), '/') }}';
+const ADMIN_USERS_BASE = '/admin/users';
 
 async function suspendUser(id, name) {
     const ok = await AdminConfirm.show({
