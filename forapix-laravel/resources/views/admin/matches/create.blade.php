@@ -26,10 +26,9 @@
                     </div>
                     <div>
                         <label class="text-sm text-gray-300">Jogo</label>
-                        <select name="game_id" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
-                            <option value="">Selecione</option>
+                        <select name="game_id" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
                             @foreach($games as $game)
-                                <option value="{{ $game->id }}">{{ $game->name }}</option>
+                                <option value="{{ $game->id }}" selected>{{ $game->name }}</option>
                             @endforeach
                         </select>
                     </div>
