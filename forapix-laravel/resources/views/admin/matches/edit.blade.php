@@ -30,12 +30,8 @@
                         <input type="text" name="title" value="{{ $match->title }}" class="input-admin mt-1" placeholder="Sinuca - Par ou Ímpar">
                     </div>
                     <div>
-                        <label class="text-sm text-gray-300">Status</label>
-                        <select name="status" class="input-admin mt-1">
-                            @foreach(['scheduled' => 'Agendada', 'live' => 'Ao vivo', 'finished' => 'Encerrada', 'cancelled' => 'Cancelada', 'postponed' => 'Adiada'] as $v => $l)
-                                <option value="{{ $v }}" @selected($match->status === $v)>{{ $l }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-sm text-gray-300">Jogo (Modalidade)</label>
+                        <input type="text" name="game_name" value="{{ $match->game?->name }}" class="input-admin mt-1" placeholder="Digite a modalidade (ex: Sinuca Par ou Ímpar)" required>
                     </div>
                 </div>
 

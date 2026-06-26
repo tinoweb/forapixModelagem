@@ -25,12 +25,8 @@
                         <input type="text" name="title" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="Sinuca - Par ou Ímpar">
                     </div>
                     <div>
-                        <label class="text-sm text-gray-300">Jogo</label>
-                        <select name="game_id" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" required>
-                            @foreach($games as $game)
-                                <option value="{{ $game->id }}" selected>{{ $game->name }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-sm text-gray-300">Jogo (Modalidade)</label>
+                        <input type="text" name="game_name" class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl" placeholder="Digite a modalidade (ex: Sinuca Par ou Ímpar)" required value="Sinuca Par ou Ímpar">
                     </div>
                 </div>
 

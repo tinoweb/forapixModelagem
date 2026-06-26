@@ -269,6 +269,7 @@ class GameManagementController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:255',
+            'game_name' => 'required|string|max:255',
             'game_id' => 'nullable|exists:games,id',
             'first_player_id' => 'required|exists:players,id',
             'second_player_id' => 'required|exists:players,id|different:first_player_id',
@@ -298,7 +299,25 @@ class GameManagementController extends Controller
             ], 422);
         }
 
-        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
+        $gameName = $request->input('game_name');
+        $game = Game::where('name', $gameName)->first();
+        if (!$game) {
+            $sport = Sport::where('slug', 'sinuca')->first() ?? Sport::first();
+            $game = Game::create([
+                'name' => $gameName,
+                'slug' => Str::slug($gameName),
+                'sport_id' => $sport ? $sport->id : null,
+                'type' => 'par_impar',
+                'status' => 'active',
+                'min_bet' => 1.00,
+                'max_bet' => 5000.00,
+                'house_edge' => 0.03,
+                'settings' => ['auto_resolve' => true, 'max_duration' => 30]
+            ]);
+        }
+
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url', 'game_name']);
+        $matchData['game_id'] = $game->id;
         $matchData['created_by'] = auth()->id();
         $matchData['status'] = $request->input('status', 'scheduled');
         $matchData['featured'] = $request->has('featured');
@@ -359,6 +378,8 @@ class GameManagementController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'sometimes|nullable|string|max:255',
+            'game_name' => 'sometimes|nullable|string|max:255',
+            'game_id' => 'sometimes|nullable|exists:games,id',
             'first_player_id' => 'sometimes|exists:players,id',
             'second_player_id' => 'sometimes|exists:players,id',
             'match_start' => 'sometimes|date',
@@ -391,10 +412,32 @@ class GameManagementController extends Controller
             ], 422);
         }
 
-        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url']);
+        $matchData = $request->except(['banner_image', 'banner_button_label', 'banner_button_link', 'stream_url', 'game_name']);
         $matchData['updated_by'] = auth()->id();
         $matchData['featured'] = $request->has('featured');
         $matchData['betting_locked'] = $request->has('betting_locked');
+
+        $gameName = $request->input('game_name');
+        if ($request->has('game_name') && !empty($gameName)) {
+            $game = Game::where('name', $gameName)->first();
+            if (!$game) {
+                $sport = Sport::where('slug', 'sinuca')->first() ?? Sport::first();
+                $game = Game::create([
+                    'name' => $gameName,
+                    'slug' => Str::slug($gameName),
+                    'sport_id' => $sport ? $sport->id : null,
+                    'type' => 'par_impar',
+                    'status' => 'active',
+                    'min_bet' => 1.00,
+                    'max_bet' => 5000.00,
+                    'house_edge' => 0.03,
+                    'settings' => ['auto_resolve' => true, 'max_duration' => 30]
+                ]);
+            }
+            $matchData['game_id'] = $game->id;
+        } elseif ($request->has('game_id')) {
+            $matchData['game_id'] = $request->input('game_id');
+        }
 
         // Se match_start foi alterado, sincroniza betting_deadline
         if (!empty($matchData['match_start']) && (empty($matchData['betting_deadline']) || $matchData['betting_deadline'] === '')) {
