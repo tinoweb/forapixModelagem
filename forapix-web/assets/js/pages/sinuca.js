@@ -45,10 +45,15 @@ const SinucaPage = {
         }
 
         try {
-            const response = await API.getMatch(this.matchId);
+            const response = await API.getMatch(this.matchId, { quiet: true });
             if (response.success && response.data) {
                 const newMatch = response.data;
                 const oldMatch = this.currentMatch;
+
+                // Stop polling if match is finished or cancelled
+                if (newMatch.status === 'finished' || newMatch.status === 'cancelled') {
+                    this._stopPolling();
+                }
 
                 if (oldMatch) {
                     // Alert if betting_locked status changed
@@ -142,7 +147,7 @@ const SinucaPage = {
         const el = document.getElementById('myBetsList');
         if (!el || !this.matchId) return;
         try {
-            const res = await API.getMyBetsForMatch(this.matchId);
+            const res = await API.getMyBetsForMatch(this.matchId, { quiet: true });
             const bets = res?.data?.data || res?.data || [];
             if (!bets.length) {
                 el.innerHTML = '<div class="match-section-empty">Você ainda não apostou nesta partida</div>';

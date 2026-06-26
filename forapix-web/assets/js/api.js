@@ -29,7 +29,9 @@ const API = {
         };
 
         try {
-            Components.showLoading(true);
+            if (!options.quiet) {
+                Components.showLoading(true);
+            }
             
             const response = await fetch(url, finalOptions);
             const data = await response.json();
@@ -48,7 +50,9 @@ const API = {
             console.error('API Error:', error);
             throw error;
         } finally {
-            Components.showLoading(false);
+            if (!options.quiet) {
+                Components.showLoading(false);
+            }
         }
     },
 
@@ -124,8 +128,8 @@ const API = {
         return await this.request(`/matches?${params}`);
     },
 
-    async getMatch(id) {
-        return await this.request(`/matches/${id}`);
+    async getMatch(id, options = {}) {
+        return await this.request(`/matches/${id}`, options);
     },
 
     async getLiveMatches() {
@@ -139,11 +143,11 @@ const API = {
     /**
      * Bets (API real + fallback simulado)
      */
-    async getMyBetsForMatch(matchId) {
+    async getMyBetsForMatch(matchId, options = {}) {
         const token = Storage.getItem(Config.STORAGE_KEYS.TOKEN);
         if (token) {
             try {
-                return await this.request(`/bets?match_id=${matchId}`);
+                return await this.request(`/bets?match_id=${matchId}`, options);
             } catch (e) {
                 console.warn('API indisponível, usando bets do localStorage');
             }
@@ -285,8 +289,8 @@ const API = {
         });
     },
 
-    async getDepositStatus(transactionId) {
-        return await this.request(`/wallet/deposit/${transactionId}/status`);
+    async getDepositStatus(transactionId, options = {}) {
+        return await this.request(`/wallet/deposit/${transactionId}/status`, options);
     },
 
     async confirmDeposit(transactionId) {

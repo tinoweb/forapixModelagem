@@ -268,7 +268,7 @@ const DepositPage = {
         }
 
         try {
-            const res = await API.getDepositStatus(transactionId);
+            const res = await API.getDepositStatus(transactionId, { quiet: true });
             if (res.success && res.data.status === 'completed') {
                 this._stopPolling();
                 Storage.setBalance(res.data.balance);
