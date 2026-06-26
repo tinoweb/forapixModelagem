@@ -22,6 +22,7 @@ class SettingsController extends Controller
             'support_email' => 'nullable|email',
             'min_deposit_amount' => 'nullable|numeric|min:1',
             'min_withdraw_amount' => 'nullable|numeric|min:1',
+            'min_bet_amount' => 'nullable|numeric|min:1',
         ]);
 
         // WhatsApp
@@ -34,6 +35,7 @@ class SettingsController extends Controller
         // Limites financeiros
         SystemSetting::set('min_deposit_amount', $validated['min_deposit_amount'] ?? 10, 'number', 'Valor mínimo de depósito');
         SystemSetting::set('min_withdraw_amount', $validated['min_withdraw_amount'] ?? 10, 'number', 'Valor mínimo de saque');
+        SystemSetting::set('min_bet_amount', $validated['min_bet_amount'] ?? 5, 'number', 'Valor mínimo de aposta');
 
         return response()->json([
             'success' => true,

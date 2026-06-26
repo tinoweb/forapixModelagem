@@ -58,7 +58,7 @@
                 <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                     <i class="fas fa-dollar-sign text-yellow-500"></i> Limites Financeiros
                 </h3>
-                <div class="grid md:grid-cols-2 gap-4">
+                <div class="grid md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-sm text-gray-300">Depósito mínimo (R$)</label>
                         <input type="number" step="0.01" min="1" name="min_deposit_amount" 
@@ -69,6 +69,12 @@
                         <label class="text-sm text-gray-300">Saque mínimo (R$)</label>
                         <input type="number" step="0.01" min="1" name="min_withdraw_amount" 
                             value="{{ $settings['min_withdraw_amount']->value ?? 10 }}"
+                            class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-300">Aposta mínima (R$)</label>
+                        <input type="number" step="0.01" min="1" name="min_bet_amount" 
+                            value="{{ $settings['min_bet_amount']->value ?? 5 }}"
                             class="mt-1 w-full px-4 py-3 bg-[#10162c] border border-white/10 rounded-2xl">
                     </div>
                 </div>

@@ -86,6 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 'support_email' => \App\Models\SystemSetting::get('support_email', 'suporte@apostacasada.com'),
                 'min_deposit_amount' => \App\Models\SystemSetting::get('min_deposit_amount', 10),
                 'min_withdraw_amount' => \App\Models\SystemSetting::get('min_withdraw_amount', 10),
+                'min_bet_amount' => \App\Models\SystemSetting::get('min_bet_amount', 5),
             ]
         ]);
     });

@@ -26,10 +26,12 @@ class BetController extends Controller
             }
         }
 
+        $minBet = (float) \App\Models\SystemSetting::get('min_bet_amount', 5);
+
         $validated = $request->validate([
             'match_id' => 'required|exists:matches,id',
             'bet_type' => 'required|in:first_player,second_player',
-            'amount'   => 'required|numeric|min:10'
+            'amount'   => 'required|numeric|min:' . $minBet
         ]);
 
         $user = $request->user();

@@ -65,8 +65,9 @@ class WalletController extends Controller
      */
     public function deposit(Request $request)
     {
+        $minDeposit = (float) \App\Models\SystemSetting::get('min_deposit_amount', 10);
         $validated = $request->validate([
-            'amount'   => 'required|numeric|min:10|max:50000',
+            'amount'   => 'required|numeric|min:' . $minDeposit . '|max:50000',
             'document' => 'nullable|string',
             'phone'    => 'nullable|string',
         ]);
@@ -280,8 +281,9 @@ class WalletController extends Controller
      */
     public function withdraw(Request $request)
     {
+        $minWithdraw = (float) \App\Models\SystemSetting::get('min_withdraw_amount', 20);
         $validated = $request->validate([
-            'amount'   => 'required|numeric|min:10',
+            'amount'   => 'required|numeric|min:' . $minWithdraw,
             'pix_key'  => 'required|string|max:255',
             'document' => 'nullable|string|max:14',
         ]);

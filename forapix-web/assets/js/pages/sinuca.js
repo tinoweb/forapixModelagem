@@ -708,7 +708,7 @@ const SinucaPage = {
                 <button class="bp-amount-btn" onclick="SinucaPage.adjustAmount(-10)">−</button>
                 <div class="bp-amount-display">
                     <span class="bp-amount-currency">R$</span>
-                    <input type="number" id="betAmountInput" class="bp-amount-input" value="0" min="10"
+                    <input type="number" id="betAmountInput" class="bp-amount-input" value="0" min="${Config.BETTING.MIN_BET}"
                            oninput="SinucaPage.onAmountChange(this.value)">
                 </div>
                 <button class="bp-amount-btn" onclick="SinucaPage.adjustAmount(10)">+</button>

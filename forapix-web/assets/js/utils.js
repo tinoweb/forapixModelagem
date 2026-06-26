@@ -98,8 +98,11 @@ const Utils = {
             return { valid: false, error: 'Valor deve ser maior que zero' };
         }
         
-        if (amount < Config.BETTING.MIN_BET) {
-            return { valid: false, error: `Valor mínimo: ${this.formatCurrency(Config.BETTING.MIN_BET, true)}` };
+        const settings = Storage.getSettings();
+        const minBet = settings.min_bet_amount !== undefined ? parseFloat(settings.min_bet_amount) : Config.BETTING.MIN_BET;
+        
+        if (amount < minBet) {
+            return { valid: false, error: `Valor mínimo: ${this.formatCurrency(minBet, true)}` };
         }
         
         if (amount > Config.BETTING.MAX_BET) {

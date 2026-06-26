@@ -291,7 +291,9 @@ const WalletPage = {
                 Storage.setItem('forapix_withdrawable', withdrawable);
             }
         } catch (_) {}
-        const canWithdraw  = withdrawable >= 10;
+        const settings = Storage.getSettings();
+        const minWithdraw = settings.min_withdraw_amount !== undefined ? parseFloat(settings.min_withdraw_amount) : 20.00;
+        const canWithdraw  = withdrawable >= minWithdraw;
         const user = Storage.getUser() || {};
 
         Components.showModal(`
@@ -320,14 +322,14 @@ const WalletPage = {
             <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24;line-height:1.6">
                 <strong>⚠️ Saque não disponível</strong><br>
                 Deposite, faça apostas e ganhe para liberar o saque.
-                Mínimo de R$ 10,00 em ganhos necessário.
+                Mínimo de ${Utils.formatCurrency(minWithdraw, true)} em ganhos necessário.
             </div>
             <button class="btn btn-secondary w-full" onclick="Components.closeModal()">Fechar</button>
             ` : `
             <div class="input-group mb-4">
-                <label class="input-label">Valor do saque <span style="color:#6b7280;font-size:11px">(mín. R$ 10 · máx. ${Utils.formatCurrency(withdrawable, true)})</span></label>
-                <input type="number" id="withdrawAmount" class="input-field" placeholder="10,00"
-                    min="10" max="${withdrawable.toFixed(2)}" step="0.01">
+                <label class="input-label">Valor do saque <span style="color:#6b7280;font-size:11px">(mín. R$ ${minWithdraw.toFixed(0)} · máx. ${Utils.formatCurrency(withdrawable, true)})</span></label>
+                <input type="number" id="withdrawAmount" class="input-field" placeholder="${minWithdraw.toFixed(2).replace('.', ',')}"
+                    min="${minWithdraw}" max="${withdrawable.toFixed(2)}" step="0.01">
             </div>
             <div class="input-group mb-4">
                 <label class="input-label">Chave PIX</label>
@@ -357,8 +359,11 @@ const WalletPage = {
         const cpfDoc  = (document.getElementById('withdrawDocument')?.value || '').replace(/\D/g, '');
         const savePix = document.getElementById('withdrawSavePix')?.checked;
 
-        if (!amount || amount < 10) {
-            Components.showToast('Valor mínimo de saque: R$ 10,00', 'warning');
+        const settings = Storage.getSettings();
+        const minWithdraw = settings.min_withdraw_amount !== undefined ? parseFloat(settings.min_withdraw_amount) : 20.00;
+
+        if (!amount || amount < minWithdraw) {
+            Components.showToast(`Valor mínimo de saque: R$ ${Utils.formatCurrency(minWithdraw)}`, 'warning');
             return;
         }
         if (!pixKey) {

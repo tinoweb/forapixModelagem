@@ -12,6 +12,8 @@ const DepositPage = {
 
     render() {
         const balance = Storage.getBalance();
+        const settings = Storage.getSettings();
+        const minDeposit = settings.min_deposit_amount !== undefined ? parseFloat(settings.min_deposit_amount) : 10.00;
 
         return `
             <div class="page-enter p-4">
@@ -40,7 +42,7 @@ const DepositPage = {
                         <label class="input-label">Outro valor</label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">R$</span>
-                            <input type="number" id="customAmount" class="input-field pl-12" placeholder="0,00" min="10" step="0.01" oninput="DepositPage.onCustomAmountInput()">
+                            <input type="number" id="customAmount" class="input-field pl-12" placeholder="0,00" min="${minDeposit}" step="0.01" oninput="DepositPage.onCustomAmountInput()">
                         </div>
                     </div>
 
@@ -99,7 +101,10 @@ const DepositPage = {
         const customInput = document.getElementById('customAmount');
         const value = parseFloat(customInput.value) || 0;
         
-        if (value >= 1) {
+        const settings = Storage.getSettings();
+        const minDeposit = settings.min_deposit_amount !== undefined ? parseFloat(settings.min_deposit_amount) : 10.00;
+
+        if (value >= minDeposit) {
             this.selectedAmount = value;
             document.querySelectorAll('.quick-amount-btn').forEach(btn => {
                 btn.classList.remove('selected');
@@ -129,8 +134,10 @@ const DepositPage = {
     },
 
     async showPixDetails() {
-        if (!this.selectedAmount || this.selectedAmount <= 0) {
-            Components.showToast('Selecione um valor válido', 'warning');
+        const settings = Storage.getSettings();
+        const minDeposit = settings.min_deposit_amount !== undefined ? parseFloat(settings.min_deposit_amount) : 10.00;
+        if (!this.selectedAmount || this.selectedAmount < minDeposit) {
+            Components.showToast(`Selecione um valor válido (mínimo: R$ ${Utils.formatCurrency(minDeposit)})`, 'warning');
             return;
         }
 

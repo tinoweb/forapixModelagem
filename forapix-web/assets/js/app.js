@@ -15,6 +15,9 @@ const App = {
         // Initialize storage
         Storage.init();
         
+        // Carrega configurações do sistema
+        await this.loadSettings();
+        
         // Carrega esportes dinamicamente da API para evitar cache do config.js
         await this.loadSportsFromApi();
         
@@ -507,6 +510,24 @@ const App = {
             }
         } catch (error) {
             console.warn('⚠️ Erro ao carregar esportes da API, usando fallback:', error);
+        }
+    },
+ 
+    /**
+     * Carrega as configurações do sistema da API
+     */
+    async loadSettings() {
+        try {
+            const response = await API.request('/settings');
+            if (response && response.success && response.data) {
+                Storage.setSettings(response.data);
+                if (response.data.min_bet_amount !== undefined) {
+                    Config.BETTING.MIN_BET = parseFloat(response.data.min_bet_amount);
+                }
+                console.log('✅ Configurações carregadas da API:', response.data);
+            }
+        } catch (error) {
+            console.warn('⚠️ Erro ao carregar configurações da API:', error);
         }
     },
 
