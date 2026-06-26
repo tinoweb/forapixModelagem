@@ -88,32 +88,32 @@ class DepositWebhookController extends Controller
         try {
             DB::beginTransaction();
 
-            // Lock transaction record for update to prevent race conditions
-            $transaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+            // Lock the user for update to prevent concurrent balance updates
+            $user = User::where('id', $transaction->user_id)->lockForUpdate()->firstOrFail();
 
-            if (!$transaction || $transaction->status === 'completed') {
+            // Atomically update transaction from pending to completed
+            $updated = Transaction::where('id', $transaction->id)
+                ->where('status', 'pending')
+                ->update([
+                    'status'         => 'completed',
+                    'balance_before' => $user->balance,
+                    'balance_after'  => $user->balance + $transaction->amount,
+                    'processed_at'   => now(),
+                    'metadata'       => array_merge($transaction->metadata ?? [], [
+                        'veopag_transaction_id' => $transactionId,
+                        'confirmed_at'          => now()->toIso8601String(),
+                        'webhook_payload'       => $payload,
+                    ]),
+                ]);
+
+            if (!$updated) {
                 DB::commit();
                 return response()->json(['message' => 'transaction already processed'], 200);
             }
 
-            $user          = User::findOrFail($transaction->user_id);
-            $balanceBefore = $user->balance;
-            $amount        = $transaction->amount;
-
+            $amount = (float) $transaction->amount;
             $user->increment('balance', $amount);
             $user->increment('total_deposited', $amount);
-
-            $transaction->update([
-                'status'         => 'completed',
-                'balance_before' => $balanceBefore,
-                'balance_after'  => $balanceBefore + $amount,
-                'processed_at'   => now(),
-                'metadata'       => array_merge($transaction->metadata ?? [], [
-                    'veopag_transaction_id' => $transactionId,
-                    'confirmed_at'          => now()->toIso8601String(),
-                    'webhook_payload'       => $payload,
-                ]),
-            ]);
 
             DB::commit();
 

@@ -67,6 +67,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin'])->group(function ()
     // Match Management
     Route::prefix('matches')->name('matches.')->group(function () {
         Route::get('/', [GameManagementController::class, 'matches'])->name('index');
+        Route::get('/betting-locks', [GameManagementController::class, 'bettingLocks'])->name('betting-locks');
         Route::get('/create', [GameManagementController::class, 'showCreateMatchForm'])->name('create');
         Route::get('/{match}/edit', [GameManagementController::class, 'showEditMatchForm'])->name('edit');
         Route::get('/{match}/delete', [GameManagementController::class, 'confirmDeleteMatch'])->name('delete');

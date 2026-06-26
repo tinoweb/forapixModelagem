@@ -198,49 +198,40 @@ class WalletController extends Controller
                 if (in_array($result['status'], $paidStatuses)) {
                     DB::beginTransaction();
                     try {
-                        // Lock transaction record for update to prevent race conditions
-                        $transaction = Transaction::where('id', $transaction->id)->lockForUpdate()->first();
+                        // Lock the user for update to prevent concurrent balance updates
+                        $user = \App\Models\User::where('id', $request->user()->id)->lockForUpdate()->firstOrFail();
 
-                        if (!$transaction || $transaction->status === 'completed') {
-                            DB::commit();
-                            
-                            $user = $request->user()->fresh();
-                            return response()->json([
-                                'success' => true,
-                                'data'    => [
-                                    'transaction_id' => $transaction->transaction_id,
-                                    'status'         => 'completed',
-                                    'amount'         => (float) $transaction->amount,
-                                    'balance'        => $user->balance,
-                                ],
+                        // Atomically update transaction from pending to completed
+                        $updated = Transaction::where('id', $transaction->id)
+                            ->where('status', 'pending')
+                            ->update([
+                                'status'         => 'completed',
+                                'balance_before' => $user->balance,
+                                'balance_after'  => $user->balance + $transaction->amount,
+                                'processed_at'   => now(),
+                                'metadata'       => array_merge($transaction->metadata ?? [], [
+                                    'confirmed_via' => 'polling',
+                                    'confirmed_at'  => now()->toIso8601String(),
+                                    'veopag_status' => $result['status'],
+                                ]),
                             ]);
+
+                        if ($updated) {
+                            $amount = (float) $transaction->amount;
+                            $user->increment('balance', $amount);
+                            $user->increment('total_deposited', $amount);
+
+                            DB::commit();
+
+                            Log::info("Depósito confirmado via polling — user {$user->id}", [
+                                'transaction_id' => $transactionId,
+                                'amount'         => $amount,
+                            ]);
+                        } else {
+                            DB::commit();
+                            // Refresh transaction if it was updated by another process/webhook
+                            $transaction = $transaction->fresh();
                         }
-
-                        $user          = $request->user()->fresh();
-                        $balanceBefore = (float) $user->balance;
-                        $amount        = (float) $transaction->amount;
-
-                        $user->increment('balance', $amount);
-                        $user->increment('total_deposited', $amount);
-
-                        $transaction->update([
-                            'status'         => 'completed',
-                            'balance_before' => $balanceBefore,
-                            'balance_after'  => $balanceBefore + $amount,
-                            'processed_at'   => now(),
-                            'metadata'       => array_merge($transaction->metadata ?? [], [
-                                'confirmed_via' => 'polling',
-                                'confirmed_at'  => now()->toIso8601String(),
-                                'veopag_status' => $result['status'],
-                            ]),
-                        ]);
-
-                        DB::commit();
-
-                        Log::info("Depósito confirmado via polling — user {$user->id}", [
-                            'transaction_id' => $transactionId,
-                            'amount'         => $amount,
-                        ]);
                     } catch (\Throwable $e) {
                         DB::rollBack();
                         Log::error('Erro ao confirmar depósito via polling: ' . $e->getMessage());
@@ -251,8 +242,8 @@ class WalletController extends Controller
                         'data'    => [
                             'transaction_id' => $transaction->transaction_id,
                             'status'         => 'completed',
-                            'amount'         => $amount,
-                            'balance'        => $user->fresh()->balance,
+                            'amount'         => (float) $transaction->amount,
+                            'balance'        => $request->user()->fresh()->balance,
                         ],
                     ]);
                 }

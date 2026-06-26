@@ -78,11 +78,18 @@
             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard*') ? 'active' : '' }}">
                 <i class="fas fa-chart-line"></i> Dashboard
             </a>
-            <a href="{{ route('admin.matches.index') }}" class="nav-link {{ request()->routeIs('admin.matches.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.matches.index') }}" class="nav-link {{ request()->routeIs('admin.matches.index') || (request()->routeIs('admin.matches.*') && !request()->routeIs('admin.matches.betting-locks')) ? 'active' : '' }}">
                 <i class="fas fa-trophy"></i> Partidas
                 @php $liveCount = \App\Models\GameMatch::where('status','live')->count(); @endphp
                 @if($liveCount > 0)
                     <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 animate-pulse">{{ $liveCount }} AO VIVO</span>
+                @endif
+            </a>
+            <a href="{{ route('admin.matches.betting-locks') }}" class="nav-link {{ request()->routeIs('admin.matches.betting-locks') ? 'active' : '' }}">
+                <i class="fas fa-lock"></i> Trancar Apostas
+                @php $lockedCount = \App\Models\GameMatch::whereIn('status',['scheduled','live'])->where('betting_locked', true)->count(); @endphp
+                @if($lockedCount > 0)
+                    <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">{{ $lockedCount }} TRAN.</span>
                 @endif
             </a>
             <a href="{{ route('admin.bets.index') }}" class="nav-link {{ request()->routeIs('admin.bets.*') ? 'active' : '' }}">
@@ -206,11 +213,11 @@
         <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0c1020]/95 backdrop-blur-xl border-t border-white/8 flex items-center safe-area-bottom shadow-2xl">
             @php
                 $bottomNav = [
-                    ['route' => 'admin.dashboard',      'icon' => 'fa-chart-line', 'label' => 'Dashboard'],
-                    ['route' => 'admin.matches.index',  'icon' => 'fa-trophy',     'label' => 'Partidas'],
-                    ['route' => 'admin.bets.index',     'icon' => 'fa-ticket',     'label' => 'Apostas'],
-                    ['route' => 'admin.users.index',    'icon' => 'fa-users',      'label' => 'Usuários'],
-                    ['route' => 'admin.players.index',  'icon' => 'fa-user',       'label' => 'Jogadores'],
+                    ['route' => 'admin.dashboard',           'icon' => 'fa-chart-line', 'label' => 'Dashboard'],
+                    ['route' => 'admin.matches.index',       'icon' => 'fa-trophy',     'label' => 'Partidas'],
+                    ['route' => 'admin.matches.betting-locks','icon' => 'fa-lock',       'label' => 'Trancar'],
+                    ['route' => 'admin.bets.index',          'icon' => 'fa-ticket',     'label' => 'Apostas'],
+                    ['route' => 'admin.users.index',         'icon' => 'fa-users',      'label' => 'Usuários'],
                 ];
             @endphp
             @foreach($bottomNav as $item)

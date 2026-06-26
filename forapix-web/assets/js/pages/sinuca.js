@@ -287,7 +287,6 @@ const SinucaPage = {
         const s     = match.bet_stats || {};
         const fp    = s.first_player  || { total: 0, matched: 0, unmatched: 0, count: 0 };
         const sp    = s.second_player || { total: 0, matched: 0, unmatched: 0, count: 0 };
-        const pool  = s.total_matched_pool || 0;
         const p1    = match.first_player  || {};
         const p2    = match.second_player || {};
 
@@ -295,28 +294,19 @@ const SinucaPage = {
         const pFp = totalAll > 0 ? Math.round((fp.total / totalAll) * 100) : 50;
         const pSp = 100 - pFp;
 
-        const fmtR = v => 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
         return `
-        <div class="mh-bets-bar">
-            <div class="flex justify-between text-xs mb-1 px-1">
-                <span class="text-white font-semibold">${(p1.name || 'J1').split(' ')[0]}</span>
-                <span class="text-gray-400 text-[10px]">⚔️ Pool casado: ${fmtR(pool)}</span>
-                <span class="text-white font-semibold">${(p2.name || 'J2').split(' ')[0]}</span>
+        <div class="mh-bets-bar" style="display:flex; align-items:center; gap:10px; padding:10px 14px;">
+            <div class="mh-bets-side" style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <img src="${Utils.getPlayerPhoto(p1)}" onerror="this.src='assets/images/jogador1.png'" style="width:24px; height:24px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); object-fit:cover;">
+                <span class="mh-bets-pct" style="font-size:12px; font-weight:800; color:#fff;">${pFp}%</span>
             </div>
-            <div class="mh-bets-track" style="border-radius:8px;overflow:hidden;display:flex;height:10px;gap:1px">
-                <div style="width:${pFp}%;background:#34d399;transition:width .4s"></div>
-                <div style="width:${pSp}%;background:#f59e0b;transition:width .4s"></div>
+            <div class="mh-bets-track" style="flex:1; border-radius:8px; overflow:hidden; display:flex; height:10px; gap:1px; background:rgba(255,255,255,0.05);">
+                <div style="width:${pFp}%; background:#f59e0b; transition:width .4s"></div>
+                <div style="width:${pSp}%; background:#34d399; transition:width .4s"></div>
             </div>
-            <div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
-                <span>
-                    <span class="text-emerald-400 font-semibold">${fmtR(fp.total)}</span>
-                    <span class="text-gray-600 ml-1">(${fmtR(fp.matched)} casado)</span>
-                </span>
-                <span>
-                    <span class="text-gray-600 mr-1">(${fmtR(sp.matched)} casado)</span>
-                    <span class="text-yellow-400 font-semibold">${fmtR(sp.total)}</span>
-                </span>
+            <div class="mh-bets-side mh-bets-side--right" style="display:flex; align-items:center; gap:6px; flex-shrink:0; flex-direction:row-reverse;">
+                <img src="${Utils.getPlayerPhoto(p2)}" onerror="this.src='assets/images/jogador2.png'" style="width:24px; height:24px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); object-fit:cover;">
+                <span class="mh-bets-pct" style="font-size:12px; font-weight:800; color:#fff;">${pSp}%</span>
             </div>
         </div>`;
     },
@@ -489,46 +479,86 @@ const SinucaPage = {
 
         const total    = parseFloat(bet.amount ?? bet.betAmount ?? 0);
         const matched  = parseFloat(bet.matched_amount ?? 0);
-        const pending  = total - matched;
+        
+        const isCancelled = bet.status === 'cancelled' || bet.status === 'refunded';
+        
+        const valor = total;
+        const casado = isCancelled ? 0 : matched;
+        const pendente = isCancelled ? 0 : Math.max(0, total - matched);
+        const extornado = isCancelled ? total : 0;
 
-        // Badge e breakdown por situação
-        let badgeHtml, breakdownHtml = '';
+        let badgeClass = '';
+        let badgeText = '';
 
         if (bet.status === 'won') {
-            const resultAmt = Utils.formatCurrency(bet.result_amount ?? 0);
-            badgeHtml = `<span class="mbi-badge mbi-won">Ganhou</span>`;
-            breakdownHtml = `<span class="mbi-matched">Ganho: <strong>R$ ${resultAmt}</strong></span>`;
+            badgeClass = 'mbi-badge-won';
+            badgeText = 'Ganhou';
         } else if (bet.status === 'lost') {
-            badgeHtml = `<span class="mbi-badge mbi-lost">Perdeu</span>`;
-        } else if (bet.status === 'cancelled' || bet.status === 'refunded') {
-            badgeHtml = `<span class="mbi-badge mbi-cancelled">Cancelada</span>`;
+            badgeClass = 'mbi-badge-lost';
+            badgeText = 'Perdeu';
+        } else if (isCancelled) {
+            badgeClass = 'mbi-badge-refunded';
+            badgeText = 'Estornado';
+        } else if (matched >= total && total > 0) {
+            badgeClass = 'mbi-badge-confirmed';
+            badgeText = 'Confirmado';
+        } else if (matched > 0) {
+            badgeClass = 'mbi-badge-partial';
+            badgeText = 'Parcial';
         } else {
-            // pending — mostra breakdown casado/pendente
-            if (matched >= total && total > 0) {
-                badgeHtml = `<span class="mbi-badge mbi-confirmed">✓ Confirmada</span>`;
-                breakdownHtml = `<span class="mbi-matched">Casado: <strong>R$ ${Utils.formatCurrency(matched)}</strong></span>`;
-            } else if (matched > 0) {
-                badgeHtml = `<span class="mbi-badge mbi-partial">Parcial</span>`;
-                breakdownHtml = `
-                    <span class="mbi-matched">✓ Casado: <strong>R$ ${Utils.formatCurrency(matched)}</strong></span>
-                    <span class="mbi-unmatched">⏳ Pendente: <strong>R$ ${Utils.formatCurrency(pending)}</strong></span>`;
-            } else {
-                badgeHtml = `<span class="mbi-badge mbi-pending">Pendente</span>`;
-                breakdownHtml = `<span class="mbi-unmatched">⏳ Aguardando casamento</span>`;
-            }
+            badgeClass = 'mbi-badge-pending';
+            badgeText = 'Pendente';
         }
 
+        const formatDT = (dateStr) => {
+            if (!dateStr) return '--';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        };
+
+        const formattedPlacedAt = formatDT(bet.placed_at || bet.placedAt || bet.created_at || bet.date);
+        const formattedUpdatedAt = formatDT(bet.updated_at || bet.resolved_at || bet.placed_at || bet.placedAt || bet.created_at || bet.date);
+        const progressPercent = total > 0 ? (casado / total) * 100 : 0;
+
         return `
-        <div class="mbi-row">
-            <div class="mbi-top">
-                <span class="mbi-label">${label}</span>
-                ${badgeHtml}
+        <div class="mbi-card-v2">
+            <div class="mbi-card-header">
+                <span class="mbi-card-player">${label}</span>
+                <span class="mbi-card-badge ${badgeClass}">${badgeText}</span>
             </div>
-            <div class="mbi-details">
-                <span>Total: <strong>R$ ${Utils.formatCurrency(total)}</strong></span>
-                ${breakdownHtml}
+            <div class="mbi-card-subtitle">ID DA APOSTA #${code}</div>
+            
+            <div class="mbi-card-info">
+                <div class="mbi-info-row">
+                    <i class="far fa-calendar"></i>
+                    <span>APOSTA: <strong>${formattedPlacedAt}</strong></span>
+                </div>
+                <div class="mbi-info-row">
+                    <i class="fas fa-link"></i>
+                    <span>ULTIMO PAREAMENTO: <strong>${formattedUpdatedAt}</strong></span>
+                </div>
             </div>
-            <div class="mbi-code">Cód: ${code}</div>
+
+            <div class="mbi-card-grid">
+                <div class="mbi-grid-block">
+                    <span class="mbi-grid-label">VALOR</span>
+                    <span class="mbi-grid-value">R$ ${Utils.formatCurrency(total)}</span>
+                </div>
+                <div class="mbi-grid-block">
+                    <span class="mbi-grid-label">CASADO</span>
+                    <span class="mbi-grid-value mbi-val-casado">R$ ${Utils.formatCurrency(casado)}</span>
+                </div>
+                <div class="mbi-grid-block" style="grid-column: span 2;">
+                    <span class="mbi-grid-label">EXTORNADO</span>
+                    <span class="mbi-grid-value mbi-val-extornado">R$ ${Utils.formatCurrency(extornado)}</span>
+                </div>
+            </div>
+
+            <div class="mbi-card-progress">
+                <div class="mbi-card-progress-fill" style="width: ${progressPercent}%"></div>
+            </div>
         </div>`;
     },
 

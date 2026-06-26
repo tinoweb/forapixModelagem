@@ -892,4 +892,18 @@ class GameManagementController extends Controller
             'message' => "{$updated} partidas atualizadas com sucesso"
         ]);
     }
+
+    /**
+     * Exibe a tela de gerenciamento rápido de trancamento de apostas
+     */
+    public function bettingLocks(Request $request)
+    {
+        $matches = GameMatch::with(['firstPlayer', 'secondPlayer', 'game'])
+            ->whereIn('status', ['scheduled', 'live'])
+            ->orderBy('status', 'desc')
+            ->orderBy('match_start', 'asc')
+            ->get();
+
+        return view('admin.matches.betting_locks', compact('matches'));
+    }
 }
