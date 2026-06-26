@@ -82,19 +82,48 @@ const SinucaPage = {
                     }
                 }
 
+                // Check if we need to re-render (only if something changed)
+                const changed = !oldMatch || this._hasMatchChanged(oldMatch, newMatch);
+
                 this.currentMatch = newMatch;
                 this.betOptions = this.buildBetOptions(newMatch);
                 
-                // Re-render dynamically without closing open modals
-                const container = document.getElementById('sinucaPage');
-                if (container) {
-                    container.innerHTML = this.renderContent();
-                    this.loadMyBetsQuietly();
+                if (changed) {
+                    // Re-render dynamically without closing open modals
+                    const container = document.getElementById('sinucaPage');
+                    if (container) {
+                        container.innerHTML = this.renderContent();
+                        this.loadMyBetsQuietly();
+                    }
                 }
             }
         } catch (error) {
             console.error('Erro no polling do jogo:', error);
         }
+    },
+
+    _hasMatchChanged(oldMatch, newMatch) {
+        if (!oldMatch || !newMatch) return true;
+        if (oldMatch.id !== newMatch.id) return true;
+        if (oldMatch.status !== newMatch.status) return true;
+        if (oldMatch.betting_locked !== newMatch.betting_locked) return true;
+        if (oldMatch.live_betting_open !== newMatch.live_betting_open) return true;
+        if (oldMatch.first_player_score !== newMatch.first_player_score) return true;
+        if (oldMatch.second_player_score !== newMatch.second_player_score) return true;
+        if (oldMatch.betting_deadline !== newMatch.betting_deadline) return true;
+        
+        // Compare bet stats
+        const oldStats = oldMatch.bet_stats || {};
+        const newStats = newMatch.bet_stats || {};
+        const oldFp = oldStats.first_player || {};
+        const newFp = newStats.first_player || {};
+        const oldSp = oldStats.second_player || {};
+        const newSp = newStats.second_player || {};
+        
+        if (oldFp.total !== newFp.total || oldFp.matched !== newFp.matched) return true;
+        if (oldSp.total !== newSp.total || oldSp.matched !== newSp.matched) return true;
+        
+        return false;
     },
 
     async loadMyBetsQuietly() {
