@@ -699,14 +699,13 @@ class GameManagementController extends Controller
             }
         }
 
-        // Bloqueia exclusão se houver apostas PENDENTES, GANHAS ou PERDIDAS
-        // Apostas canceladas (dinheiro já devolvido) NÃO bloqueiam a exclusão
-        $activeBetsCount = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count();
+        // Bloqueia exclusão apenas se houver apostas PENDENTES (que precisariam de reembolso)
+        $pendingBetsCount = $match->bets()->where('status', 'pending')->count();
 
-        if ($activeBetsCount > 0) {
+        if ($pendingBetsCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Não é possível excluir partida com apostas ativas (pendentes ou já processadas). Cancele a partida primeiro para devolver os valores.'
+                'message' => 'Não é possível excluir partida com apostas pendentes. Cancele a partida primeiro para devolver os valores.'
             ], 400);
         }
 

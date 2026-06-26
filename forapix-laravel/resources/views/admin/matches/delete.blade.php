@@ -22,19 +22,31 @@
                 Esta ação não poderá ser desfeita.
             </p>
 
+            @php 
+                $pendingBets = $match->bets()->where('status', 'pending')->count();
+                $resolvedBets = $match->bets()->whereIn('status', ['won', 'lost', 'cancelled'])->count();
+                $totalBets = $match->bets()->count();
+            @endphp
+
             <div class="bg-[#10152b] border border-white/5 rounded-2xl p-4 mb-6 space-y-1 text-sm">
                 <div class="flex justify-between"><span class="text-gray-500">Jogo:</span> <span>{{ $match->game?->name ?? '---' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Início:</span> <span>{{ optional($match->match_start)->format('d/m/Y H:i') ?? '--' }}</span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="uppercase">{{ $match->status }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Apostas ativas:</span> <span class="{{ $match->bets()->whereIn('status',['pending','won','lost'])->count() > 0 ? 'text-red-300 font-semibold' : 'text-green-300' }}">{{ $match->bets()->whereIn('status',['pending','won','lost'])->count() }} ({{ $match->bets()->count() }} total)</span></div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Apostas pendentes:</span> 
+                    <span class="{{ $pendingBets > 0 ? 'text-red-300 font-semibold' : 'text-green-300' }}">{{ $pendingBets }} ({{ $totalBets }} total)</span>
+                </div>
             </div>
 
-            @php $activeBets = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count(); @endphp
-
-            @if($activeBets > 0)
+            @if($pendingBets > 0)
                 <div class="bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 rounded-2xl p-4 mb-6 text-sm">
                     <i class="fas fa-circle-info mr-2"></i>
-                    Esta partida possui <strong>{{ $activeBets }} aposta(s) ativa(s)</strong> e <strong>não poderá ser excluída</strong>. Cancele a partida primeiro para devolver os valores aos apostadores.
+                    Esta partida possui <strong>{{ $pendingBets }} aposta(s) pendente(s)</strong> e <strong>não poderá ser excluída</strong>. Cancele a partida primeiro para devolver os valores aos apostadores.
+                </div>
+            @elseif($resolvedBets > 0)
+                <div class="bg-red-500/10 border border-red-500/30 text-red-200 rounded-2xl p-4 mb-6 text-sm">
+                    <i class="fas fa-circle-info mr-2"></i>
+                    <strong>Atenção:</strong> Esta partida já possui <strong>{{ $resolvedBets }} aposta(s) finalizada(s)</strong>. Ao excluí-la definitivamente, o histórico dessas apostas também será removido do sistema.
                 </div>
             @endif
 
@@ -44,8 +56,7 @@
                 <a href="{{ route('admin.matches.index') }}" class="admin-btn-ghost flex-1 justify-center">
                     <i class="fas fa-arrow-left"></i> Cancelar
                 </a>
-                @php $activeBets2 = $match->bets()->whereIn('status', ['pending', 'won', 'lost'])->count(); @endphp
-                <button type="submit" class="admin-btn-danger flex-1 justify-center" @disabled($activeBets2 > 0)>
+                <button type="submit" class="admin-btn-danger flex-1 justify-center" @disabled($pendingBets > 0)>
                     <i class="fas fa-trash"></i> Excluir definitivamente
                 </button>
             </form>
