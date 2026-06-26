@@ -143,6 +143,14 @@ class BetController extends Controller
      */
     public function index(Request $request)
     {
+        $rawMatchId = $request->input('match_id');
+        if (!is_numeric($rawMatchId) && !empty($rawMatchId)) {
+            $decoded = \Vinkla\Hashids\Facades\Hashids::decode($rawMatchId);
+            if (!empty($decoded)) {
+                $request->merge(['match_id' => $decoded[0]]);
+            }
+        }
+
         $query = Bet::with(['match.game', 'match.firstPlayer', 'match.secondPlayer'])
             ->where('user_id', $request->user()->id);
 
