@@ -92,7 +92,19 @@ const SinucaPage = {
                     // Re-render dynamically without closing open modals
                     const container = document.getElementById('sinucaPage');
                     if (container) {
+                        const myBetsListEl = document.getElementById('myBetsList');
+                        const savedBetsHtml = myBetsListEl ? myBetsListEl.innerHTML : null;
+
                         container.innerHTML = this.renderContent();
+
+                        // Restore saved bets HTML immediately to prevent any flicker of the loading spinner
+                        if (savedBetsHtml) {
+                            const newMyBetsListEl = document.getElementById('myBetsList');
+                            if (newMyBetsListEl) {
+                                newMyBetsListEl.innerHTML = savedBetsHtml;
+                            }
+                        }
+
                         this.loadMyBetsQuietly();
                     }
                 }
