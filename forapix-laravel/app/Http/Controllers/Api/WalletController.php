@@ -377,8 +377,8 @@ class WalletController extends Controller
             DB::commit();
 
             $msg = $status === 'completed'
-                ? 'Saque processado! O PIX será enviado em instantes.'
-                : 'Saque solicitado! Você receberá o PIX em até 24 horas.';
+                ? 'Saque processado! O PIX foi enviado com sucesso.'
+                : 'Saque solicitado com sucesso! O PIX está sendo processado e você receberá em instantes.';
 
             return response()->json([
                 'success' => true,
