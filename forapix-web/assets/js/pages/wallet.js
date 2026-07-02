@@ -375,11 +375,18 @@ const WalletPage = {
             return;
         }
 
+        const confirmBtn = document.querySelector('button[onclick="WalletPage.processWithdraw()"]');
+        const originalText = confirmBtn ? confirmBtn.innerHTML : '';
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processando...';
+        }
+
         try {
             const result = await API.withdraw(amount, pixKey, cpfDoc);
-            Components.closeModal();
 
             if (result.success) {
+                Components.closeModal();
                 Components.showToast(result.message || 'Saque solicitado com sucesso!', 'success');
                 
                 // Salvar dados de PIX e CPF no perfil se o checkbox estiver marcado
@@ -407,9 +414,17 @@ const WalletPage = {
                 this.switchTab('balance');
             } else {
                 Components.showToast(result.error || result.message || 'Erro ao processar saque', 'error');
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = originalText;
+                }
             }
         } catch (error) {
             Components.showToast('Erro ao processar saque', 'error');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
         }
     }
 };

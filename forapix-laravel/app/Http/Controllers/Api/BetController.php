@@ -75,6 +75,9 @@ class BetController extends Controller
         try {
             DB::beginTransaction();
 
+            // Lock user row for update to prevent concurrent betting race conditions
+            $user = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+
             $bet = $user->placeBet($match, $validated['bet_type'], $validated['amount']);
 
             DB::commit();

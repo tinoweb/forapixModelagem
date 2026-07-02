@@ -41,7 +41,7 @@ class WithdrawWebhookController extends Controller
               ->orWhere('external_transaction_id', $transactionId);
         })
         ->where('type', 'withdraw')
-        ->where('status', 'pending')
+        ->whereIn('status', ['pending', 'completed'])
         ->first();
 
         if (!$transaction) {
@@ -58,18 +58,32 @@ class WithdrawWebhookController extends Controller
                 default                         => 'pending',
             };
 
-            $transaction->update([
-                'status'       => $newStatus,
-                'processed_at' => $newStatus !== 'pending' ? now() : null,
-                'metadata'     => array_merge($transaction->metadata ?? [], [
-                    'veopag_transaction_id' => $transactionId,
-                    'confirmed_at'          => now()->toIso8601String(),
-                    'webhook_payload'       => $payload,
-                ]),
-            ]);
+            // Se a transação já estava completada e o status do webhook é de sucesso,
+            // apenas atualizamos metadados e encerramos para evitar processamento duplicado.
+            if ($transaction->status === 'completed' && $newStatus === 'completed') {
+                $transaction->update([
+                    'metadata' => array_merge($transaction->metadata ?? [], [
+                        'veopag_transaction_id' => $transactionId,
+                        'webhook_payload'       => $payload,
+                        'confirmed_at'          => now()->toIso8601String(),
+                    ]),
+                ]);
+                DB::commit();
+                return response()->json(['message' => 'ok (already completed)'], 200);
+            }
 
-            // Se falhou, estorna o saldo e withdrawable_balance ao usuário
+            // Se a transação falhou, estorna o saldo e withdrawable_balance ao usuário
             if ($newStatus === 'failed') {
+                $transaction->update([
+                    'status'       => 'failed',
+                    'processed_at' => now(),
+                    'metadata'     => array_merge($transaction->metadata ?? [], [
+                        'veopag_transaction_id' => $transactionId,
+                        'webhook_payload'       => $payload,
+                        'failed_at'             => now()->toIso8601String(),
+                    ]),
+                ]);
+
                 $user = $transaction->user;
                 $user->increment('balance', $transaction->amount);
                 $user->increment('withdrawable_balance', $transaction->amount);
@@ -80,6 +94,16 @@ class WithdrawWebhookController extends Controller
                     'external_id' => $externalId,
                 ]);
             } else {
+                $transaction->update([
+                    'status'       => $newStatus,
+                    'processed_at' => $newStatus !== 'pending' ? now() : null,
+                    'metadata'     => array_merge($transaction->metadata ?? [], [
+                        'veopag_transaction_id' => $transactionId,
+                        'confirmed_at'          => now()->toIso8601String(),
+                        'webhook_payload'       => $payload,
+                    ]),
+                ]);
+
                 Log::info("VeoPag: saque confirmado para user {$transaction->user_id}", [
                     'amount'      => $transaction->amount,
                     'external_id' => $externalId,

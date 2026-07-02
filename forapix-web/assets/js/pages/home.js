@@ -152,7 +152,7 @@ const HomePage = {
      * Share invite link
      */
     async shareInvite() {
-        const inviteLink = 'https://jrpix.com/invite/ABC123';
+        const inviteLink = window.location.origin + '/';
         
         if (navigator.share) {
             try {

@@ -132,17 +132,24 @@
                             <div class="flex justify-center gap-2 flex-wrap">
                                 @if(!empty($tx->metadata['veopag_transaction_id']) || !empty($tx->payment_reference))
                                     {{-- Já foi enviado para VeoPag: processamento automático --}}
-                                    <span class="px-2 py-1 text-xs bg-blue-500/15 text-blue-300 rounded-lg border border-blue-500/20 flex items-center gap-1">
+                                    <span class="w-full px-2 py-1 text-xs bg-blue-500/15 text-blue-300 rounded-lg border border-blue-500/20 flex items-center justify-center gap-1 mb-1">
                                         <i class="fas fa-circle-notch fa-spin text-[10px]"></i> Aguardando VeoPag
                                     </span>
+                                    <button onclick="approveWithdrawal({{ $tx->id }})"
+                                        class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition flex-1 text-center"
+                                        title="Confirmar pagamento manualmente (caso já pago na VeoPag)">
+                                        <i class="fas fa-check"></i> Confirmar Pago
+                                    </button>
                                     <button onclick="rejectWithdrawal({{ $tx->id }})"
-                                        class="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition">
+                                        class="px-2 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition flex-1 text-center"
+                                        title="Estornar saldo e cancelar saque">
                                         <i class="fas fa-times"></i> Estornar
                                     </button>
                                 @else
                                     {{-- Não enviado para VeoPag: aprovação manual --}}
                                     <button onclick="approveWithdrawal({{ $tx->id }})"
-                                        class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition">
+                                        class="px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition"
+                                        title="Aprovar e pagar saque manualmente">
                                         <i class="fas fa-check"></i> Aprovar manual
                                     </button>
                                     <button onclick="rejectWithdrawal({{ $tx->id }})"

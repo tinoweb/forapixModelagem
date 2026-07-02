@@ -291,30 +291,36 @@ class WalletController extends Controller
         $user   = $request->user();
         $amount = (float) $validated['amount'];
 
-        if (!$user->canWithdraw()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Você ainda não possui saldo sacável. Deposite, jogue e ganhe para poder sacar.',
-            ], 422);
-        }
-
-        if ($amount > $user->maxWithdrawable()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Valor solicitado excede seu saldo sacável de R$ '
-                    . number_format($user->maxWithdrawable(), 2, ',', '.') . '.',
-            ], 422);
-        }
-
-        if ($amount > (float) $user->balance) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Saldo insuficiente.',
-            ], 422);
-        }
-
         try {
             DB::beginTransaction();
+
+            // Lock the user row for update to prevent concurrent requests
+            $user = \App\Models\User::where('id', $user->id)->lockForUpdate()->first();
+
+            if (!$user->canWithdraw()) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você ainda não possui saldo sacável. Deposite, jogue e ganhe para poder sacar.',
+                ], 422);
+            }
+
+            if ($amount > $user->maxWithdrawable()) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Valor solicitado excede seu saldo sacável de R$ '
+                        . number_format($user->maxWithdrawable(), 2, ',', '.') . '.',
+                ], 422);
+            }
+
+            if ($amount > (float) $user->balance) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Saldo insuficiente.',
+                ], 422);
+            }
 
             $balanceBefore = (float) $user->balance;
             $externalId    = 'sw-' . $user->id . '-' . time();
@@ -338,7 +344,7 @@ class WalletController extends Controller
                         'document' => $recipientDoc,
                     ], $callbackUrl);
                     $veopagId = $result['transactionId'];
-                    $status   = strtolower($result['status']) === 'completed' ? 'completed' : 'pending';
+                    $status   = 'completed';
                 } catch (\Throwable $veopagErr) {
                     $veopagError = $veopagErr->getMessage();
                     Log::warning('VeoPag saque falhou — criando como pendente para processamento manual', [

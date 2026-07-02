@@ -176,23 +176,10 @@ const SinucaPage = {
     buildBetOptions(match) {
         const p1 = match.first_player || {};
         const p2 = match.second_player || {};
-        const stats = match.bet_stats || {};
         
-        // Calcular odds baseadas no pool de apostas
-        const fpTotal = stats.first_player?.total || 0;
-        const spTotal = stats.second_player?.total || 0;
-        const totalPool = fpTotal + spTotal;
-        
-        // Se não há apostas, odds iguais (2.0 que resulta em 1.80 após a taxa de 10%)
-        let fpOdds = 2.0, spOdds = 2.0;
-        if (totalPool > 0) {
-            fpOdds = totalPool / fpTotal;
-            spOdds = totalPool / spTotal;
-        }
-        
-        // Aplicar taxa da casa (10%)
-        fpOdds = fpOdds * 0.9;
-        spOdds = spOdds * 0.9;
+        // As odds são fixas e vêm do banco de dados (normalmente 1.80 para ambos os lados)
+        let fpOdds = parseFloat(match.first_player_odds || match.firstPlayerOdds || 1.80);
+        let spOdds = parseFloat(match.second_player_odds || match.secondPlayerOdds || 1.80);
         
         // Mínimo de 1.01
         fpOdds = Math.max(1.01, fpOdds);
@@ -679,7 +666,6 @@ const SinucaPage = {
             const side  = stats[o.type] || { total: 0, matched: 0 };
             const photo = Utils.getPlayerPhoto(o.player);
             const pFall = o.type === 'first_player' ? 'assets/images/jogador1.png' : 'assets/images/jogador2.png';
-            const fmtR  = v => 'R$ ' + parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
             return `
                 <label class="bp-competitor" onclick="SinucaPage.selectBetOption('${o.type}')">
                     ${photo
@@ -687,7 +673,6 @@ const SinucaPage = {
                         : `<div class="bp-comp-avatar bp-comp-avatar--icon"><i class="fas fa-user"></i></div>`}
                     <div style="flex:1">
                         <span class="bp-comp-name">${o.label}</span>
-                        <span style="display:block;font-size:10px;color:#9ca3af">${fmtR(side.matched)} casado / ${fmtR(side.total)} total</span>
                     </div>
                     <div class="bp-radio" id="radio_${o.type}"></div>
                 </label>`;
